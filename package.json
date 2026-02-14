@@ -3,7 +3,10 @@
   "version": "0.4.0",
   "description": "Crontab Manager - Electron Desktop App",
   "main": "dist-electron/main/index.js",
-  "author": "seunggabi",
+  "author": {
+    "name": "seunggabi",
+    "email": "seunggabi@users.noreply.github.com"
+  },
   "license": "MIT",
   "private": true,
   "scripts": {
