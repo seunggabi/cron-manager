@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
-import { Play, Trash2, Plus, RefreshCw, FolderOpen, FileText, Edit, ChevronUp, ChevronDown, Save, ListChecks, Settings, Database, Search, X, FolderPlus, Github, Star } from 'lucide-react';
+import { Play, Trash2, Plus, RefreshCw, FolderOpen, FileText, Edit, ChevronUp, ChevronDown, Save, ListChecks, Settings, Database, Search, X, FolderPlus, Github, Star, Languages, Check } from 'lucide-react';
 import { JobForm } from './components/JobForm';
 import { GlobalEnvSettings } from './components/GlobalEnvSettings';
 import { BackupManager } from './components/BackupManager';
@@ -10,6 +10,7 @@ import { extractLogFiles } from './utils/logFileExtractor';
 import { extractScriptPath } from './utils/scriptPathExtractor';
 import { useResizableColumns } from './hooks/useResizableColumns';
 import { useTranslation } from 'react-i18next';
+import * as Select from '@radix-ui/react-select';
 import logoSvg from '/logo.svg';
 import packageJson from '../../package.json';
 
@@ -95,7 +96,7 @@ function LogButton({ logFile, workingDir, showAlert }: { logFile: string; workin
 }
 
 function App() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [activeTab, setActiveTab] = useState<TabType>('jobs');
   const [jobs, setJobs] = useState<CronJob[]>([]);
   const [loading, setLoading] = useState(false);
@@ -485,24 +486,116 @@ function App() {
             <div className="header-sub">{t('header.subtitle')}</div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
-            <a
-              href="https://github.com/seunggabi/cron-manager"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn"
-              style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
-              title="GitHub Repository"
-            >
-              <Github size={16} />
-              GitHub
-              {starCount !== null && (
-                <>
-                  <span style={{ opacity: 0.3, margin: '0 4px' }}>|</span>
-                  <Star size={14} style={{ fill: 'currentColor' }} />
-                  {starCount}
-                </>
-              )}
-            </a>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              {/* Language Switcher */}
+              <Select.Root value={i18n.language} onValueChange={(lang) => {
+                i18n.changeLanguage(lang);
+                localStorage.setItem('i18nextLng', lang);
+              }}>
+                <Select.Trigger
+                  className="btn"
+                  style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: '110px' }}
+                  title={t('common.language')}
+                >
+                  <Languages size={16} />
+                  <Select.Value />
+                  <ChevronDown size={14} style={{ opacity: 0.6 }} />
+                </Select.Trigger>
+                <Select.Portal>
+                  <Select.Content
+                    className="select-content"
+                    position="popper"
+                    sideOffset={5}
+                    style={{
+                      background: 'var(--surface)',
+                      border: '1px solid var(--border)',
+                      borderRadius: 'var(--radius)',
+                      padding: '4px',
+                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                      minWidth: '110px',
+                      zIndex: 1000,
+                    }}
+                  >
+                    <Select.Viewport>
+                      <Select.Item
+                        value="ko"
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '8px 12px',
+                          fontSize: '13px',
+                          cursor: 'pointer',
+                          borderRadius: '4px',
+                          outline: 'none',
+                          userSelect: 'none',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = 'var(--accent)';
+                          e.currentTarget.style.color = 'white';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = 'transparent';
+                          e.currentTarget.style.color = 'var(--text-primary)';
+                        }}
+                      >
+                        <Select.ItemText>{t('languages.ko')}</Select.ItemText>
+                        <Select.ItemIndicator>
+                          <Check size={14} />
+                        </Select.ItemIndicator>
+                      </Select.Item>
+                      <Select.Item
+                        value="en"
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '8px 12px',
+                          fontSize: '13px',
+                          cursor: 'pointer',
+                          borderRadius: '4px',
+                          outline: 'none',
+                          userSelect: 'none',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = 'var(--accent)';
+                          e.currentTarget.style.color = 'white';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = 'transparent';
+                          e.currentTarget.style.color = 'var(--text-primary)';
+                        }}
+                      >
+                        <Select.ItemText>{t('languages.en')}</Select.ItemText>
+                        <Select.ItemIndicator>
+                          <Check size={14} />
+                        </Select.ItemIndicator>
+                      </Select.Item>
+                    </Select.Viewport>
+                  </Select.Content>
+                </Select.Portal>
+              </Select.Root>
+
+              {/* GitHub Link */}
+              <a
+                href="https://github.com/seunggabi/cron-manager"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn"
+                style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+                title="GitHub Repository"
+              >
+                <Github size={16} />
+                GitHub
+                {starCount !== null && (
+                  <>
+                    <span style={{ opacity: 0.3, margin: '0 4px' }}>|</span>
+                    <Star size={14} style={{ fill: 'currentColor' }} />
+                    {starCount}
+                  </>
+                )}
+              </a>
+            </div>
             <div style={{ fontSize: '11px', opacity: 0.6, marginRight: '8px' }}>
               v{packageJson.version}
             </div>

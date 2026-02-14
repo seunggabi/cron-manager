@@ -19,7 +19,12 @@
     "status": "상태",
     "active": "활성",
     "inactive": "비활성",
-    "latest": "최신"
+    "latest": "최신",
+    "language": "언어"
+  },
+  "languages": {
+    "ko": "한국어",
+    "en": "English"
   },
   "header": {
     "title": "Cron Manager",

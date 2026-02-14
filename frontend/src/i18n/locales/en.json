@@ -19,7 +19,12 @@
     "status": "Status",
     "active": "Active",
     "inactive": "Inactive",
-    "latest": "Latest"
+    "latest": "Latest",
+    "language": "Language"
+  },
+  "languages": {
+    "ko": "한국어",
+    "en": "English"
   },
   "header": {
     "title": "Cron Manager",
