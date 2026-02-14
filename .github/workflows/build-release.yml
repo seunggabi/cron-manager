@@ -65,9 +65,9 @@ jobs:
         shell: bash
         run: |
           if [[ $GITHUB_REF == refs/tags/* ]]; then
-            echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+            echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
           else
-            echo "VERSION=v$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+            echo "VERSION=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
           fi
 
       - name: Upload artifacts (macOS)
