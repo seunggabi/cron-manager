@@ -117,6 +117,31 @@ function App() {
     fetchStars();
   }, []);
 
+  // Keyboard shortcuts for tab switching
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey) {
+        switch (e.key) {
+          case '1':
+            e.preventDefault();
+            setActiveTab('jobs');
+            break;
+          case '2':
+            e.preventDefault();
+            setActiveTab('env');
+            break;
+          case '3':
+            e.preventDefault();
+            setActiveTab('backups');
+            break;
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   const fetchJobs = async () => {
     setLoading(true);
     try {
@@ -415,9 +440,9 @@ function App() {
   }
 
   const tabs = [
-    { id: 'jobs' as TabType, label: '작업 관리', icon: ListChecks },
-    { id: 'env' as TabType, label: '환경변수', icon: Settings },
-    { id: 'backups' as TabType, label: '백업 관리', icon: Database },
+    { id: 'jobs' as TabType, label: '작업 관리', shortcut: '⌘1', icon: ListChecks },
+    { id: 'env' as TabType, label: '환경변수', shortcut: '⌘2', icon: Settings },
+    { id: 'backups' as TabType, label: '백업 관리', shortcut: '⌘3', icon: Database },
   ];
 
   const activeJobsCount = jobs.filter(j => j.enabled).length;
@@ -473,7 +498,7 @@ function App() {
               className={`tab ${activeTab === tab.id ? 'active' : ''}`}
             >
               <Icon />
-              {tab.label}
+              {tab.label} <span style={{ opacity: 0.6, fontSize: '11px', marginLeft: '4px' }}>({tab.shortcut})</span>
             </button>
           );
         })}
@@ -568,7 +593,7 @@ function App() {
               </button>
               <button onClick={handleSync} className="btn">
                 <RefreshCw />
-                동기화
+                동기화 <span style={{ opacity: 0.6, fontSize: '11px' }}>(⌘R)</span>
               </button>
               <button
                 onClick={() => {
@@ -578,7 +603,7 @@ function App() {
                 className="btn btn-primary"
               >
                 <Plus />
-                새 작업
+                새 작업 <span style={{ opacity: 0.6, fontSize: '11px' }}>(⌘N)</span>
               </button>
             </div>
           </div>

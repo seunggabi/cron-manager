@@ -3,6 +3,7 @@ import { join } from 'path';
 import { setupIpcHandlers } from './ipc';
 import { configService } from './services/config.service';
 import { initCrontabService } from './services/crontab.service';
+import { createApplicationMenu } from './menu';
 
 const isDev = process.env.NODE_ENV === 'development';
 
@@ -33,6 +34,9 @@ function createWindow() {
 
   // Setup IPC handlers
   setupIpcHandlers();
+
+  // Create application menu
+  createApplicationMenu(mainWindow);
 
   // Load the app
   if (isDev) {
