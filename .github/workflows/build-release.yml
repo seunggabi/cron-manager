@@ -31,7 +31,7 @@ jobs:
       - name: Build shared package
         run: |
           cd shared
-          npm ci
+          npm install
           npm run build
 
       - name: Build frontend dependencies
