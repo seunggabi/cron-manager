@@ -528,33 +528,6 @@ function App() {
                   >
                     <Select.Viewport>
                       <Select.Item
-                        value="ko"
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          padding: '8px 12px',
-                          fontSize: '13px',
-                          cursor: 'pointer',
-                          borderRadius: '4px',
-                          outline: 'none',
-                          userSelect: 'none',
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.background = 'var(--accent)';
-                          e.currentTarget.style.color = 'white';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.background = 'transparent';
-                          e.currentTarget.style.color = 'var(--text-primary)';
-                        }}
-                      >
-                        <Select.ItemText>{t('languages.ko')}</Select.ItemText>
-                        <Select.ItemIndicator>
-                          <Check size={14} />
-                        </Select.ItemIndicator>
-                      </Select.Item>
-                      <Select.Item
                         value="en"
                         style={{
                           display: 'flex',
@@ -577,6 +550,33 @@ function App() {
                         }}
                       >
                         <Select.ItemText>{t('languages.en')}</Select.ItemText>
+                        <Select.ItemIndicator>
+                          <Check size={14} />
+                        </Select.ItemIndicator>
+                      </Select.Item>
+                      <Select.Item
+                        value="ko"
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '8px 12px',
+                          fontSize: '13px',
+                          cursor: 'pointer',
+                          borderRadius: '4px',
+                          outline: 'none',
+                          userSelect: 'none',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = 'var(--accent)';
+                          e.currentTarget.style.color = 'white';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = 'transparent';
+                          e.currentTarget.style.color = 'var(--text-primary)';
+                        }}
+                      >
+                        <Select.ItemText>{t('languages.ko')}</Select.ItemText>
                         <Select.ItemIndicator>
                           <Check size={14} />
                         </Select.ItemIndicator>

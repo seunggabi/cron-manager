@@ -14,7 +14,7 @@ i18n
   .use(initReactI18next)
   .init({
     resources,
-    fallbackLng: 'ko',
+    fallbackLng: 'en',
     // lng: removed to enable automatic language detection
     debug: false,
     interpolation: {
