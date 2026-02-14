@@ -60,6 +60,28 @@ export function JobForm({ job, onClose, onSubmit }: JobFormProps) {
     });
   };
 
+  // Handle ESC key to close modal and Cmd+S to submit
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      } else if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+        e.preventDefault();
+        const submitButton = document.querySelector('.modal-footer .btn-primary') as HTMLButtonElement;
+        if (submitButton) {
+          submitButton.style.transform = 'scale(0.95)';
+          setTimeout(() => {
+            submitButton.style.transform = '';
+            submitButton.click();
+          }, 100);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
   // Handle Ctrl/Cmd + Enter to submit
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {

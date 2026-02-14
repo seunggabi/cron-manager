@@ -1,5 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { RefreshCw, RotateCcw, Database, FolderOpen, FileText, X, Search, ChevronUp, ChevronDown, Save } from 'lucide-react';
+import { BackupCountdown } from './BackupCountdown';
+import { useResizableColumns } from '../hooks/useResizableColumns';
+import { format } from 'date-fns';
 
 const api = window.electronAPI;
 
@@ -30,6 +33,15 @@ export function BackupManager() {
   const [maxBackups, setMaxBackups] = useState(10);
   const [maxBackupDays, setMaxBackupDays] = useState(7);
   const [configLoading, setConfigLoading] = useState(false);
+
+  // Resizable columns for backup table
+  const { getColumnStyle, ResizeHandle } = useResizableColumns('backups', {
+    timestamp: 200,
+    filename: 350,
+    size: 100,
+    deletion: 80,
+    action: 130,
+  });
 
   const fetchBackups = async () => {
     setLoading(true);
@@ -108,7 +120,7 @@ export function BackupManager() {
     if (!confirm(
       `백업을 복구하시겠습니까?\n\n` +
       `파일: ${backup.filename}\n` +
-      `날짜: ${new Date(backup.timestamp).toLocaleString('ko-KR')}\n\n` +
+      `날짜: ${format(new Date(backup.timestamp), 'yyyy-MM-dd HH:mm:ss')}\n\n` +
       `현재 crontab이 이 백업으로 대체됩니다.`
     )) {
       return;
@@ -151,15 +163,7 @@ export function BackupManager() {
   };
 
   const formatTimestamp = (timestamp: Date): string => {
-    const date = new Date(timestamp);
-    return date.toLocaleString('ko-KR', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-    });
+    return format(new Date(timestamp), 'yyyy-MM-dd HH:mm:ss');
   };
 
   const handleSort = (field: SortField) => {
@@ -169,6 +173,30 @@ export function BackupManager() {
       setSortField(field);
       setSortDirection(field === 'timestamp' ? 'desc' : 'asc');
     }
+  };
+
+  // Calculate deletion time for a backup based on retention policy
+  const getDeletionTime = (backup: Backup, index: number): Date | null => {
+    // First maxBackups are always kept
+    if (index < maxBackups) {
+      return null;
+    }
+
+    // For backups beyond maxBackups, calculate deletion time
+    const createdAt = new Date(backup.timestamp).getTime();
+    const deletionTime = new Date(createdAt + maxBackupDays * 24 * 60 * 60 * 1000);
+    return deletionTime;
+  };
+
+  // Check if deletion is within 24 hours
+  const isScheduledForDeletion = (deletionTime: Date | null): boolean => {
+    if (!deletionTime) return false;
+
+    const now = new Date().getTime();
+    const target = deletionTime.getTime();
+    const diff = target - now;
+
+    return diff > 0 && diff <= 24 * 60 * 60 * 1000; // Within 24 hours
   };
 
   const filteredAndSortedBackups = useMemo(() => {
@@ -232,7 +260,7 @@ export function BackupManager() {
             ) : (
               <>
                 <Save size={16} />
-                저장
+                저장 <span style={{ opacity: 0.6, fontSize: '11px' }}>(⌘S)</span>
               </>
             )}
           </button>
@@ -327,99 +355,124 @@ export function BackupManager() {
             <table className="backup-table">
               <thead>
                 <tr>
-                  <th onClick={() => handleSort('timestamp')} style={{ cursor: 'pointer' }}>
+                  <th onClick={() => handleSort('timestamp')} style={{ ...getColumnStyle('timestamp'), cursor: 'pointer' }}>
                     백업 시각
                     {sortField === 'timestamp' && (
                       <span className="sort-icon">
                         {sortDirection === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                       </span>
                     )}
+                    <ResizeHandle columnName="timestamp" />
                   </th>
-                  <th onClick={() => handleSort('filename')} style={{ cursor: 'pointer' }}>
+                  <th onClick={() => handleSort('filename')} style={{ ...getColumnStyle('filename'), cursor: 'pointer' }}>
                     파일명
                     {sortField === 'filename' && (
                       <span className="sort-icon">
                         {sortDirection === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                       </span>
                     )}
+                    <ResizeHandle columnName="filename" />
                   </th>
-                  <th onClick={() => handleSort('size')} style={{ cursor: 'pointer' }}>
+                  <th onClick={() => handleSort('size')} style={{ ...getColumnStyle('size'), cursor: 'pointer' }}>
                     크기
                     {sortField === 'size' && (
                       <span className="sort-icon">
                         {sortDirection === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                       </span>
                     )}
+                    <ResizeHandle columnName="size" />
                   </th>
-                  <th>액션</th>
+                  <th style={{ ...getColumnStyle('deletion'), textAlign: 'center' }}>
+                    삭제 예정
+                    <ResizeHandle columnName="deletion" />
+                  </th>
+                  <th style={getColumnStyle('action')}>
+                    액션
+                    <ResizeHandle columnName="action" />
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                {filteredAndSortedBackups.map((backup, index) => (
-                  <tr key={backup.path}>
-                    <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        {index === 0 && (
-                          <span className="badge badge-active" style={{ fontSize: '10px' }}>최신</span>
-                        )}
-                        <span className="job-name" style={{ fontSize: '13px' }}>
-                          {formatTimestamp(backup.timestamp)}
-                        </span>
-                      </div>
-                    </td>
-                    <td>
-                      <code className="mono" style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                        {backup.filename}
-                      </code>
-                    </td>
-                    <td>
-                      <code className="schedule-code" style={{ fontSize: '11px' }}>
-                        {formatFileSize(backup.size)}
-                      </code>
-                    </td>
-                    <td>
-                      <div className="actions">
-                        <button
-                          onClick={() => handleOpenBackup(backup.path)}
-                          className="btn"
-                          style={{ padding: '6px 12px', fontSize: '12px' }}
-                          title="백업 파일 열기"
-                        >
-                          <FolderOpen size={14} />
-                          열기
-                        </button>
-                        <button
-                          onClick={() => handleRestore(backup)}
-                          disabled={restoring !== null}
-                          className="btn btn-primary"
-                          style={{ padding: '6px 12px', fontSize: '12px' }}
-                          title="이 백업으로 복구"
-                        >
-                          {restoring === backup.path ? (
-                            <>
-                              <RefreshCw size={14} style={{ animation: 'spin 1s linear infinite' }} />
-                              복구 중...
-                            </>
-                          ) : (
-                            <>
-                              <RotateCcw size={14} />
-                              복구
-                            </>
+                {filteredAndSortedBackups.map((backup, index) => {
+                  const deletionTime = getDeletionTime(backup, index);
+                  const isScheduled = deletionTime && isScheduledForDeletion(deletionTime);
+
+                  return (
+                    <tr
+                      key={backup.path}
+                      style={isScheduled ? { background: '#fef2f2' } : undefined}
+                    >
+                      <td>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          {index === 0 && (
+                            <span className="badge badge-active" style={{ fontSize: '10px' }}>최신</span>
                           )}
-                        </button>
-                        <button
-                          onClick={() => handleDiff(backup)}
-                          className="btn"
-                          style={{ padding: '6px 12px', fontSize: '12px' }}
-                          title="현재 crontab과 비교"
-                        >
-                          <FileText size={14} />
-                          비교
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                          <span className="job-name" style={{ fontSize: '13px' }}>
+                            {formatTimestamp(backup.timestamp)}
+                          </span>
+                        </div>
+                      </td>
+                      <td>
+                        <code className="mono" style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                          {backup.filename}
+                        </code>
+                      </td>
+                      <td>
+                        <code className="schedule-code" style={{ fontSize: '11px' }}>
+                          {formatFileSize(backup.size)}
+                        </code>
+                      </td>
+                      <td>
+                        {isScheduled && deletionTime ? (
+                          <BackupCountdown deletionTime={deletionTime} />
+                        ) : (
+                          <span style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>-</span>
+                        )}
+                      </td>
+                      <td>
+                        <div className="actions">
+                          <button
+                            onClick={() => handleOpenBackup(backup.path)}
+                            className="btn"
+                            style={{ padding: '6px 12px', fontSize: '12px' }}
+                            title="백업 파일 열기"
+                          >
+                            <FolderOpen size={14} />
+                            열기
+                          </button>
+                          <button
+                            onClick={() => handleRestore(backup)}
+                            disabled={restoring !== null}
+                            className="btn btn-primary"
+                            style={{ padding: '6px 12px', fontSize: '12px' }}
+                            title="이 백업으로 복구"
+                          >
+                            {restoring === backup.path ? (
+                              <>
+                                <RefreshCw size={14} style={{ animation: 'spin 1s linear infinite' }} />
+                                복구 중...
+                              </>
+                            ) : (
+                              <>
+                                <RotateCcw size={14} />
+                                복구
+                              </>
+                            )}
+                          </button>
+                          <button
+                            onClick={() => handleDiff(backup)}
+                            className="btn"
+                            style={{ padding: '6px 12px', fontSize: '12px' }}
+                            title="현재 crontab과 비교"
+                          >
+                            <FileText size={14} />
+                            비교
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
