@@ -186,8 +186,3 @@ export interface PaginationParams {
 export interface GlobalEnv {
   [key: string]: string;
 }
-
-// Global environment variables for crontab
-export interface GlobalEnv {
-  [key: string]: string;
-}

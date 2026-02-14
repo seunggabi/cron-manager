@@ -8,6 +8,7 @@
   "private": true,
   "scripts": {
     "dev": "tsx scripts/dev-runner.ts",
+    "restart": "bash scripts/restart.sh",
     "build": "tsc && vite build && electron-builder",
     "build:dev": "tsc && vite build",
     "preview": "vite preview",
@@ -76,16 +77,25 @@
       "dist-electron"
     ],
     "mac": {
-      "target": ["dmg", "zip"],
+      "target": [
+        "dmg",
+        "zip"
+      ],
       "category": "public.app-category.developer-tools",
       "icon": "build/icon.icns"
     },
     "win": {
-      "target": ["nsis", "zip"],
+      "target": [
+        "nsis",
+        "zip"
+      ],
       "icon": "build/icon.ico"
     },
     "linux": {
-      "target": ["AppImage", "deb"],
+      "target": [
+        "AppImage",
+        "deb"
+      ],
       "category": "Development",
       "icon": "build/icon.png"
     }

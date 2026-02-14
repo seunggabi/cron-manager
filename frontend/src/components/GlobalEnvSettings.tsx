@@ -1,12 +1,15 @@
-import { useState, useEffect } from 'react';
-import { Plus, Trash2, RefreshCw, Edit, X, Check } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { Plus, Trash2, RefreshCw, Edit, X, Check, Search, ChevronUp, ChevronDown } from 'lucide-react';
 
-const api = (window as any).electronAPI;
+const api = window.electronAPI;
 
 interface EnvVar {
   key: string;
   value: string;
 }
+
+type SortField = 'key' | 'value';
+type SortDirection = 'asc' | 'desc';
 
 export function GlobalEnvSettings() {
   const [envVars, setEnvVars] = useState<EnvVar[]>([]);
@@ -15,28 +18,26 @@ export function GlobalEnvSettings() {
   const [newValue, setNewValue] = useState('');
   const [editingKey, setEditingKey] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortField, setSortField] = useState<SortField>('key');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
   const fetchGlobalEnv = async () => {
     setLoading(true);
     try {
       const response = await api.env.getGlobal();
-      console.log('Global env response:', response);
 
       if (response.success && response.data) {
-        console.log('Global env data:', response.data);
         const vars = Object.entries(response.data).map(([key, value]) => ({
           key,
           value: value as string,
         }));
-        console.log('Parsed env vars:', vars);
         setEnvVars(vars);
       } else {
-        console.error('Failed to get global env:', response.error);
-        alert(response.error || '전역 환경변수를 불러오는데 실패했습니다');
+        alert(response.error || '환경변수를 불러오는데 실패했습니다');
       }
     } catch (error) {
-      console.error('Failed to fetch global env:', error);
-      alert('전역 환경변수를 불러오는데 실패했습니다');
+      alert('환경변수를 불러오는데 실패했습니다');
     } finally {
       setLoading(false);
     }
@@ -62,7 +63,6 @@ export function GlobalEnvSettings() {
         alert(response.error || '환경변수 추가에 실패했습니다');
       }
     } catch (error) {
-      console.error('Failed to add env var:', error);
       alert('환경변수 추가에 실패했습니다');
     }
   };
@@ -78,7 +78,6 @@ export function GlobalEnvSettings() {
         alert(response.error || '환경변수 수정에 실패했습니다');
       }
     } catch (error) {
-      console.error('Failed to update env var:', error);
       alert('환경변수 수정에 실패했습니다');
     }
   };
@@ -94,16 +93,13 @@ export function GlobalEnvSettings() {
         alert(response.error || '환경변수 삭제에 실패했습니다');
       }
     } catch (error) {
-      console.error('Failed to delete env var:', error);
       alert('환경변수 삭제에 실패했습니다');
     }
   };
 
   const startEdit = (key: string, value: string) => {
-    console.log('[startEdit] key:', key, 'value:', value);
     setEditingKey(key);
     setEditValue(value);
-    console.log('[startEdit] editingKey set to:', key);
   };
 
   const cancelEdit = () => {
@@ -111,150 +107,210 @@ export function GlobalEnvSettings() {
     setEditValue('');
   };
 
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const filteredAndSortedEnvVars = useMemo(() => {
+    let filtered = envVars;
+
+    // Filter by search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = envVars.filter(
+        (envVar) =>
+          envVar.key.toLowerCase().includes(query) ||
+          envVar.value.toLowerCase().includes(query)
+      );
+    }
+
+    // Sort
+    const sorted = [...filtered].sort((a, b) => {
+      const aValue = a[sortField].toLowerCase();
+      const bValue = b[sortField].toLowerCase();
+      const comparison = aValue.localeCompare(bValue);
+      return sortDirection === 'asc' ? comparison : -comparison;
+    });
+
+    return sorted;
+  }, [envVars, searchQuery, sortField, sortDirection]);
+
   if (loading && envVars.length === 0) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="text-lg text-gray-600">로딩 중...</div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '60px 0' }}>
+        <div style={{ fontSize: '15px', color: 'var(--text-secondary)' }}>로딩 중...</div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">전역 환경변수</h2>
-          <p className="text-sm text-gray-600 mt-1">
-            모든 Cron 작업에 적용되는 환경변수를 관리합니다
-          </p>
-        </div>
-        <button
-          onClick={fetchGlobalEnv}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2 transition-colors"
-        >
-          <RefreshCw className="w-4 h-4" />
-          새로고침
-        </button>
-      </div>
-
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
       {/* Add New Variable */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">새 환경변수 추가</h3>
-        <div className="flex gap-3">
+      <div className="table-card" style={{ padding: '24px' }}>
+        <h3 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '16px', color: 'var(--text-primary)' }}>
+          새 환경변수 추가
+        </h3>
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
           <input
             type="text"
             value={newKey}
             onChange={(e) => setNewKey(e.target.value)}
             placeholder="KEY"
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono"
-            onKeyPress={(e) => e.key === 'Enter' && handleAdd()}
+            className="mono"
+            style={{ flex: 1 }}
+            onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
           />
           <input
             type="text"
             value={newValue}
             onChange={(e) => setNewValue(e.target.value)}
             placeholder="VALUE"
-            className="flex-[2] px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono"
-            onKeyPress={(e) => e.key === 'Enter' && handleAdd()}
+            className="mono"
+            style={{ flex: 2 }}
+            onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
           />
-          <button
-            onClick={handleAdd}
-            className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2 transition-colors"
-          >
-            <Plus className="w-4 h-4" />
+          <button onClick={handleAdd} className="btn btn-primary">
+            <Plus />
             추가
           </button>
         </div>
       </div>
 
+      {/* Search */}
+      {envVars.length > 0 && (
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <div style={{ position: 'relative', flex: 1 }}>
+            <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)' }} />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="검색 (Key, Value)"
+              style={{
+                width: '100%',
+                paddingLeft: '40px',
+                fontSize: '13px',
+              }}
+            />
+          </div>
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="btn"
+              title="검색 초기화"
+            >
+              <X size={16} />
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Environment Variables List */}
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+      <div className="table-card">
         {envVars.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-gray-500">등록된 전역 환경변수가 없습니다</p>
+          <div className="empty">
+            <div className="empty-icon">🔧</div>
+            <div className="empty-text">등록된 환경변수가 없습니다</div>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
+          <div className="table-wrap">
+            <table className="env-table">
+              <thead>
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  <th>액션</th>
+                  <th onClick={() => handleSort('key')} style={{ cursor: 'pointer' }}>
                     Key
+                    {sortField === 'key' && (
+                      <span className="sort-icon">
+                        {sortDirection === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                      </span>
+                    )}
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  <th onClick={() => handleSort('value')} style={{ cursor: 'pointer' }}>
                     Value
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    액션
+                    {sortField === 'value' && (
+                      <span className="sort-icon">
+                        {sortDirection === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                      </span>
+                    )}
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
-                {envVars.map((envVar) => (
-                  <tr key={envVar.key} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <code className="px-3 py-1 bg-blue-50 text-blue-700 rounded text-sm font-mono font-semibold">
-                        {envVar.key}
-                      </code>
-                    </td>
-                    <td className="px-6 py-4">
-                      {editingKey === envVar.key ? (
-                        <input
-                          type="text"
-                          value={editValue}
-                          onChange={(e) => setEditValue(e.target.value)}
-                          className="w-full px-3 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
-                          autoFocus
-                          onKeyPress={(e) => {
-                            if (e.key === 'Enter') handleUpdate(envVar.key);
-                            if (e.key === 'Escape') cancelEdit();
-                          }}
-                        />
-                      ) : (
-                        <code className="text-sm font-mono text-gray-700">
-                          {envVar.value}
-                        </code>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right">
-                      <div className="flex items-center justify-end gap-2">
+              <tbody>
+                {filteredAndSortedEnvVars.map((envVar) => (
+                  <tr key={envVar.key}>
+                    <td>
+                      <div className="actions">
                         {editingKey === envVar.key ? (
                           <>
                             <button
                               onClick={() => handleUpdate(envVar.key)}
-                              className="p-2 text-green-600 hover:text-green-700 hover:bg-green-50 rounded transition-colors"
+                              className="icon-btn play"
                               title="저장"
+                              data-tooltip="저장"
                             >
-                              <Check className="w-4 h-4" />
+                              <Check />
                             </button>
                             <button
                               onClick={cancelEdit}
-                              className="p-2 text-gray-600 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"
+                              className="icon-btn"
                               title="취소"
+                              data-tooltip="취소"
                             >
-                              <X className="w-4 h-4" />
+                              <X />
                             </button>
                           </>
                         ) : (
                           <>
                             <button
                               onClick={() => startEdit(envVar.key, envVar.value)}
-                              className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded transition-colors"
+                              className="icon-btn edit"
                               title="수정"
+                              data-tooltip="수정"
                             >
-                              <Edit className="w-4 h-4" />
+                              <Edit />
                             </button>
                             <button
                               onClick={() => handleDelete(envVar.key)}
-                              className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
+                              className="icon-btn delete"
                               title="삭제"
+                              data-tooltip="삭제"
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <Trash2 />
                             </button>
                           </>
                         )}
                       </div>
+                    </td>
+                    <td>
+                      <code className="schedule-code" style={{ background: 'var(--accent-light)', color: 'var(--accent)', borderColor: 'var(--accent)' }}>
+                        {envVar.key}
+                      </code>
+                    </td>
+                    <td>
+                      {editingKey === envVar.key ? (
+                        <input
+                          type="text"
+                          value={editValue}
+                          onChange={(e) => setEditValue(e.target.value)}
+                          className="mono"
+                          style={{ width: '100%' }}
+                          autoFocus
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleUpdate(envVar.key);
+                            if (e.key === 'Escape') cancelEdit();
+                          }}
+                        />
+                      ) : (
+                        <code className="mono" style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                          {envVar.value}
+                        </code>
+                      )}
                     </td>
                   </tr>
                 ))}

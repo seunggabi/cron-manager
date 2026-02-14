@@ -16,7 +16,7 @@ function createWindow() {
       preload: join(__dirname, '../preload/index.js'),
       nodeIntegration: false,
       contextIsolation: true,
-      sandbox: false,
+      sandbox: true,
     },
     title: 'Cron Manager',
     titleBarStyle: 'default',
@@ -29,7 +29,6 @@ function createWindow() {
   // Load the app
   if (isDev) {
     mainWindow.loadURL('http://localhost:5173');
-    mainWindow.webContents.openDevTools();
   } else {
     mainWindow.loadFile(join(__dirname, '../../dist/index.html'));
   }

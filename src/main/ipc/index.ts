@@ -27,6 +27,19 @@ export function setupIpcHandlers() {
 
   ipcMain.handle('jobs:create', async (_, data: CreateJobRequest) => {
     try {
+      // Validate required fields
+      if (!data.command || !data.schedule) {
+        return { success: false, error: 'Command and schedule are required' };
+      }
+      // Validate name length
+      if (data.name && data.name.length > 200) {
+        return { success: false, error: 'Name too long' };
+      }
+      // Validate workingDir is a valid path
+      if (data.workingDir && !path.isAbsolute(data.workingDir)) {
+        return { success: false, error: 'Working directory must be absolute path' };
+      }
+
       // Validate schedule
       const validation = scheduleService.validateSchedule(data.schedule);
       if (!validation.valid) {
@@ -57,6 +70,15 @@ export function setupIpcHandlers() {
 
   ipcMain.handle('jobs:update', async (_, id: string, updates: UpdateJobRequest) => {
     try {
+      // Validate name length
+      if (updates.name && updates.name.length > 200) {
+        return { success: false, error: 'Name too long' };
+      }
+      // Validate workingDir is a valid path
+      if (updates.workingDir && !path.isAbsolute(updates.workingDir)) {
+        return { success: false, error: 'Working directory must be absolute path' };
+      }
+
       // Validate schedule if provided
       if (updates.schedule) {
         const validation = scheduleService.validateSchedule(updates.schedule);
@@ -219,8 +241,8 @@ export function setupIpcHandlers() {
 
       if (fileExists) {
         // Open Terminal and run tail -f on the log file
-        const escapedPath = expandedPath.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
-        await execAsync(`osascript -e "tell application \\"Terminal\\" to do script \\"tail -f '${escapedPath}'\\""`);
+        const safePath = expandedPath.replace(/'/g, "'\\''");
+        await execAsync(`osascript -e "tell application \\"Terminal\\" to do script \\"tail -f '${safePath}'\\""`);
       } else {
         // If file doesn't exist, open the directory
         const logDir = path.dirname(expandedPath);
@@ -230,8 +252,42 @@ export function setupIpcHandlers() {
           return { success: false, error: `Directory does not exist: ${logDir}` };
         }
 
-        await execAsync(`open "${logDir}"`);
+        await shell.openPath(logDir);
       }
+
+      return { success: true };
+    } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  });
+
+  // Create log file handler
+  ipcMain.handle('logs:create', async (_, logPath: string) => {
+    try {
+      if (!logPath) {
+        return { success: false, error: 'Log path is required' };
+      }
+
+      // Validate log path
+      const expandedLogPath = logPath.startsWith('~') ? logPath.replace('~', os.homedir()) : logPath;
+      if (!path.isAbsolute(expandedLogPath) || expandedLogPath.startsWith('/System') || expandedLogPath.startsWith('/etc')) {
+        return { success: false, error: 'Invalid log path' };
+      }
+
+      const fs = await import('fs-extra');
+
+      // Expand ~ to home directory
+      let expandedPath = logPath;
+      if (logPath.startsWith('~')) {
+        expandedPath = logPath.replace('~', os.homedir());
+      }
+
+      // Ensure directory exists
+      const logDir = path.dirname(expandedPath);
+      await fs.ensureDir(logDir);
+
+      // Create empty log file
+      await fs.writeFile(expandedPath, '');
 
       return { success: true };
     } catch (error: any) {
@@ -246,15 +302,19 @@ export function setupIpcHandlers() {
         return { success: false, error: 'File path is required' };
       }
 
+      // Validate file path
+      if (!path.isAbsolute(filePath) && !filePath.startsWith('~')) {
+        return { success: false, error: 'File path must be absolute' };
+      }
+
       // Get directory from file path
-      const fileDir = path.dirname(filePath);
+      let expandedFilePath = filePath;
+      if (filePath.startsWith('~')) {
+        expandedFilePath = filePath.replace('~', os.homedir());
+      }
+      const fileDir = path.dirname(expandedFilePath);
 
-      // Use macOS 'open' command for reliability
-      const { exec } = await import('child_process');
-      const { promisify } = await import('util');
-      const execAsync = promisify(exec);
-
-      await execAsync(`open "${fileDir}"`);
+      await shell.openPath(fileDir);
 
       return { success: true };
     } catch (error: any) {
@@ -274,8 +334,24 @@ export function setupIpcHandlers() {
 
   ipcMain.handle('backups:restore', async (_, backupPath: string) => {
     try {
+      // Validate backup path is within the expected backup directory
+      const backupDir = path.join(os.homedir(), '.cron-manager', 'backups');
+      const resolvedPath = path.resolve(backupPath);
+      if (!resolvedPath.startsWith(backupDir)) {
+        return { success: false, error: 'Invalid backup path' };
+      }
+
       await crontabService.restoreBackup(backupPath);
       return { success: true };
+    } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  });
+
+  ipcMain.handle('backups:diff', async (_, backupPath: string) => {
+    try {
+      const result = await crontabService.diffWithBackup(backupPath);
+      return { success: true, data: result };
     } catch (error: any) {
       return { success: false, error: error.message };
     }
@@ -302,6 +378,15 @@ export function setupIpcHandlers() {
 
   ipcMain.handle('env:updateGlobalVar', async (_, key: string, value: string) => {
     try {
+      // Validate key format
+      if (!/^[A-Z_][A-Z0-9_]*$/i.test(key)) {
+        return { success: false, error: 'Invalid environment variable name' };
+      }
+      // Validate value has no newlines
+      if (value.includes('\n')) {
+        return { success: false, error: 'Value cannot contain newlines' };
+      }
+
       const env = await crontabService.updateGlobalEnvVar(key, value);
       return { success: true, data: env };
     } catch (error: any) {

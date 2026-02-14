@@ -41,6 +41,7 @@ export default defineConfig({
     renderer(),
   ],
   root: 'frontend',
+  base: './',
   build: {
     outDir: '../dist',
     emptyOutDir: true,

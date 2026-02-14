@@ -181,3 +181,8 @@ export interface PaginationParams {
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
 }
+
+// Global environment variables for crontab
+export interface GlobalEnv {
+  [key: string]: string;
+}

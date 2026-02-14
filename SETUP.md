@@ -5,7 +5,7 @@
 ### 1. Install Dependencies
 
 ```bash
-cd /Users/seunggabi/seunggabi/project/n8n/cron-manager
+cd ~/seunggabi/project/n8n/cron-manager
 npm install
 ```
 
