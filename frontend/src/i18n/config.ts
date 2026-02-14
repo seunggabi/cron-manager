@@ -15,7 +15,7 @@ i18n
   .init({
     resources,
     fallbackLng: 'ko',
-    lng: 'ko',
+    // lng: removed to enable automatic language detection
     debug: false,
     interpolation: {
       escapeValue: false,
