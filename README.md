@@ -1,20 +1,68 @@
 # Cron Manager - Electron Desktop App
 
-A modern GUI-based crontab manager built with Electron, React, and TypeScript.
+A modern, feature-rich GUI-based crontab manager built with Electron, React, and TypeScript. Manage your cron jobs with ease through an intuitive interface with real-time synchronization, backup management, and advanced features.
 
-## Features
+## ✨ Features
 
-- 📝 Visual cron job management
-- 🔄 Real-time crontab synchronization
-- ⏰ Schedule validation and preview
-- 🧪 Test jobs (1-minute test execution with auto-cleanup)
-- 📊 Cron expression presets
-- 🌍 Environment variable support
-- 📁 Working directory configuration
-- 📋 Log file management
-- 🏷️ Job tagging and organization
+### 📝 Job Management
+- **Visual cron job management** - Create, edit, and delete cron jobs through an intuitive UI
+- **Real-time crontab synchronization** - Automatically sync with system crontab
+- **Job reordering** - Drag and drop to reorganize jobs
+- **Enable/disable jobs** - Toggle jobs without deleting them
+- **Instant execution** - Run jobs immediately for testing
+- **Test mode** - 1-minute test execution with auto-cleanup
+- **Next run preview** - See when jobs will execute next
 
-## Architecture
+### ⏰ Schedule Management
+- **Schedule validation** - Real-time cron expression validation
+- **Visual schedule builder** - Predefined schedule presets
+- **Next runs preview** - See upcoming execution times (up to 5)
+- **Human-readable format** - Understand schedules at a glance
+- **Cron expression presets** - Common schedules (hourly, daily, weekly, monthly, etc.)
+
+### 🌍 Environment Variables
+- **Global environment variables** - Set variables for all jobs
+- **Per-job environment variables** - Job-specific environment configuration
+- **Variable validation** - Ensure valid environment variable names
+- **Search and filter** - Find variables quickly
+- **Sort and organize** - Sort by key or value
+
+### 💾 Backup & Restore
+- **Automatic backups** - Crontab backed up on every change
+- **Manual backup creation** - Create backups on demand
+- **Backup retention** - Configurable retention policy (max files and days)
+- **Restore functionality** - Restore from any backup point
+- **Diff viewer** - Compare current crontab with backups
+- **Search backups** - Find specific backups quickly
+- **Countdown timer** - See when backups will be auto-deleted
+
+### 📁 Advanced Features
+- **Working directory configuration** - Set execution context per job
+- **Log file management** - Configure and view log files
+- **Real-time log viewer** - Open logs in Terminal with `tail -f`
+- **Log directory creation** - Automatically create log directories
+- **Script folder access** - Quick access to script locations
+- **Job tagging** - Organize jobs with tags
+- **Job descriptions** - Add notes and documentation
+- **Resizable columns** - Customize table column widths
+
+### ⌨️ Keyboard Shortcuts
+- **Cmd/Ctrl+N** - Create new job
+- **Cmd/Ctrl+R** - Sync with crontab
+- **Cmd/Ctrl+F** - Search/filter
+- **Cmd/Ctrl+1** - Switch to Jobs tab
+- **Cmd/Ctrl+2** - Switch to Environment Variables tab
+- **Cmd/Ctrl+3** - Switch to Backup Management tab
+
+### 🎨 UI/UX
+- **Modern interface** - Clean, intuitive design with Radix UI
+- **Dark mode support** - Comfortable viewing in any lighting
+- **Responsive tables** - Resizable and sortable columns
+- **Search and filter** - Find jobs, variables, and backups quickly
+- **GitHub integration** - View repository stars in-app
+- **Application menu** - Full macOS/Windows menu support
+
+## 🏗️ Architecture
 
 ### Electron Structure
 
@@ -23,24 +71,35 @@ cron-manager/
 ├── src/
 │   ├── main/              # Main Process (Node.js)
 │   │   ├── index.ts       # Electron main entry
+│   │   ├── menu.ts        # Application menu & shortcuts
 │   │   ├── ipc/           # IPC handlers
 │   │   │   └── index.ts
 │   │   └── services/      # Business logic
 │   │       ├── crontab.service.ts
-│   │       └── schedule.service.ts
+│   │       ├── schedule.service.ts
+│   │       └── config.service.ts
 │   ├── preload/           # Preload scripts (Context Bridge)
 │   │   ├── index.ts
 │   │   └── types.d.ts
-│   └── shared/            # Shared types
+│   └── shared/            # Shared types (workspace package)
 │       └── types/
 │           └── index.ts
 ├── frontend/              # Renderer Process (React)
 │   └── src/
 │       ├── App.tsx
+│       ├── components/
+│       │   ├── JobForm.tsx
+│       │   ├── GlobalEnvSettings.tsx
+│       │   ├── BackupManager.tsx
+│       │   ├── BackupCountdown.tsx
+│       │   ├── AlertDialog.tsx
+│       │   └── NextRunCell.tsx
+│       ├── hooks/
+│       │   └── useResizableColumns.tsx
 │       ├── lib/
 │       │   └── api.ts     # IPC communication layer
-│       └── store/
-│           └── jobStore.ts
+│       └── utils/
+│           └── logFileExtractor.ts
 ├── dist/                  # Built renderer (production)
 ├── dist-electron/         # Built main & preload (production)
 └── release/               # Packaged applications
@@ -49,28 +108,51 @@ cron-manager/
 ### IPC Channels
 
 #### Jobs
-- `jobs:getAll` - Get all cron jobs
-- `jobs:create` - Create a new job
+- `jobs:getAll` - Get all cron jobs with next run times
+- `jobs:create` - Create a new job with validation
 - `jobs:update` - Update existing job
 - `jobs:delete` - Delete a job
 - `jobs:toggle` - Enable/disable a job
 - `jobs:run` - Run job immediately (test mode)
 - `jobs:sync` - Sync with current crontab
-- `jobs:testIn1Minute` - Create test job that auto-deletes
+- `jobs:testIn1Minute` - Create test job that auto-deletes after 2 minutes
+- `jobs:reorder` - Reorder jobs by ID array
 
 #### Schedule
 - `schedule:parse` - Validate and parse cron expression
 - `schedule:getPresets` - Get predefined schedule presets
 
 #### Logs
-- `logs:open` - Open log directory in file explorer
+- `logs:open` - Open log file in Terminal with tail -f
+- `logs:checkDir` - Check if log directory exists
+- `logs:createDir` - Create log directory
+- `logs:create` - Create empty log file
 
-## Development
+#### Files
+- `files:open` - Open executable file directory in Finder/Explorer
+
+#### Backups
+- `backups:list` - List all available backups
+- `backups:restore` - Restore crontab from backup
+- `backups:diff` - Get diff between current crontab and backup
+
+#### Environment Variables
+- `env:getGlobal` - Get all global environment variables
+- `env:setGlobal` - Set global environment variables
+- `env:updateGlobalVar` - Update or create a global variable
+- `env:deleteGlobalVar` - Delete a global variable
+
+#### Configuration
+- `config:getBackupConfig` - Get backup retention settings
+- `config:updateBackupConfig` - Update backup retention (max files, max days)
+
+## 🚀 Development
 
 ### Prerequisites
 
 - Node.js >= 18.0.0
 - npm or yarn
+- macOS, Windows, or Linux
 
 ### Installation
 
@@ -91,6 +173,14 @@ This will:
 2. Compile TypeScript (main process)
 3. Launch Electron with DevTools
 
+### Restart During Development
+
+Quick restart during development:
+
+```bash
+npm run restart
+```
+
 ### Build for Production
 
 Build the renderer and main process:
@@ -101,29 +191,31 @@ npm run build:dev
 
 ### Package Application
 
-Package for current platform:
+Package for current platform (no installer):
 
 ```bash
 npm run package
 ```
 
-Build distributables:
+Build distributables with installers:
 
 ```bash
-# macOS
+# macOS (.dmg, .zip)
 npm run electron:build:mac
 
-# Windows
+# Windows (NSIS installer, .zip)
 npm run electron:build:win
 
-# Linux
+# Linux (AppImage, .deb)
 npm run electron:build:linux
 
 # All platforms
 npm run electron:build
 ```
 
-## Project Migration
+Built packages are output to `release/{version}/`
+
+## 📦 Project Migration
 
 This project was migrated from a client-server architecture to Electron:
 
@@ -131,68 +223,112 @@ This project was migrated from a client-server architecture to Electron:
 - **Frontend**: React app (Vite) - HTTP client
 - **Backend**: Express server - REST API
 - **Communication**: Axios HTTP requests
+- **Deployment**: Separate frontend/backend processes
 
 ### After (Electron)
 - **Main Process**: Backend logic via IPC
 - **Renderer Process**: React UI
 - **Communication**: IPC (Inter-Process Communication)
+- **Deployment**: Single packaged application
 
 ### Key Changes
 
-1. **Removed**: Express, Axios, CORS
-2. **Added**: Electron, IPC handlers, Context Bridge
+1. **Removed**: Express, Axios, CORS, HTTP server
+2. **Added**: Electron, IPC handlers, Context Bridge, Application Menu
 3. **Modified**: API client (`frontend/src/lib/api.ts`) - now uses `window.electronAPI`
 4. **Reused**: All business logic from `backend/src/services/`
 5. **Reused**: All React components from `frontend/src/`
+6. **Added**: Backup management, global environment variables, keyboard shortcuts
 
-## Scripts
+## 📋 Scripts
 
 | Command | Description |
 |---------|-------------|
-| `npm run dev` | Start development mode |
-| `npm run build` | Build and package application |
-| `npm run build:dev` | Build without packaging |
+| `npm run dev` | Start development mode with hot-reload |
+| `npm run restart` | Quick restart during development |
+| `npm run build` | Build and package application with installer |
+| `npm run build:dev` | Build without packaging (dist only) |
 | `npm run package` | Package app (no installer) |
 | `npm run electron:build` | Build installers for all platforms |
-| `npm run electron:build:mac` | Build macOS DMG |
-| `npm run electron:build:win` | Build Windows installer |
-| `npm run electron:build:linux` | Build Linux packages |
+| `npm run electron:build:mac` | Build macOS DMG and zip |
+| `npm run electron:build:win` | Build Windows NSIS installer and zip |
+| `npm run electron:build:linux` | Build Linux AppImage and deb |
 | `npm run lint` | Run ESLint |
 | `npm run type-check` | TypeScript type checking |
 
-## Configuration
+## ⚙️ Configuration
 
 ### electron-builder.json
 
-Customize build settings:
+Application build settings are in `package.json` under the `"build"` key:
+
+```json
+{
+  "appId": "com.seunggabi.cron-manager",
+  "productName": "Cron Manager",
+  "directories": {
+    "output": "release/${version}"
+  },
+  "files": ["dist", "dist-electron"],
+  "mac": {
+    "target": ["dmg", "zip"],
+    "category": "public.app-category.developer-tools",
+    "icon": "build/icon.icns"
+  },
+  "win": {
+    "target": ["nsis", "zip"],
+    "icon": "build/icon.ico"
+  },
+  "linux": {
+    "target": ["AppImage", "deb"],
+    "category": "Development",
+    "icon": "build/icon.png"
+  }
+}
+```
+
+Customize:
 - App ID, name, version
-- Icon paths (build/icon.{icns,ico,png})
+- Icon paths (`build/icon.{icns,ico,png}`)
 - Target platforms and formats
 - Installer options
 
 ### vite.config.ts
 
-Configure Vite build:
+Vite build configuration:
 - Electron plugin settings
 - Renderer build output
-- Dev server port
+- Dev server port (5173)
 - Path aliases
+- TypeScript integration
 
-## Security
+### Backup Configuration
+
+Backup retention is configurable via the Backup Management tab:
+- **Max Backup Files**: Maximum number of backup files to keep (default: 10)
+- **Max Backup Days**: Maximum age of backup files in days (default: 7)
+
+Backups are stored in `~/.cron-manager/backups/`
+
+## 🔒 Security
 
 This app follows Electron security best practices:
 
-- ✅ Context Isolation enabled
-- ✅ Node Integration disabled in renderer
-- ✅ Preload script with contextBridge
-- ✅ Sandbox mode (can be toggled)
-- ✅ External links open in browser
+- ✅ **Context Isolation** enabled
+- ✅ **Node Integration** disabled in renderer
+- ✅ **Preload script** with contextBridge
+- ✅ **Sandbox mode** (can be toggled)
+- ✅ **External links** open in default browser
+- ✅ **Path validation** for file operations
+- ✅ **Input validation** for all IPC handlers
+- ✅ **Environment variable** name validation
+- ✅ **Backup path** validation
 
-## Testing
+## 🧪 Testing
 
 ### Test Job Feature
 
-The app includes a "Test in 1 Minute" feature:
+The app includes a "Test in 1 Minute" feature for quick job testing:
 
 ```typescript
 await window.electronAPI.jobs.testIn1Minute('echo "Hello World"', {
@@ -206,12 +342,22 @@ This will:
 2. Execute the command at the scheduled time
 3. Auto-delete the job after 2 minutes
 
-## Troubleshooting
+Perfect for testing commands before scheduling them permanently.
+
+### Manual Testing
+
+1. Create a test job with a simple command
+2. Use "Run Now" to test execution immediately
+3. Check logs in Terminal using the log viewer
+4. Verify next run times are calculated correctly
+5. Test backup and restore functionality
+
+## 🐛 Troubleshooting
 
 ### App won't start
 
 ```bash
-# Clean build
+# Clean build and reinstall
 rm -rf dist dist-electron node_modules
 npm install
 npm run dev
@@ -220,20 +366,104 @@ npm run dev
 ### IPC communication errors
 
 Check that:
-1. Preload script is loaded correctly
+1. Preload script is loaded correctly (`dist-electron/preload/index.js`)
 2. `contextBridge.exposeInMainWorld` is called
 3. `window.electronAPI` is available in renderer
+4. Main process IPC handlers are registered
+
+Debug in DevTools:
+```javascript
+// In renderer console
+console.log(window.electronAPI);
+```
 
 ### TypeScript errors
 
 ```bash
+# Run type checker
 npm run type-check
+
+# Check specific file
+npx tsc --noEmit path/to/file.ts
 ```
 
-## License
+### Build errors
 
-MIT
+```bash
+# Clean TypeScript cache
+rm -rf dist-electron
 
-## Author
+# Rebuild main process
+npm run build:dev
+```
 
-seunggabi
+### Crontab not syncing
+
+- Check crontab permissions: `crontab -l`
+- Verify cron service is running
+- Check application logs in DevTools Console
+- Try manual sync with Cmd/Ctrl+R
+
+## 📚 Resources
+
+- [Electron Documentation](https://www.electronjs.org/docs)
+- [Cron Expression Reference](https://crontab.guru/)
+- [Radix UI Components](https://www.radix-ui.com/)
+- [Vite Documentation](https://vitejs.dev/)
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'feat: Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## 📄 License
+
+MIT License - see LICENSE file for details
+
+## 👤 Author
+
+**seunggabi**
+
+- GitHub: [@seunggabi](https://github.com/seunggabi)
+- Repository: [cron-manager](https://github.com/seunggabi/cron-manager)
+
+## 🌟 Changelog
+
+### Version 0.4.0 (Latest)
+
+#### Features
+- ✨ Comprehensive UI improvements and keyboard shortcuts
+- ✨ Application menu with full keyboard shortcut support
+- ✨ Backup retention settings with configurable policies
+- ✨ Global environment variable management
+- ✨ Real-time log viewer with Terminal integration
+- ✨ Job reordering with drag-and-drop
+- ✨ Backup diff viewer with syntax highlighting
+- ✨ GitHub stars display in header
+- ✨ Resizable table columns with persistent state
+- ✨ Search and filter across all tables
+- ✨ Backup countdown timer showing auto-deletion time
+
+#### Improvements
+- 🔧 Fixed TypeScript configuration for shared types
+- 🔧 Improved error handling across all IPC channels
+- 🔧 Enhanced path validation for security
+- 🔧 Better crontab synchronization
+- 🔧 Optimized component rendering
+- 🔧 Cleaned up unused code and imports
+
+#### Technical
+- 📦 Updated to TypeScript 5.9.3
+- 📦 Electron 28.1.0
+- 📦 React 18.3.1
+- 📦 Vite 7.3.1
+- 📦 Migrated to workspace packages for shared types
+
+---
+
+Made with ❤️ using Electron, React, and TypeScript
