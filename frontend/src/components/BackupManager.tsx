@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { RefreshCw, RotateCcw, Database, FolderOpen, FileText, X, Search, ChevronUp, ChevronDown, Save } from 'lucide-react';
 import { BackupCountdown } from './BackupCountdown';
 import { useResizableColumns } from '../hooks/useResizableColumns';
@@ -23,6 +24,7 @@ type SortField = 'timestamp' | 'filename' | 'size';
 type SortDirection = 'asc' | 'desc';
 
 export function BackupManager() {
+  const { t } = useTranslation();
   const [backups, setBackups] = useState<Backup[]>([]);
   const [loading, setLoading] = useState(false);
   const [restoring, setRestoring] = useState<string | null>(null);
@@ -53,11 +55,11 @@ export function BackupManager() {
         );
         setBackups(sortedBackups);
       } else {
-        alert(response.error || '백업 목록을 불러오는데 실패했습니다');
+        alert(response.error || t('errors.loadBackupsFailed'));
       }
     } catch (error) {
       console.error('Failed to fetch backups:', error);
-      alert('백업 목록을 불러오는데 실패했습니다');
+      alert(t('errors.loadBackupsFailed'));
     } finally {
       setLoading(false);
     }
@@ -82,11 +84,11 @@ export function BackupManager() {
 
   const handleSaveConfig = async () => {
     if (maxBackups < 1) {
-      alert('백업 파일 개수는 최소 1개 이상이어야 합니다');
+      alert(t('errors.minBackups'));
       return;
     }
     if (maxBackupDays < 1) {
-      alert('보관 일수는 최소 1일 이상이어야 합니다');
+      alert(t('errors.minDays'));
       return;
     }
 
@@ -94,14 +96,14 @@ export function BackupManager() {
     try {
       const response = await api.config.updateBackupConfig(maxBackups, maxBackupDays);
       if (!response.success) {
-        alert(response.error || '설정 저장에 실패했습니다');
+        alert(response.error || t('errors.saveConfigFailed'));
       } else {
         // Success: refresh backup list to show cleaned up backups
         await fetchBackups();
       }
     } catch (error) {
       console.error('Failed to save config:', error);
-      alert('설정 저장에 실패했습니다');
+      alert(t('errors.saveConfigFailed'));
     } finally {
       setConfigLoading(false);
     }
@@ -112,16 +114,17 @@ export function BackupManager() {
       await api.files.open(backupPath);
     } catch (error) {
       console.error('Failed to open backup file:', error);
-      alert('백업 파일을 여는데 실패했습니다');
+      alert(t('errors.openBackupFailed'));
     }
   };
 
   const handleRestore = async (backup: Backup) => {
     if (!confirm(
-      `백업을 복구하시겠습니까?\n\n` +
-      `파일: ${backup.filename}\n` +
-      `날짜: ${format(new Date(backup.timestamp), 'yyyy-MM-dd HH:mm:ss')}\n\n` +
-      `현재 crontab이 이 백업으로 대체됩니다.`
+      t('dialogs.restoreBackup') + '\n\n' +
+      t('dialogs.restoreBackupDetails', {
+        filename: backup.filename,
+        date: format(new Date(backup.timestamp), 'yyyy-MM-dd HH:mm:ss')
+      })
     )) {
       return;
     }
@@ -130,13 +133,13 @@ export function BackupManager() {
     try {
       const response = await api.backups.restore(backup.path);
       if (response.success) {
-        alert('백업이 성공적으로 복구되었습니다');
+        alert(t('success.backupRestored'));
       } else {
-        alert(response.error || '백업 복구에 실패했습니다');
+        alert(response.error || t('errors.restoreBackupFailed'));
       }
     } catch (error) {
       console.error('Failed to restore backup:', error);
-      alert('백업 복구에 실패했습니다');
+      alert(t('errors.restoreBackupFailed'));
     } finally {
       setRestoring(null);
     }
@@ -148,11 +151,11 @@ export function BackupManager() {
       if (response.success && response.data) {
         setDiffData({ backup, diff: response.data.diff });
       } else {
-        alert(response.error || 'Diff 비교에 실패했습니다');
+        alert(response.error || t('errors.diffFailed'));
       }
     } catch (error) {
       console.error('Failed to diff backup:', error);
-      alert('Diff 비교에 실패했습니다');
+      alert(t('errors.diffFailed'));
     }
   };
 
@@ -234,7 +237,7 @@ export function BackupManager() {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '60px 0', flexDirection: 'column', gap: '16px' }}>
         <RefreshCw size={32} style={{ color: 'var(--accent)', animation: 'spin 1s linear infinite' }} />
-        <div style={{ fontSize: '15px', color: 'var(--text-secondary)', fontWeight: 600 }}>로딩 중...</div>
+        <div style={{ fontSize: '15px', color: 'var(--text-secondary)', fontWeight: 600 }}>{t('common.loading')}</div>
       </div>
     );
   }
@@ -245,7 +248,7 @@ export function BackupManager() {
       <div className="table-card" style={{ padding: '24px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
           <h3 style={{ fontSize: '16px', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
-            백업 보관 설정
+            {t('backups.config')}
           </h3>
           <button
             onClick={handleSaveConfig}
@@ -255,12 +258,12 @@ export function BackupManager() {
             {configLoading ? (
               <>
                 <RefreshCw size={16} style={{ animation: 'spin 1s linear infinite' }} />
-                저장 중...
+                {t('common.saving')}
               </>
             ) : (
               <>
                 <Save size={16} />
-                저장 <span style={{ opacity: 0.6, fontSize: '11px' }}>(⌘S)</span>
+                {t('common.save')} <span style={{ opacity: 0.6, fontSize: '11px' }}>(⌘S)</span>
               </>
             )}
           </button>
@@ -268,7 +271,7 @@ export function BackupManager() {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
           <div>
             <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '6px', color: 'var(--text-secondary)' }}>
-              최소 유지 개수
+              {t('backups.config.maxBackups')}
             </label>
             <input
               type="number"
@@ -278,12 +281,12 @@ export function BackupManager() {
               style={{ width: '100%' }}
             />
             <span style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '4px', display: 'block' }}>
-              최소 유지할 백업 파일 개수
+              {t('backups.config.maxBackupsHelp')}
             </span>
           </div>
           <div>
             <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '6px', color: 'var(--text-secondary)' }}>
-              최대 보관 일수
+              {t('backups.config.maxDays')}
             </label>
             <input
               type="number"
@@ -293,7 +296,7 @@ export function BackupManager() {
               style={{ width: '100%' }}
             />
             <span style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '4px', display: 'block' }}>
-              백업 파일을 보관할 최대 일수
+              {t('backups.config.maxDaysHelp')}
             </span>
           </div>
         </div>
@@ -306,8 +309,7 @@ export function BackupManager() {
           color: 'var(--text-secondary)',
           lineHeight: '1.5'
         }}>
-          💡 <strong>정리 정책 (AND 조건):</strong> 최신 {maxBackups}개는 무조건 유지하고,
-          {maxBackups + 1}번째부터는 {maxBackupDays}일 이상 경과 시 자동 삭제됩니다.
+          💡 <strong>{t('backups.config.policy')}</strong> {t('backups.config.policyDesc')}
         </div>
       </div>
 
@@ -320,7 +322,7 @@ export function BackupManager() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="검색 (백업 시각, 파일명)"
+              placeholder={t('backups.searchPlaceholder')}
               style={{
                 width: '100%',
                 paddingLeft: '40px',
@@ -332,7 +334,7 @@ export function BackupManager() {
             <button
               onClick={() => setSearchQuery('')}
               className="btn"
-              title="검색 초기화"
+              title={t('backups.clearSearch')}
             >
               <X size={16} />
             </button>
@@ -345,9 +347,9 @@ export function BackupManager() {
         {backups.length === 0 ? (
           <div className="empty">
             <div className="empty-icon">💾</div>
-            <div className="empty-text">백업 파일이 없습니다</div>
+            <div className="empty-text">{t('backups.noBackups')}</div>
             <p style={{ fontSize: '13px', color: 'var(--text-tertiary)', marginTop: '8px' }}>
-              Cron 작업을 수정하면 자동으로 백업이 생성됩니다
+              {t('backups.autoBackupInfo')}
             </p>
           </div>
         ) : (
@@ -356,7 +358,7 @@ export function BackupManager() {
               <thead>
                 <tr>
                   <th onClick={() => handleSort('timestamp')} style={{ ...getColumnStyle('timestamp'), cursor: 'pointer' }}>
-                    백업 시각
+                    {t('backups.table.timestamp')}
                     {sortField === 'timestamp' && (
                       <span className="sort-icon">
                         {sortDirection === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
@@ -365,7 +367,7 @@ export function BackupManager() {
                     <ResizeHandle columnName="timestamp" />
                   </th>
                   <th onClick={() => handleSort('filename')} style={{ ...getColumnStyle('filename'), cursor: 'pointer' }}>
-                    파일명
+                    {t('backups.table.filename')}
                     {sortField === 'filename' && (
                       <span className="sort-icon">
                         {sortDirection === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
@@ -374,7 +376,7 @@ export function BackupManager() {
                     <ResizeHandle columnName="filename" />
                   </th>
                   <th onClick={() => handleSort('size')} style={{ ...getColumnStyle('size'), cursor: 'pointer' }}>
-                    크기
+                    {t('backups.table.size')}
                     {sortField === 'size' && (
                       <span className="sort-icon">
                         {sortDirection === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
@@ -383,11 +385,11 @@ export function BackupManager() {
                     <ResizeHandle columnName="size" />
                   </th>
                   <th style={{ ...getColumnStyle('deletion'), textAlign: 'center' }}>
-                    삭제 예정
+                    {t('backups.table.deletion')}
                     <ResizeHandle columnName="deletion" />
                   </th>
                   <th style={getColumnStyle('action')}>
-                    액션
+                    {t('common.actions')}
                     <ResizeHandle columnName="action" />
                   </th>
                 </tr>
@@ -405,7 +407,7 @@ export function BackupManager() {
                       <td>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                           {index === 0 && (
-                            <span className="badge badge-active" style={{ fontSize: '10px' }}>최신</span>
+                            <span className="badge badge-active" style={{ fontSize: '10px' }}>{t('common.latest')}</span>
                           )}
                           <span className="job-name" style={{ fontSize: '13px' }}>
                             {formatTimestamp(backup.timestamp)}
@@ -435,27 +437,27 @@ export function BackupManager() {
                             onClick={() => handleOpenBackup(backup.path)}
                             className="btn"
                             style={{ padding: '6px 12px', fontSize: '12px' }}
-                            title="백업 파일 열기"
+                            title={t('common.open')}
                           >
                             <FolderOpen size={14} />
-                            열기
+                            {t('common.open')}
                           </button>
                           <button
                             onClick={() => handleRestore(backup)}
                             disabled={restoring !== null}
                             className="btn btn-primary"
                             style={{ padding: '6px 12px', fontSize: '12px' }}
-                            title="이 백업으로 복구"
+                            title={t('backups.restore')}
                           >
                             {restoring === backup.path ? (
                               <>
                                 <RefreshCw size={14} style={{ animation: 'spin 1s linear infinite' }} />
-                                복구 중...
+                                {t('common.restoring')}
                               </>
                             ) : (
                               <>
                                 <RotateCcw size={14} />
-                                복구
+                                {t('backups.restore')}
                               </>
                             )}
                           </button>
@@ -463,10 +465,10 @@ export function BackupManager() {
                             onClick={() => handleDiff(backup)}
                             className="btn"
                             style={{ padding: '6px 12px', fontSize: '12px' }}
-                            title="현재 crontab과 비교"
+                            title={t('backups.compareWithCurrent')}
                           >
                             <FileText size={14} />
-                            비교
+                            {t('backups.compare')}
                           </button>
                         </div>
                       </td>
@@ -501,11 +503,11 @@ export function BackupManager() {
               <Database size={20} color="white" />
             </div>
             <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-              <p style={{ fontWeight: 700, marginBottom: '8px', color: 'var(--text-primary)' }}>백업 정보</p>
+              <p style={{ fontWeight: 700, marginBottom: '8px', color: 'var(--text-primary)' }}>{t('backups.info')}</p>
               <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <li>• 총 <strong>{backups.length}개</strong>의 백업 파일이 있습니다</li>
-                <li>• 백업은 작업 추가/수정/삭제 시 자동으로 생성됩니다</li>
-                <li>• 복구 시 현재 crontab이 선택한 백업으로 대체됩니다</li>
+                <li>• {t('backups.totalBackups', { count: backups.length })}</li>
+                <li>• {t('backups.autoCreated')}</li>
+                <li>• {t('backups.restoreWarning')}</li>
               </ul>
             </div>
           </div>
@@ -517,7 +519,7 @@ export function BackupManager() {
         <div className="modal-overlay" onClick={() => setDiffData(null)}>
           <div className="modal" style={{ maxWidth: '900px', maxHeight: '80vh' }} onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>백업 비교</h2>
+              <h2>{t('backups.compareTitle')}</h2>
               <button onClick={() => setDiffData(null)} className="modal-close">
                 <X />
               </button>
@@ -525,7 +527,7 @@ export function BackupManager() {
             <div className="modal-body" style={{ padding: 0 }}>
               <div style={{ padding: '16px', borderBottom: '1px solid var(--border)', background: 'var(--surface)' }}>
                 <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0 }}>
-                  <strong>{diffData.backup.filename}</strong>과 현재 crontab 비교
+                  {t('backups.compareSubtitle', { filename: diffData.backup.filename })}
                 </p>
               </div>
               <div style={{ maxHeight: '500px', overflow: 'auto', fontFamily: 'monospace', fontSize: '12px' }}>

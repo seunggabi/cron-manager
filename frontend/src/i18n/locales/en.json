@@ -1,0 +1,172 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "saving": "Saving...",
+    "restoring": "Restoring...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "close": "Close",
+    "confirm": "Confirm",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "search": "Search",
+    "clear": "Clear",
+    "clearSearch": "Clear Search",
+    "sync": "Sync",
+    "open": "Open",
+    "actions": "Actions",
+    "status": "Status",
+    "active": "Active",
+    "inactive": "Inactive",
+    "latest": "Latest"
+  },
+  "header": {
+    "title": "Cron Manager",
+    "subtitle": "Manage your crontab jobs with ease"
+  },
+  "tabs": {
+    "jobs": "Jobs",
+    "env": "Environment",
+    "backups": "Backups"
+  },
+  "jobs": {
+    "title": "Cron Jobs",
+    "newJob": "New Job",
+    "editJob": "Edit Job",
+    "newCronJob": "New Cron Job",
+    "runNow": "Run Now",
+    "testIn1Minute": "Test in 1 Min",
+    "noJobs": "No cron jobs registered",
+    "addFirstJob": "Add your first job",
+    "searchPlaceholder": "Search (name, command, schedule)",
+    "noSearchResults": "No results for \"{query}\"",
+    "saveOrder": "Save current order to crontab file",
+    "activeCount": "Active {{active}} / Total {{total}}",
+    "table": {
+      "name": "Name",
+      "schedule": "Schedule",
+      "command": "Command",
+      "nextRun": "Next Run",
+      "executable": "Executable",
+      "openFolder": "Open executable folder"
+    },
+    "form": {
+      "name": "Job Name",
+      "namePlaceholder": "Backup Job",
+      "description": "Description (Optional)",
+      "descriptionPlaceholder": "This job performs daily database backup",
+      "descriptionHelp": "Saved as a comment in crontab file",
+      "schedule": "Schedule (Cron Expression)",
+      "required": "*",
+      "schedulePlaceholder": "min hour day month weekday (e.g., 0 9 * * * = Daily at 9am)",
+      "command": "Command",
+      "env": "Environment Variables (Optional)",
+      "envPlaceholder": "One per line in KEY=VALUE format",
+      "logFile": "Log File Path (Auto-parsed)",
+      "logFileInfo": "Auto-parsed from >> path in command",
+      "logFileHelp": "Use >> /path/to/log.txt in command for automatic parsing",
+      "closeForm": "Close form",
+      "submit": "Add Job",
+      "submitEdit": "Save Changes",
+      "presets": {
+        "everyMinute": "Every Minute",
+        "every5Minutes": "Every 5 Minutes",
+        "hourly": "Hourly",
+        "daily": "Daily at Midnight",
+        "daily9am": "Daily at 9am",
+        "weekdays9am": "Weekdays at 9am"
+      }
+    }
+  },
+  "env": {
+    "title": "Global Environment Variables",
+    "newVar": "Add New Variable",
+    "noVars": "No environment variables registered",
+    "searchPlaceholder": "Search (Key, Value)",
+    "clearSearch": "Clear Search",
+    "table": {
+      "key": "Key",
+      "value": "Value"
+    }
+  },
+  "backups": {
+    "title": "Backup Management",
+    "config": "Backup Retention Settings",
+    "noBackups": "No backup files",
+    "autoBackupInfo": "Backups are automatically created when you modify cron jobs",
+    "searchPlaceholder": "Search (timestamp, filename)",
+    "clearSearch": "Clear Search",
+    "info": "Backup Information",
+    "totalBackups": "Total {{count}} backup files",
+    "autoCreated": "Backups are automatically created on job add/update/delete",
+    "restoreWarning": "Restore will replace current crontab with selected backup",
+    "table": {
+      "timestamp": "Timestamp",
+      "filename": "Filename",
+      "size": "Size",
+      "deletion": "Auto-Delete"
+    },
+    "restore": "Restore",
+    "compare": "Compare",
+    "compareWithCurrent": "Compare with current crontab",
+    "compareTitle": "Backup Comparison",
+    "compareSubtitle": "Comparing {{filename}} with current crontab",
+    "config": {
+      "maxBackups": "Min Files to Keep",
+      "maxBackupsHelp": "Minimum number of backup files to retain",
+      "maxDays": "Max Retention Days",
+      "maxDaysHelp": "Maximum days to keep backup files",
+      "policy": "Cleanup Policy (AND condition):",
+      "policyDesc": "Old backups exceeding retention days and minimum count will be auto-deleted."
+    }
+  },
+  "logs": {
+    "createDir": "Create Log Directory",
+    "openLog": "Open Log File",
+    "log": "Log"
+  },
+  "errors": {
+    "createDirFailed": "Failed to create directory",
+    "loadJobsFailed": "Failed to load jobs",
+    "syncFailed": "Sync failed",
+    "addJobFailed": "Failed to add job",
+    "updateJobFailed": "Failed to update job",
+    "deleteJobFailed": "Failed to delete job",
+    "toggleJobFailed": "Failed to toggle job",
+    "runJobFailed": "Failed to run job",
+    "saveOrderFailed": "Failed to save order",
+    "updateFailed": "Update failed",
+    "executableNotFound": "Executable path not found",
+    "openFolderFailed": "Failed to open folder",
+    "openBackupFailed": "Failed to open backup file",
+    "loadEnvFailed": "Failed to load environment variables",
+    "addEnvFailed": "Failed to add environment variable",
+    "updateEnvFailed": "Failed to update environment variable",
+    "deleteEnvFailed": "Failed to delete environment variable",
+    "loadBackupsFailed": "Failed to load backups",
+    "saveConfigFailed": "Failed to save configuration",
+    "restoreBackupFailed": "Failed to restore backup",
+    "diffFailed": "Diff comparison failed",
+    "enterKey": "Please enter a key",
+    "enterValue": "Please enter a value",
+    "minBackups": "Minimum backup count must be at least 1",
+    "minDays": "Retention days must be at least 1"
+  },
+  "success": {
+    "syncCompleted": "Sync completed",
+    "jobAdded": "Job added successfully",
+    "jobDeleted": "Job deleted successfully",
+    "orderSaved": "Order saved successfully",
+    "backupRestored": "Backup restored successfully",
+    "runCompleted": "Execution completed"
+  },
+  "dialogs": {
+    "deleteEnv": "Delete environment variable \"{{key}}\"?",
+    "restoreBackup": "Restore this backup?",
+    "restoreBackupDetails": "File: {{filename}}\nDate: {{date}}\nCurrent crontab will be replaced with this backup.",
+    "exitCode": "Exit Code",
+    "stdout": "Stdout",
+    "stderr": "Stderr"
+  }
+}

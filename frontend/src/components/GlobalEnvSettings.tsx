@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Plus, Trash2, Edit, X, Check, Search, ChevronUp, ChevronDown } from 'lucide-react';
 
 const api = window.electronAPI;
@@ -12,6 +13,7 @@ type SortField = 'key' | 'value';
 type SortDirection = 'asc' | 'desc';
 
 export function GlobalEnvSettings() {
+  const { t } = useTranslation();
   const [envVars, setEnvVars] = useState<EnvVar[]>([]);
   const [loading, setLoading] = useState(false);
   const [newKey, setNewKey] = useState('');
@@ -34,10 +36,10 @@ export function GlobalEnvSettings() {
         }));
         setEnvVars(vars);
       } else {
-        alert(response.error || '환경변수를 불러오는데 실패했습니다');
+        alert(response.error || t('errors.loadEnvFailed'));
       }
     } catch (error) {
-      alert('환경변수를 불러오는데 실패했습니다');
+      alert(t('errors.loadEnvFailed'));
     } finally {
       setLoading(false);
     }
@@ -49,7 +51,7 @@ export function GlobalEnvSettings() {
 
   const handleAdd = async () => {
     if (!newKey.trim()) {
-      alert('키를 입력해주세요');
+      alert(t('errors.enterKey'));
       return;
     }
 
@@ -60,10 +62,10 @@ export function GlobalEnvSettings() {
         setNewValue('');
         await fetchGlobalEnv();
       } else {
-        alert(response.error || '환경변수 추가에 실패했습니다');
+        alert(response.error || t('errors.addEnvFailed'));
       }
     } catch (error) {
-      alert('환경변수 추가에 실패했습니다');
+      alert(t('errors.addEnvFailed'));
     }
   };
 
@@ -75,25 +77,25 @@ export function GlobalEnvSettings() {
         setEditValue('');
         await fetchGlobalEnv();
       } else {
-        alert(response.error || '환경변수 수정에 실패했습니다');
+        alert(response.error || t('errors.updateEnvFailed'));
       }
     } catch (error) {
-      alert('환경변수 수정에 실패했습니다');
+      alert(t('errors.updateEnvFailed'));
     }
   };
 
   const handleDelete = async (key: string) => {
-    if (!confirm(`"${key}" 환경변수를 삭제하시겠습니까?`)) return;
+    if (!confirm(t('dialogs.deleteEnv', { key }))) return;
 
     try {
       const response = await api.env.deleteGlobalVar(key);
       if (response.success) {
         await fetchGlobalEnv();
       } else {
-        alert(response.error || '환경변수 삭제에 실패했습니다');
+        alert(response.error || t('errors.deleteEnvFailed'));
       }
     } catch (error) {
-      alert('환경변수 삭제에 실패했습니다');
+      alert(t('errors.deleteEnvFailed'));
     }
   };
 
@@ -143,7 +145,7 @@ export function GlobalEnvSettings() {
   if (loading && envVars.length === 0) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '60px 0' }}>
-        <div style={{ fontSize: '15px', color: 'var(--text-secondary)' }}>로딩 중...</div>
+        <div style={{ fontSize: '15px', color: 'var(--text-secondary)' }}>{t('common.loading')}</div>
       </div>
     );
   }
@@ -153,7 +155,7 @@ export function GlobalEnvSettings() {
       {/* Add New Variable */}
       <div className="table-card" style={{ padding: '24px' }}>
         <h3 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '16px', color: 'var(--text-primary)' }}>
-          새 환경변수 추가
+          {t('env.newVar')}
         </h3>
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
           <input
@@ -176,7 +178,7 @@ export function GlobalEnvSettings() {
           />
           <button onClick={handleAdd} className="btn btn-primary">
             <Plus />
-            추가
+            {t('common.add')}
           </button>
         </div>
       </div>
@@ -190,7 +192,7 @@ export function GlobalEnvSettings() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="검색 (Key, Value)"
+              placeholder={t('env.searchPlaceholder')}
               style={{
                 width: '100%',
                 paddingLeft: '40px',
@@ -202,7 +204,7 @@ export function GlobalEnvSettings() {
             <button
               onClick={() => setSearchQuery('')}
               className="btn"
-              title="검색 초기화"
+              title={t('env.clearSearch')}
             >
               <X size={16} />
             </button>
@@ -215,16 +217,16 @@ export function GlobalEnvSettings() {
         {envVars.length === 0 ? (
           <div className="empty">
             <div className="empty-icon">🔧</div>
-            <div className="empty-text">등록된 환경변수가 없습니다</div>
+            <div className="empty-text">{t('env.noVars')}</div>
           </div>
         ) : (
           <div className="table-wrap">
             <table className="env-table">
               <thead>
                 <tr>
-                  <th>액션</th>
+                  <th>{t('common.actions')}</th>
                   <th onClick={() => handleSort('key')} style={{ cursor: 'pointer' }}>
-                    Key
+                    {t('env.table.key')}
                     {sortField === 'key' && (
                       <span className="sort-icon">
                         {sortDirection === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
@@ -232,7 +234,7 @@ export function GlobalEnvSettings() {
                     )}
                   </th>
                   <th onClick={() => handleSort('value')} style={{ cursor: 'pointer' }}>
-                    Value
+                    {t('env.table.value')}
                     {sortField === 'value' && (
                       <span className="sort-icon">
                         {sortDirection === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
@@ -251,16 +253,16 @@ export function GlobalEnvSettings() {
                             <button
                               onClick={() => handleUpdate(envVar.key)}
                               className="icon-btn play"
-                              title="저장"
-                              data-tooltip="저장"
+                              title={t('common.save')}
+                              data-tooltip={t('common.save')}
                             >
                               <Check />
                             </button>
                             <button
                               onClick={cancelEdit}
                               className="icon-btn"
-                              title="취소"
-                              data-tooltip="취소"
+                              title={t('common.cancel')}
+                              data-tooltip={t('common.cancel')}
                             >
                               <X />
                             </button>
@@ -270,16 +272,16 @@ export function GlobalEnvSettings() {
                             <button
                               onClick={() => startEdit(envVar.key, envVar.value)}
                               className="icon-btn edit"
-                              title="수정"
-                              data-tooltip="수정"
+                              title={t('common.edit')}
+                              data-tooltip={t('common.edit')}
                             >
                               <Edit />
                             </button>
                             <button
                               onClick={() => handleDelete(envVar.key)}
                               className="icon-btn delete"
-                              title="삭제"
-                              data-tooltip="삭제"
+                              title={t('common.delete')}
+                              data-tooltip={t('common.delete')}
                             >
                               <Trash2 />
                             </button>

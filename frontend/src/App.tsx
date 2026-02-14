@@ -9,6 +9,9 @@ import type { CronJob, CreateJobRequest, UpdateJobRequest } from '@cron-manager/
 import { extractLogFiles } from './utils/logFileExtractor';
 import { extractScriptPath } from './utils/scriptPathExtractor';
 import { useResizableColumns } from './hooks/useResizableColumns';
+import { useTranslation } from 'react-i18next';
+import logoSvg from '/logo.svg';
+import packageJson from '../../package.json';
 
 // Electron IPC API
 const api = window.electronAPI;
@@ -19,6 +22,7 @@ type TabType = 'jobs' | 'env' | 'backups';
 
 // LogButton component - checks if directory exists and shows appropriate button
 function LogButton({ logFile, workingDir, showAlert }: { logFile: string; workingDir?: string; showAlert: (message: string, type: 'info' | 'success' | 'error' | 'warning') => void }) {
+  const { t } = useTranslation();
   const [dirExists, setDirExists] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -42,10 +46,10 @@ function LogButton({ logFile, workingDir, showAlert }: { logFile: string; workin
       if (response.success) {
         setDirExists(true);
       } else {
-        showAlert(response.error || '디렉토리 생성에 실패했습니다', 'error');
+        showAlert(response.error || t('errors.createDirFailed'), 'error');
       }
     } catch (error) {
-      showAlert('디렉토리 생성에 실패했습니다', 'error');
+      showAlert(t('errors.createDirFailed'), 'error');
     }
   };
 
@@ -70,10 +74,10 @@ function LogButton({ logFile, workingDir, showAlert }: { logFile: string; workin
           color: '#ef4444',
           borderColor: '#ef4444',
         }}
-        title={`로그 디렉토리 생성: ${logFile}`}
+        title={`${t('logs.createDir')}: ${logFile}`}
       >
         <FolderPlus />
-        로그 디렉토리 생성
+        {t('logs.createDir')}
       </button>
     );
   }
@@ -82,15 +86,16 @@ function LogButton({ logFile, workingDir, showAlert }: { logFile: string; workin
     <button
       onClick={handleOpenLog}
       className="command-link"
-      title={`로그 파일 열기: ${logFile}`}
+      title={`${t('logs.openLog')}: ${logFile}`}
     >
       <FileText />
-      로그
+      {t('logs.log')}
     </button>
   );
 }
 
 function App() {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<TabType>('jobs');
   const [jobs, setJobs] = useState<CronJob[]>([]);
   const [loading, setLoading] = useState(false);
@@ -138,24 +143,24 @@ function App() {
       if (response.success && response.data) {
         setJobs(response.data);
       } else {
-        showAlert(response.error || '작업 목록을 불러오는데 실패했습니다', 'error');
+        showAlert(response.error || t('errors.loadJobsFailed'), 'error');
       }
     } catch (error) {
-      showAlert('작업 목록을 불러오는데 실패했습니다', 'error');
+      showAlert(t('errors.loadJobsFailed'), 'error');
     } finally {
       setLoading(false);
     }
-  }, [showAlert]);
+  }, [showAlert, t]);
 
   const handleSync = useCallback(async () => {
     try {
       await api.jobs.sync();
       await fetchJobs();
-      showAlert('동기화 완료', 'success');
+      showAlert(t('success.syncCompleted'), 'success');
     } catch (error) {
-      showAlert('동기화에 실패했습니다', 'error');
+      showAlert(t('errors.syncFailed'), 'error');
     }
-  }, [fetchJobs, showAlert]);
+  }, [fetchJobs, showAlert, t]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -185,7 +190,7 @@ function App() {
           case 'R':
             e.preventDefault();
             const syncButton = Array.from(document.querySelectorAll('button')).find(
-              btn => btn.textContent?.includes('동기화')
+              btn => btn.textContent?.includes(t('common.sync'))
             ) as HTMLButtonElement;
             if (syncButton) {
               syncButton.style.transform = 'scale(0.95)';
@@ -201,7 +206,7 @@ function App() {
             if (!(e.target as HTMLElement).closest('form')) {
               e.preventDefault();
               const saveButton = Array.from(document.querySelectorAll('button')).find(
-                btn => btn.textContent?.includes('저장') && !btn.textContent?.includes('완료')
+                btn => btn.textContent?.includes(t('common.save')) && !btn.textContent?.includes(t('jobs.form.submitEdit'))
               ) as HTMLButtonElement;
               if (saveButton) {
                 saveButton.style.transform = 'scale(0.95)';
@@ -230,12 +235,12 @@ function App() {
       if (response.success) {
         await fetchJobs();
         setShowForm(false);
-        showAlert('작업이 추가되었습니다', 'success');
+        showAlert(t('success.jobAdded'), 'success');
       } else {
-        showAlert(response.error || '작업 추가에 실패했습니다', 'error');
+        showAlert(response.error || t('errors.addJobFailed'), 'error');
       }
     } catch (error) {
-      showAlert('작업 추가에 실패했습니다', 'error');
+      showAlert(t('errors.addJobFailed'), 'error');
     }
   };
 
@@ -249,10 +254,10 @@ function App() {
         setEditingJob(null);
         setShowForm(false);
       } else {
-        showAlert(response.error || '작업 수정에 실패했습니다', 'error');
+        showAlert(response.error || t('errors.updateJobFailed'), 'error');
       }
     } catch (error) {
-      showAlert('작업 수정에 실패했습니다', 'error');
+      showAlert(t('errors.updateJobFailed'), 'error');
     }
   };
 
@@ -261,7 +266,7 @@ function App() {
       await api.jobs.toggle(id);
       await fetchJobs();
     } catch (error) {
-      showAlert('작업 토글에 실패했습니다', 'error');
+      showAlert(t('errors.toggleJobFailed'), 'error');
     }
   };
 
@@ -269,9 +274,9 @@ function App() {
     try {
       await api.jobs.delete(id);
       await fetchJobs();
-      showAlert('작업이 삭제되었습니다', 'success');
+      showAlert(t('success.jobDeleted'), 'success');
     } catch (error) {
-      showAlert('작업 삭제에 실패했습니다', 'error');
+      showAlert(t('errors.deleteJobFailed'), 'error');
     }
   };
 
@@ -280,29 +285,29 @@ function App() {
       const response = await api.jobs.run(id);
       if (response.success && response.data) {
         const result = response.data;
-        const message = `실행 완료\n\nExit Code: ${result.exitCode}\n\n` +
-          `Stdout:\n${result.stdout || '(empty)'}\n\n` +
-          `Stderr:\n${result.stderr || '(empty)'}`;
+        const message = `${t('success.runCompleted')}\n\n${t('dialogs.exitCode')}: ${result.exitCode}\n\n` +
+          `${t('dialogs.stdout')}:\n${result.stdout || '(empty)'}\n\n` +
+          `${t('dialogs.stderr')}:\n${result.stderr || '(empty)'}`;
         showAlert(message, 'info');
       } else {
-        showAlert(response.error || '작업 실행에 실패했습니다', 'error');
+        showAlert(response.error || t('errors.runJobFailed'), 'error');
       }
     } catch (error) {
-      showAlert('작업 실행에 실패했습니다', 'error');
+      showAlert(t('errors.runJobFailed'), 'error');
     }
   };
 
   const handleOpenScriptFolder = async (command: string) => {
     const scriptPath = extractScriptPath(command);
     if (!scriptPath) {
-      showAlert('실행 파일 경로를 찾을 수 없습니다', 'error');
+      showAlert(t('errors.executableNotFound'), 'error');
       return;
     }
 
     try {
       await api.files.open(scriptPath);
     } catch (error) {
-      showAlert('실행 파일 폴더를 여는데 실패했습니다', 'error');
+      showAlert(t('errors.openFolderFailed'), 'error');
     }
   };
 
@@ -338,7 +343,7 @@ function App() {
     const trimmedValue = editingValue.trim();
 
     if (!trimmedValue) {
-      showAlert('값을 입력해주세요', 'error');
+      showAlert(t('errors.enterValue'), 'error');
       return;
     }
 
@@ -357,10 +362,10 @@ function App() {
         setEditingCell(null);
         setEditingValue('');
       } else {
-        showAlert(response.error || '수정에 실패했습니다', 'error');
+        showAlert(response.error || t('errors.updateFailed'), 'error');
       }
     } catch (error) {
-      showAlert('수정에 실패했습니다', 'error');
+      showAlert(t('errors.updateFailed'), 'error');
     }
   };
 
@@ -383,13 +388,13 @@ function App() {
       const jobIds = filteredAndSortedJobs.map(job => job.id);
       const response = await api.jobs.reorder(jobIds);
       if (response.success) {
-        showAlert('정렬 순서가 저장되었습니다', 'success');
+        showAlert(t('success.orderSaved'), 'success');
         await fetchJobs();
       } else {
-        showAlert(response.error || '정렬 저장에 실패했습니다', 'error');
+        showAlert(response.error || t('errors.saveOrderFailed'), 'error');
       }
     } catch (error) {
-      showAlert('정렬 저장에 실패했습니다', 'error');
+      showAlert(t('errors.saveOrderFailed'), 'error');
     }
   };
 
@@ -445,15 +450,15 @@ function App() {
   if (loading && jobs.length === 0) {
     return (
       <div className="app" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ fontSize: '15px', color: 'var(--text-secondary)' }}>로딩 중...</div>
+        <div style={{ fontSize: '15px', color: 'var(--text-secondary)' }}>{t('common.loading')}</div>
       </div>
     );
   }
 
   const tabs = [
-    { id: 'jobs' as TabType, label: '작업 관리', shortcut: '⌘1', icon: ListChecks },
-    { id: 'env' as TabType, label: '환경변수', shortcut: '⌘2', icon: Settings },
-    { id: 'backups' as TabType, label: '백업 관리', shortcut: '⌘3', icon: Database },
+    { id: 'jobs' as TabType, label: t('tabs.jobs'), shortcut: '⌘1', icon: ListChecks },
+    { id: 'env' as TabType, label: t('tabs.env'), shortcut: '⌘2', icon: Settings },
+    { id: 'backups' as TabType, label: t('tabs.backups'), shortcut: '⌘3', icon: Database },
   ];
 
   const activeJobsCount = jobs.filter(j => j.enabled).length;
@@ -466,7 +471,7 @@ function App() {
           <div>
             <h1>
               <img
-                src="/logo.svg"
+                src={logoSvg}
                 alt="Cron Manager Logo"
                 style={{
                   width: '24px',
@@ -477,9 +482,9 @@ function App() {
               />
               Cron Manager
             </h1>
-            <div className="header-sub">Crontab 작업을 GUI로 쉽게 관리하세요</div>
+            <div className="header-sub">{t('header.subtitle')}</div>
           </div>
-          <div style={{ display: 'flex', gap: '8px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
             <a
               href="https://github.com/seunggabi/cron-manager"
               target="_blank"
@@ -498,6 +503,9 @@ function App() {
                 </>
               )}
             </a>
+            <div style={{ fontSize: '11px', opacity: 0.6, marginRight: '8px' }}>
+              v{packageJson.version}
+            </div>
           </div>
         </div>
       </div>
@@ -529,7 +537,7 @@ function App() {
                 <>
                   <div className="summary-pill">
                     <span className="dot"></span>
-                    활성 {activeJobsCount} / 전체 {jobs.length}
+                    {t('jobs.activeCount', { active: activeJobsCount, total: jobs.length })}
                   </div>
                   {/* Search Input */}
                   <div style={{ position: 'relative', flex: 6 }}>
@@ -545,7 +553,7 @@ function App() {
                       type="text"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="검색 (이름, 명령어, 스케줄)"
+                      placeholder={t('jobs.searchPlaceholder')}
                       style={{
                         width: '100%',
                         padding: '8px 36px 8px 36px',
@@ -592,7 +600,7 @@ function App() {
                           e.currentTarget.style.background = 'transparent';
                           e.currentTarget.style.color = 'var(--text-tertiary)';
                         }}
-                        title="검색 지우기"
+                        title={t('common.clearSearch')}
                       >
                         <X size={14} />
                       </button>
@@ -602,13 +610,13 @@ function App() {
               )}
             </div>
             <div className="action-bar-right">
-              <button onClick={handleSaveSortOrder} className="btn" title="현재 정렬 순서를 crontab 파일에 저장">
+              <button onClick={handleSaveSortOrder} className="btn" title={t('jobs.saveOrder')}>
                 <Save />
-                저장 <span style={{ opacity: 0.6, fontSize: '11px' }}>(⌘S)</span>
+                {t('common.save')} <span style={{ opacity: 0.6, fontSize: '11px' }}>(⌘S)</span>
               </button>
               <button onClick={handleSync} className="btn">
                 <RefreshCw />
-                동기화 <span style={{ opacity: 0.6, fontSize: '11px' }}>(⌘R)</span>
+                {t('common.sync')} <span style={{ opacity: 0.6, fontSize: '11px' }}>(⌘R)</span>
               </button>
               <button
                 onClick={() => {
@@ -618,7 +626,7 @@ function App() {
                 className="btn btn-primary"
               >
                 <Plus />
-                새 작업 <span style={{ opacity: 0.6, fontSize: '11px' }}>(⌘N)</span>
+                {t('jobs.newJob')} <span style={{ opacity: 0.6, fontSize: '11px' }}>(⌘N)</span>
               </button>
             </div>
           </div>
@@ -627,14 +635,14 @@ function App() {
           {jobs.length === 0 ? (
             <div className="empty">
               <div className="empty-icon">📋</div>
-              <div className="empty-text">등록된 Cron 작업이 없습니다</div>
+              <div className="empty-text">{t('jobs.noJobs')}</div>
               <button
                 onClick={() => setShowForm(true)}
                 className="btn btn-primary"
                 style={{ marginTop: '20px' }}
               >
                 <Plus />
-                첫 작업 추가하기
+                {t('jobs.addFirstJob')}
               </button>
             </div>
           ) : (
@@ -644,11 +652,11 @@ function App() {
                   <thead>
                     <tr>
                       <th style={getColumnStyle('action')}>
-                        액션
+                        {t('common.actions')}
                         <ResizeHandle columnName="action" />
                       </th>
                       <th style={getColumnStyle('status')} onClick={() => handleSort('enabled')}>
-                        상태
+                        {t('common.status')}
                         {sortField === 'enabled' && (
                           <span className="sort-icon">
                             {sortDirection === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
@@ -657,7 +665,7 @@ function App() {
                         <ResizeHandle columnName="status" />
                       </th>
                       <th style={getColumnStyle('name')} onClick={() => handleSort('name')}>
-                        이름
+                        {t('jobs.table.name')}
                         {sortField === 'name' && (
                           <span className="sort-icon">
                             {sortDirection === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
@@ -666,7 +674,7 @@ function App() {
                         <ResizeHandle columnName="name" />
                       </th>
                       <th style={getColumnStyle('schedule')} onClick={() => handleSort('schedule')}>
-                        스케줄
+                        {t('jobs.table.schedule')}
                         {sortField === 'schedule' && (
                           <span className="sort-icon">
                             {sortDirection === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
@@ -675,7 +683,7 @@ function App() {
                         <ResizeHandle columnName="schedule" />
                       </th>
                       <th style={getColumnStyle('command')} onClick={() => handleSort('command')}>
-                        명령어
+                        {t('jobs.table.command')}
                         {sortField === 'command' && (
                           <span className="sort-icon">
                             {sortDirection === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
@@ -684,7 +692,7 @@ function App() {
                         <ResizeHandle columnName="command" />
                       </th>
                       <th style={getColumnStyle('nextRun')} onClick={() => handleSort('nextRun')}>
-                        다음 실행
+                        {t('jobs.table.nextRun')}
                         {sortField === 'nextRun' && (
                           <span className="sort-icon">
                             {sortDirection === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
@@ -699,7 +707,7 @@ function App() {
                       <tr>
                         <td colSpan={6} style={{ textAlign: 'center', padding: '40px' }}>
                           <div style={{ color: 'var(--text-tertiary)', fontSize: '14px' }}>
-                            "{searchQuery}" 검색 결과가 없습니다
+                            {t('jobs.noSearchResults', { query: searchQuery })}
                           </div>
                         </td>
                       </tr>
@@ -711,24 +719,24 @@ function App() {
                             <button
                               onClick={() => handleRun(job.id)}
                               className="icon-btn play"
-                              title="즉시 실행"
-                              data-tooltip="즉시 실행"
+                              title={t('jobs.runNow')}
+                              data-tooltip={t('jobs.runNow')}
                             >
                               <Play />
                             </button>
                             <button
                               onClick={() => handleEdit(job)}
                               className="icon-btn edit"
-                              title="수정"
-                              data-tooltip="수정"
+                              title={t('common.edit')}
+                              data-tooltip={t('common.edit')}
                             >
                               <Edit />
                             </button>
                             <button
                               onClick={() => handleDelete(job.id)}
                               className="icon-btn delete"
-                              title="삭제"
-                              data-tooltip="삭제"
+                              title={t('common.delete')}
+                              data-tooltip={t('common.delete')}
                             >
                               <Trash2 />
                             </button>
@@ -738,10 +746,10 @@ function App() {
                           <button
                             onClick={() => handleToggle(job.id)}
                             className={`badge ${job.enabled ? 'badge-active' : 'badge-inactive'}`}
-                            title={job.enabled ? '클릭하여 비활성화' : '클릭하여 활성화'}
+                            title={job.enabled ? t('common.inactive') : t('common.active')}
                           >
                             {job.enabled && <span className="dot"></span>}
-                            {job.enabled ? '활성' : '비활성'}
+                            {job.enabled ? t('common.active') : t('common.inactive')}
                           </button>
                         </td>
                         <td>
@@ -828,10 +836,10 @@ function App() {
                                 <button
                                   onClick={() => handleOpenScriptFolder(job.command)}
                                   className="command-link"
-                                  title="실행 파일 폴더 열기"
+                                  title={t('jobs.table.openFolder')}
                                 >
                                   <FolderOpen />
-                                  실행파일
+                                  {t('jobs.table.executable')}
                                 </button>
                                 {extractLogFiles(job.command).map((logFile, idx) => (
                                   <LogButton

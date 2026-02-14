@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { AlertTriangle } from 'lucide-react';
 
 interface BackupCountdownProps {
@@ -6,6 +7,7 @@ interface BackupCountdownProps {
 }
 
 export function BackupCountdown({ deletionTime }: BackupCountdownProps) {
+  const { t } = useTranslation();
   const [timeLeft, setTimeLeft] = useState<string>('');
 
   useEffect(() => {
@@ -15,7 +17,7 @@ export function BackupCountdown({ deletionTime }: BackupCountdownProps) {
       const diff = target - now;
 
       if (diff <= 0) {
-        setTimeLeft('삭제 예정');
+        setTimeLeft(t('backups.table.deletion'));
         return;
       }
 

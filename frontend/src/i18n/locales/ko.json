@@ -1,0 +1,172 @@
+{
+  "common": {
+    "loading": "로딩 중...",
+    "saving": "저장 중...",
+    "restoring": "복구 중...",
+    "save": "저장",
+    "cancel": "취소",
+    "close": "닫기",
+    "confirm": "확인",
+    "delete": "삭제",
+    "edit": "수정",
+    "add": "추가",
+    "search": "검색",
+    "clear": "지우기",
+    "clearSearch": "검색 지우기",
+    "sync": "동기화",
+    "open": "열기",
+    "actions": "액션",
+    "status": "상태",
+    "active": "활성",
+    "inactive": "비활성",
+    "latest": "최신"
+  },
+  "header": {
+    "title": "Cron Manager",
+    "subtitle": "Crontab 작업을 GUI로 쉽게 관리하세요"
+  },
+  "tabs": {
+    "jobs": "작업 관리",
+    "env": "환경변수",
+    "backups": "백업 관리"
+  },
+  "jobs": {
+    "title": "Cron 작업 관리",
+    "newJob": "새 작업",
+    "editJob": "작업 수정",
+    "newCronJob": "새 Cron 작업",
+    "runNow": "즉시 실행",
+    "testIn1Minute": "1분 테스트",
+    "noJobs": "등록된 Cron 작업이 없습니다",
+    "addFirstJob": "첫 작업 추가하기",
+    "searchPlaceholder": "검색 (이름, 명령어, 스케줄)",
+    "noSearchResults": "\"{query}\" 검색 결과가 없습니다",
+    "saveOrder": "현재 정렬 순서를 crontab 파일에 저장",
+    "activeCount": "활성 {{active}} / 전체 {{total}}",
+    "table": {
+      "name": "이름",
+      "schedule": "스케줄",
+      "command": "명령어",
+      "nextRun": "다음 실행",
+      "executable": "실행파일",
+      "openFolder": "실행 파일 폴더 열기"
+    },
+    "form": {
+      "name": "작업 이름",
+      "namePlaceholder": "백업 작업",
+      "description": "설명 (선택사항)",
+      "descriptionPlaceholder": "이 작업은 매일 데이터베이스 백업을 수행합니다",
+      "descriptionHelp": "crontab 파일에 주석으로 저장됩니다",
+      "schedule": "스케줄 타임 (Cron 표현식)",
+      "required": "*",
+      "schedulePlaceholder": "분 시 일 월 요일 (예: 0 9 * * * = 매일 9시)",
+      "command": "실행 명령어",
+      "env": "환경변수 (선택사항)",
+      "envPlaceholder": "한 줄에 하나씩 KEY=VALUE 형식으로 입력",
+      "logFile": "로그 파일 경로 (자동 파싱)",
+      "logFileInfo": "명령어에서 >> 뒤 경로 자동 파싱",
+      "logFileHelp": "명령어에 >> /path/to/log.txt 형식으로 작성하면 자동으로 파싱됩니다",
+      "closeForm": "폼 닫기",
+      "submit": "작업 추가",
+      "submitEdit": "수정 완료",
+      "presets": {
+        "everyMinute": "매분",
+        "every5Minutes": "5분마다",
+        "hourly": "매시간",
+        "daily": "매일 0시",
+        "daily9am": "매일 9시",
+        "weekdays9am": "평일 9시"
+      }
+    }
+  },
+  "env": {
+    "title": "글로벌 환경변수",
+    "newVar": "새 환경변수 추가",
+    "noVars": "등록된 환경변수가 없습니다",
+    "searchPlaceholder": "검색 (Key, Value)",
+    "clearSearch": "검색 초기화",
+    "table": {
+      "key": "Key",
+      "value": "Value"
+    }
+  },
+  "backups": {
+    "title": "백업 관리",
+    "config": "백업 보관 설정",
+    "noBackups": "백업 파일이 없습니다",
+    "autoBackupInfo": "Cron 작업을 수정하면 자동으로 백업이 생성됩니다",
+    "searchPlaceholder": "검색 (백업 시각, 파일명)",
+    "clearSearch": "검색 초기화",
+    "info": "백업 정보",
+    "totalBackups": "총 {{count}}개의 백업 파일이 있습니다",
+    "autoCreated": "백업은 작업 추가/수정/삭제 시 자동으로 생성됩니다",
+    "restoreWarning": "복구 시 현재 crontab이 선택한 백업으로 대체됩니다",
+    "table": {
+      "timestamp": "백업 시각",
+      "filename": "파일명",
+      "size": "크기",
+      "deletion": "삭제 예정"
+    },
+    "restore": "복구",
+    "compare": "비교",
+    "compareWithCurrent": "현재 crontab과 비교",
+    "compareTitle": "백업 비교",
+    "compareSubtitle": "{{filename}}과 현재 crontab 비교",
+    "config": {
+      "maxBackups": "최소 유지 개수",
+      "maxBackupsHelp": "최소 유지할 백업 파일 개수",
+      "maxDays": "최대 보관 일수",
+      "maxDaysHelp": "백업 파일을 보관할 최대 일수",
+      "policy": "정리 정책 (AND 조건):",
+      "policyDesc": "보관 일수를 초과한 백업 중에서 최소 유지 개수를 초과하는 오래된 백업이 자동 삭제됩니다."
+    }
+  },
+  "logs": {
+    "createDir": "로그 디렉토리 생성",
+    "openLog": "로그 파일 열기",
+    "log": "로그"
+  },
+  "errors": {
+    "createDirFailed": "디렉토리 생성에 실패했습니다",
+    "loadJobsFailed": "작업 목록을 불러오는데 실패했습니다",
+    "syncFailed": "동기화에 실패했습니다",
+    "addJobFailed": "작업 추가에 실패했습니다",
+    "updateJobFailed": "작업 수정에 실패했습니다",
+    "deleteJobFailed": "작업 삭제에 실패했습니다",
+    "toggleJobFailed": "작업 토글에 실패했습니다",
+    "runJobFailed": "작업 실행에 실패했습니다",
+    "saveOrderFailed": "정렬 저장에 실패했습니다",
+    "updateFailed": "수정에 실패했습니다",
+    "executableNotFound": "실행 파일 경로를 찾을 수 없습니다",
+    "openFolderFailed": "실행 파일 폴더를 여는데 실패했습니다",
+    "openBackupFailed": "백업 파일을 여는데 실패했습니다",
+    "loadEnvFailed": "환경변수를 불러오는데 실패했습니다",
+    "addEnvFailed": "환경변수 추가에 실패했습니다",
+    "updateEnvFailed": "환경변수 수정에 실패했습니다",
+    "deleteEnvFailed": "환경변수 삭제에 실패했습니다",
+    "loadBackupsFailed": "백업 목록을 불러오는데 실패했습니다",
+    "saveConfigFailed": "설정 저장에 실패했습니다",
+    "restoreBackupFailed": "백업 복구에 실패했습니다",
+    "diffFailed": "Diff 비교에 실패했습니다",
+    "enterKey": "키를 입력해주세요",
+    "enterValue": "값을 입력해주세요",
+    "minBackups": "백업 파일 개수는 최소 1개 이상이어야 합니다",
+    "minDays": "보관 일수는 최소 1일 이상이어야 합니다"
+  },
+  "success": {
+    "syncCompleted": "동기화 완료",
+    "jobAdded": "작업이 추가되었습니다",
+    "jobDeleted": "작업이 삭제되었습니다",
+    "orderSaved": "정렬 순서가 저장되었습니다",
+    "backupRestored": "백업이 성공적으로 복구되었습니다",
+    "runCompleted": "실행 완료"
+  },
+  "dialogs": {
+    "deleteEnv": "\"{{key}}\" 환경변수를 삭제하시겠습니까?",
+    "restoreBackup": "백업을 복구하시겠습니까?",
+    "restoreBackupDetails": "파일: {{filename}}\n날짜: {{date}}\n현재 crontab이 이 백업으로 대체됩니다.",
+    "exitCode": "Exit Code",
+    "stdout": "Stdout",
+    "stderr": "Stderr"
+  }
+}

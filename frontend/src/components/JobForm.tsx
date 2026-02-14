@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
 import type { CronJob, CreateJobRequest, UpdateJobRequest } from '@cron-manager/shared';
 
@@ -9,6 +10,7 @@ interface JobFormProps {
 }
 
 export function JobForm({ job, onClose, onSubmit }: JobFormProps) {
+  const { t } = useTranslation();
   const [schedule, setSchedule] = useState(job?.schedule || '');
   const [command, setCommand] = useState(job?.command || '');
   const [name, setName] = useState(job?.name || '');
@@ -95,20 +97,20 @@ export function JobForm({ job, onClose, onSubmit }: JobFormProps) {
 
   // Preset schedules
   const presets = [
-    { label: '매분', value: '* * * * *' },
-    { label: '5분마다', value: '*/5 * * * *' },
-    { label: '매시간', value: '0 * * * *' },
-    { label: '매일 0시', value: '0 0 * * *' },
-    { label: '매일 9시', value: '0 9 * * *' },
-    { label: '평일 9시', value: '0 9 * * 1-5' },
+    { label: t('jobs.form.presets.everyMinute'), value: '* * * * *' },
+    { label: t('jobs.form.presets.every5Minutes'), value: '*/5 * * * *' },
+    { label: t('jobs.form.presets.hourly'), value: '0 * * * *' },
+    { label: t('jobs.form.presets.daily'), value: '0 0 * * *' },
+    { label: t('jobs.form.presets.daily9am'), value: '0 9 * * *' },
+    { label: t('jobs.form.presets.weekdays9am'), value: '0 9 * * 1-5' },
   ];
 
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h2>{job ? '작업 수정' : '새 Cron 작업'}</h2>
-          <button onClick={onClose} className="modal-close" aria-label="폼 닫기">
+          <h2>{job ? t('jobs.editJob') : t('jobs.newCronJob')}</h2>
+          <button onClick={onClose} className="modal-close" aria-label={t('jobs.form.closeForm')}>
             <X />
           </button>
         </div>
@@ -116,7 +118,7 @@ export function JobForm({ job, onClose, onSubmit }: JobFormProps) {
         <form onSubmit={handleSubmit} className="modal-body">
           {/* 환경변수 */}
           <div className="field">
-            <label className="field-label">환경변수 (선택사항)</label>
+            <label className="field-label">{t('jobs.form.env')}</label>
             <textarea
               value={env}
               onChange={(e) => setEnv(e.target.value)}
@@ -125,7 +127,7 @@ export function JobForm({ job, onClose, onSubmit }: JobFormProps) {
               className="mono"
               rows={3}
             />
-            <span className="field-hint">한 줄에 하나씩 KEY=VALUE 형식으로 입력</span>
+            <span className="field-hint">{t('jobs.form.envPlaceholder')}</span>
           </div>
 
           <div className="divider"></div>
@@ -133,7 +135,7 @@ export function JobForm({ job, onClose, onSubmit }: JobFormProps) {
           {/* 스케줄 타임 */}
           <div className="field">
             <label className="field-label">
-              스케줄 타임 (Cron 표현식) <span className="required">*</span>
+              {t('jobs.form.schedule')} <span className="required">{t('jobs.form.required')}</span>
             </label>
             <input
               type="text"
@@ -157,7 +159,7 @@ export function JobForm({ job, onClose, onSubmit }: JobFormProps) {
                 </button>
               ))}
             </div>
-            <span className="field-hint">분 시 일 월 요일 (예: 0 9 * * * = 매일 9시)</span>
+            <span className="field-hint">{t('jobs.form.schedulePlaceholder')}</span>
           </div>
 
           <div className="divider"></div>
@@ -165,7 +167,7 @@ export function JobForm({ job, onClose, onSubmit }: JobFormProps) {
           {/* 실행 명령어 */}
           <div className="field">
             <label className="field-label">
-              실행 명령어 <span className="required">*</span>
+              {t('jobs.form.command')} <span className="required">{t('jobs.form.required')}</span>
             </label>
             <input
               type="text"
@@ -182,13 +184,13 @@ export function JobForm({ job, onClose, onSubmit }: JobFormProps) {
 
           {/* 작업 이름 */}
           <div className="field">
-            <label className="field-label">작업 이름</label>
+            <label className="field-label">{t('jobs.form.name')}</label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="백업 작업"
+              placeholder={t('jobs.form.namePlaceholder')}
             />
           </div>
 
@@ -196,27 +198,27 @@ export function JobForm({ job, onClose, onSubmit }: JobFormProps) {
 
           {/* 설명 */}
           <div className="field">
-            <label className="field-label">설명 (선택사항)</label>
+            <label className="field-label">{t('jobs.form.description')}</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="이 작업은 매일 데이터베이스 백업을 수행합니다"
+              placeholder={t('jobs.form.descriptionPlaceholder')}
               rows={2}
             />
-            <span className="field-hint">crontab 파일에 주석으로 저장됩니다</span>
+            <span className="field-hint">{t('jobs.form.descriptionHelp')}</span>
           </div>
 
           <div className="divider"></div>
 
           {/* 로그 파일 */}
           <div className="field">
-            <label className="field-label">로그 파일 경로 (자동 파싱)</label>
+            <label className="field-label">{t('jobs.form.logFile')}</label>
             <input
               type="text"
               value={logFile}
               readOnly
-              placeholder="명령어에서 >> 뒤 경로 자동 파싱"
+              placeholder={t('jobs.form.logFileInfo')}
               className="mono"
               style={{
                 background: 'var(--surface)',
@@ -224,16 +226,16 @@ export function JobForm({ job, onClose, onSubmit }: JobFormProps) {
                 opacity: 0.7
               }}
             />
-            <span className="field-hint">명령어에 &gt;&gt; /path/to/log.txt 형식으로 작성하면 자동으로 파싱됩니다</span>
+            <span className="field-hint">{t('jobs.form.logFileHelp')}</span>
           </div>
         </form>
 
         <div className="modal-footer">
           <button type="button" onClick={onClose} className="btn">
-            취소
+            {t('common.cancel')}
           </button>
           <button type="submit" onClick={handleSubmit} className="btn btn-primary">
-            {job ? '수정 완료' : '작업 추가'}
+            {job ? t('jobs.form.submitEdit') : t('jobs.form.submit')}
           </button>
         </div>
       </div>

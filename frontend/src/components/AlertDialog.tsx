@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { AlertCircle, CheckCircle, XCircle, Info, X } from 'lucide-react';
+import logoSvg from '/logo.svg';
 
 export type AlertType = 'info' | 'success' | 'error' | 'warning';
 
@@ -12,6 +14,7 @@ interface AlertDialogProps {
 }
 
 export function AlertDialog({ isOpen, type = 'info', title, message, onClose }: AlertDialogProps) {
+  const { t } = useTranslation();
   useEffect(() => {
     if (!isOpen) return;
 
@@ -63,7 +66,7 @@ export function AlertDialog({ isOpen, type = 'info', title, message, onClose }: 
         style={{ maxWidth: '500px' }}
       >
         <div className="modal-header" style={{ borderBottom: 'none', paddingBottom: '0' }}>
-          <button onClick={onClose} className="modal-close" aria-label="닫기">
+          <button onClick={onClose} className="modal-close" aria-label={t('common.close')}>
             <X />
           </button>
         </div>
@@ -84,7 +87,7 @@ export function AlertDialog({ isOpen, type = 'info', title, message, onClose }: 
             gap: '12px'
           }}>
             <img
-              src="/logo.svg"
+              src={logoSvg}
               alt="Cron Manager"
               style={{
                 width: '32px',
@@ -139,7 +142,7 @@ export function AlertDialog({ isOpen, type = 'info', title, message, onClose }: 
             autoFocus
             style={{ minWidth: '120px' }}
           >
-            확인
+            {t('common.confirm')}
           </button>
         </div>
       </div>
