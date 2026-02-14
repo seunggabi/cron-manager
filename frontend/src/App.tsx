@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
-import { Play, Trash2, Plus, RefreshCw, FolderOpen, FileText, Edit, ChevronUp, ChevronDown, Save, ListChecks, Settings, Database, Clock, Search, X } from 'lucide-react';
+import { Play, Trash2, Plus, RefreshCw, FolderOpen, FileText, Edit, ChevronUp, ChevronDown, Save, ListChecks, Settings, Database, Clock, Search, X, FolderPlus, Github, Star } from 'lucide-react';
 import { JobForm } from './components/JobForm';
 import { GlobalEnvSettings } from './components/GlobalEnvSettings';
 import { BackupManager } from './components/BackupManager';
@@ -14,6 +14,79 @@ type SortField = 'name' | 'schedule' | 'command' | 'enabled' | 'nextRun';
 type SortDirection = 'asc' | 'desc';
 type TabType = 'jobs' | 'env' | 'backups';
 
+// LogButton component - checks if directory exists and shows appropriate button
+function LogButton({ logFile, workingDir }: { logFile: string; workingDir?: string }) {
+  const [dirExists, setDirExists] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const checkDir = async () => {
+      try {
+        const response = await api.logs.checkDir(logFile, workingDir);
+        if (response.success && response.data) {
+          setDirExists(response.data.exists);
+        }
+      } catch (error) {
+        console.error('Failed to check directory:', error);
+      }
+    };
+
+    checkDir();
+  }, [logFile, workingDir]);
+
+  const handleCreateDir = async () => {
+    try {
+      const response = await api.logs.createDir(logFile, workingDir);
+      if (response.success) {
+        setDirExists(true);
+      } else {
+        alert(response.error || '디렉토리 생성에 실패했습니다');
+      }
+    } catch (error) {
+      alert('디렉토리 생성에 실패했습니다');
+    }
+  };
+
+  const handleOpenLog = async () => {
+    try {
+      await api.logs.open(logFile, workingDir);
+    } catch (error) {
+      console.error('Failed to open log:', error);
+    }
+  };
+
+  if (dirExists === null) {
+    return null; // Loading
+  }
+
+  if (!dirExists) {
+    return (
+      <button
+        onClick={handleCreateDir}
+        className="command-link"
+        style={{
+          color: '#ef4444',
+          borderColor: '#ef4444',
+        }}
+        title={`로그 디렉토리 생성: ${logFile}`}
+      >
+        <FolderPlus />
+        로그 디렉토리 생성
+      </button>
+    );
+  }
+
+  return (
+    <button
+      onClick={handleOpenLog}
+      className="command-link"
+      title={`로그 파일 열기: ${logFile}`}
+    >
+      <FileText />
+      로그
+    </button>
+  );
+}
+
 function App() {
   const [activeTab, setActiveTab] = useState<TabType>('jobs');
   const [jobs, setJobs] = useState<CronJob[]>([]);
@@ -25,6 +98,24 @@ function App() {
   const [editingCell, setEditingCell] = useState<{ jobId: string; field: 'name' | 'command' | 'schedule' } | null>(null);
   const [editingValue, setEditingValue] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [starCount, setStarCount] = useState<number | null>(null);
+
+  // Fetch GitHub stars
+  useEffect(() => {
+    const fetchStars = async () => {
+      try {
+        const response = await fetch('https://api.github.com/repos/seunggabi/cron-manager');
+        const data = await response.json();
+        if (data.stargazers_count !== undefined) {
+          setStarCount(data.stargazers_count);
+        }
+      } catch (error) {
+        console.error('Failed to fetch GitHub stars:', error);
+      }
+    };
+
+    fetchStars();
+  }, []);
 
   const fetchJobs = async () => {
     setLoading(true);
@@ -345,6 +436,29 @@ function App() {
             </h1>
             <div className="header-sub">Crontab 작업을 GUI로 쉽게 관리하세요</div>
           </div>
+          <a
+            href="https://github.com/seunggabi/cron-manager"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn"
+            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+            title="GitHub Repository"
+          >
+            <Github size={16} />
+            GitHub
+            {starCount !== null && (
+              <span style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                paddingLeft: '6px',
+                borderLeft: '1px solid var(--border)'
+              }}>
+                <Star size={14} style={{ fill: 'currentColor' }} />
+                {starCount}
+              </span>
+            )}
+          </a>
         </div>
       </div>
 
@@ -378,7 +492,7 @@ function App() {
                     활성 {activeJobsCount} / 전체 {jobs.length}
                   </div>
                   {/* Search Input */}
-                  <div style={{ position: 'relative', flex: 1 }}>
+                  <div style={{ position: 'relative', flex: 6 }}>
                     <Search size={16} style={{
                       position: 'absolute',
                       left: '12px',
@@ -672,15 +786,11 @@ function App() {
                                   실행파일
                                 </button>
                                 {extractLogFiles(job.command).map((logFile, idx) => (
-                                  <button
+                                  <LogButton
                                     key={idx}
-                                    onClick={() => handleOpenLogs(logFile, job.workingDir)}
-                                    className="command-link"
-                                    title={`로그 파일 열기: ${logFile}`}
-                                  >
-                                    <FileText />
-                                    로그
-                                  </button>
+                                    logFile={logFile}
+                                    workingDir={job.workingDir}
+                                  />
                                 ))}
                               </div>
                             </>

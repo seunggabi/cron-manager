@@ -1,6 +1,7 @@
 import { ipcMain, shell } from 'electron';
 import { crontabService } from '../services/crontab.service';
 import { scheduleService } from '../services/schedule.service';
+import { configService } from '../services/config.service';
 import type { CronJob, CreateJobRequest, UpdateJobRequest } from '../../../shared/types';
 import path from 'path';
 import os from 'os';
@@ -53,7 +54,7 @@ export function setupIpcHandlers() {
         name: data.name,
         description: data.description,
         schedule: data.schedule,
-        command: data.command,
+        command: data.command.trim(),
         enabled: true,
         env: data.env,
         workingDir: data.workingDir,
@@ -88,6 +89,11 @@ export function setupIpcHandlers() {
             error: `Invalid schedule: ${validation.error}`
           };
         }
+      }
+
+      // Trim command if provided
+      if (updates.command) {
+        updates.command = updates.command.trim();
       }
 
       const job = await crontabService.updateJob(id, updates);
@@ -239,23 +245,85 @@ export function setupIpcHandlers() {
       // Check if file exists
       const fileExists = await fs.pathExists(expandedPath);
 
-      if (fileExists) {
-        // Open Terminal and run tail -f on the log file
-        const safePath = expandedPath.replace(/'/g, "'\\''");
-        await execAsync(`osascript -e "tell application \\"Terminal\\" to do script \\"tail -f '${safePath}'\\""`);
-      } else {
-        // If file doesn't exist, open the directory
+      if (!fileExists) {
+        // If file doesn't exist, create directory and empty file
         const logDir = path.dirname(expandedPath);
-        const dirExists = await fs.pathExists(logDir);
 
-        if (!dirExists) {
-          return { success: false, error: `Directory does not exist: ${logDir}` };
-        }
+        // Create directory if it doesn't exist
+        await fs.ensureDir(logDir);
 
-        await shell.openPath(logDir);
+        // Create empty file
+        await fs.writeFile(expandedPath, '');
       }
 
+      // Open Terminal and run tail -f on the log file
+      const safePath = expandedPath.replace(/'/g, "'\\''");
+      await execAsync(`osascript -e "tell application \\"Terminal\\" to do script \\"tail -f '${safePath}'\\""`);
+
+
       return { success: true };
+    } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  });
+
+  // Check if log directory exists
+  ipcMain.handle('logs:checkDir', async (_, logPath?: string, workingDir?: string) => {
+    try {
+      if (!logPath) {
+        return { success: false, error: 'Log path is required' };
+      }
+
+      // Expand ~ to home directory
+      let expandedPath = logPath;
+      if (logPath.startsWith('~')) {
+        expandedPath = logPath.replace('~', os.homedir());
+      }
+
+      // If path is relative and workingDir is provided, resolve it
+      if (!path.isAbsolute(expandedPath) && workingDir) {
+        expandedPath = path.resolve(workingDir, expandedPath);
+      } else if (!path.isAbsolute(expandedPath)) {
+        expandedPath = path.resolve(os.homedir(), expandedPath);
+      }
+
+      const fs = await import('fs-extra');
+      const logDir = path.dirname(expandedPath);
+      const dirExists = await fs.pathExists(logDir);
+
+      return { success: true, data: { exists: dirExists, dir: logDir } };
+    } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  });
+
+  // Create log directory only
+  ipcMain.handle('logs:createDir', async (_, logPath?: string, workingDir?: string) => {
+    try {
+      if (!logPath) {
+        return { success: false, error: 'Log path is required' };
+      }
+
+      // Expand ~ to home directory
+      let expandedPath = logPath;
+      if (logPath.startsWith('~')) {
+        expandedPath = logPath.replace('~', os.homedir());
+      }
+
+      // If path is relative and workingDir is provided, resolve it
+      if (!path.isAbsolute(expandedPath) && workingDir) {
+        expandedPath = path.resolve(workingDir, expandedPath);
+      } else if (!path.isAbsolute(expandedPath)) {
+        expandedPath = path.resolve(os.homedir(), expandedPath);
+      }
+
+      const fs = await import('fs-extra');
+      const logDir = path.dirname(expandedPath);
+
+      // Create directory
+      await fs.ensureDir(logDir);
+
+      return { success: true, data: { dir: logDir } };
     } catch (error: any) {
       return { success: false, error: error.message };
     }
@@ -398,6 +466,27 @@ export function setupIpcHandlers() {
     try {
       const env = await crontabService.deleteGlobalEnvVar(key);
       return { success: true, data: env };
+    } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  });
+
+  // Backup config handlers
+  ipcMain.handle('config:getBackupConfig', async () => {
+    try {
+      const config = configService.getBackupConfig();
+      return { success: true, data: config };
+    } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  });
+
+  ipcMain.handle('config:updateBackupConfig', async (_, maxBackups: number, maxBackupDays: number) => {
+    try {
+      await configService.updateBackupConfig({ maxBackups, maxBackupDays });
+      // Clean up old backups immediately after config update
+      await crontabService.cleanupOldBackups();
+      return { success: true };
     } catch (error: any) {
       return { success: false, error: error.message };
     }

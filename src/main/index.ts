@@ -1,8 +1,16 @@
 import { app, BrowserWindow, shell } from 'electron';
 import { join } from 'path';
 import { setupIpcHandlers } from './ipc';
+import { configService } from './services/config.service';
+import { initCrontabService } from './services/crontab.service';
 
 const isDev = process.env.NODE_ENV === 'development';
+
+// Initialize services
+async function initializeServices() {
+  await configService.load();
+  initCrontabService(configService);
+}
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -50,7 +58,8 @@ function createWindow() {
 }
 
 // App lifecycle
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
+  await initializeServices();
   createWindow();
 
   app.on('activate', () => {

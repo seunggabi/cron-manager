@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { RefreshCw, RotateCcw, Database, FolderOpen, FileText, X, Search, ChevronUp, ChevronDown } from 'lucide-react';
+import { RefreshCw, RotateCcw, Database, FolderOpen, FileText, X, Search, ChevronUp, ChevronDown, Save } from 'lucide-react';
 
 const api = window.electronAPI;
 
@@ -27,6 +27,9 @@ export function BackupManager() {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortField, setSortField] = useState<SortField>('timestamp');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [maxBackups, setMaxBackups] = useState(10);
+  const [maxBackupDays, setMaxBackupDays] = useState(7);
+  const [configLoading, setConfigLoading] = useState(false);
 
   const fetchBackups = async () => {
     setLoading(true);
@@ -48,9 +51,49 @@ export function BackupManager() {
     }
   };
 
+  const fetchBackupConfig = async () => {
+    try {
+      const response = await api.config.getBackupConfig();
+      if (response.success && response.data) {
+        setMaxBackups(response.data.maxBackups);
+        setMaxBackupDays(response.data.maxBackupDays);
+      }
+    } catch (error) {
+      console.error('Failed to fetch backup config:', error);
+    }
+  };
+
   useEffect(() => {
     fetchBackups();
+    fetchBackupConfig();
   }, []);
+
+  const handleSaveConfig = async () => {
+    if (maxBackups < 1) {
+      alert('백업 파일 개수는 최소 1개 이상이어야 합니다');
+      return;
+    }
+    if (maxBackupDays < 1) {
+      alert('보관 일수는 최소 1일 이상이어야 합니다');
+      return;
+    }
+
+    setConfigLoading(true);
+    try {
+      const response = await api.config.updateBackupConfig(maxBackups, maxBackupDays);
+      if (!response.success) {
+        alert(response.error || '설정 저장에 실패했습니다');
+      } else {
+        // Success: refresh backup list to show cleaned up backups
+        await fetchBackups();
+      }
+    } catch (error) {
+      console.error('Failed to save config:', error);
+      alert('설정 저장에 실패했습니다');
+    } finally {
+      setConfigLoading(false);
+    }
+  };
 
   const handleOpenBackup = async (backupPath: string) => {
     try {
@@ -170,6 +213,64 @@ export function BackupManager() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      {/* Backup Retention Settings */}
+      <div className="table-card" style={{ padding: '24px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <h3 style={{ fontSize: '16px', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
+            백업 보관 설정
+          </h3>
+          <button
+            onClick={handleSaveConfig}
+            disabled={configLoading}
+            className="btn btn-primary"
+          >
+            {configLoading ? (
+              <>
+                <RefreshCw size={16} style={{ animation: 'spin 1s linear infinite' }} />
+                저장 중...
+              </>
+            ) : (
+              <>
+                <Save size={16} />
+                저장
+              </>
+            )}
+          </button>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+          <div>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '6px', color: 'var(--text-secondary)' }}>
+              최소 유지 개수
+            </label>
+            <input
+              type="number"
+              value={maxBackups}
+              onChange={(e) => setMaxBackups(Math.max(1, parseInt(e.target.value) || 1))}
+              min="1"
+              style={{ width: '100%' }}
+            />
+            <span style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '4px', display: 'block' }}>
+              최소 유지할 백업 파일 개수
+            </span>
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '6px', color: 'var(--text-secondary)' }}>
+              최대 보관 일수
+            </label>
+            <input
+              type="number"
+              value={maxBackupDays}
+              onChange={(e) => setMaxBackupDays(Math.max(1, parseInt(e.target.value) || 1))}
+              min="1"
+              style={{ width: '100%' }}
+            />
+            <span style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '4px', display: 'block' }}>
+              백업 파일을 보관할 최대 일수
+            </span>
+          </div>
+        </div>
+      </div>
+
       {/* Search */}
       {backups.length > 0 && (
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
