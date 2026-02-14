@@ -3,14 +3,18 @@ import { promisify } from 'util';
 import { nanoid } from 'nanoid';
 import type { CronJob, GlobalEnv } from '../../../shared/types';
 import { extractJobName } from '../utils/jobNameExtractor';
+import type { ConfigService } from './config.service';
 
 const execAsync = promisify(exec);
 
 export class CrontabService {
   private static MARKER_PREFIX = '# CRON-MANAGER:';
-  private static MAX_BACKUPS = 10; // 최소 유지 백업 개수
-  private static MAX_BACKUP_DAYS = 7; // 최대 유지 일수
   private globalEnv: GlobalEnv = {};
+  private configService: ConfigService;
+
+  constructor(configService: ConfigService) {
+    this.configService = configService;
+  }
 
   /**
    * Read current user's crontab
@@ -75,11 +79,12 @@ export class CrontabService {
       // Sort by modification time, most recent first
       backupFilesWithStats.sort((a, b) => b.mtime - a.mtime);
 
-      // Keep backups from last MAX_BACKUP_DAYS days
-      const maxDaysAgo = Date.now() - (CrontabService.MAX_BACKUP_DAYS * 24 * 60 * 60 * 1000);
+      // Get backup config
+      const backupConfig = this.configService.getBackupConfig();
+      const maxDaysAgo = Date.now() - (backupConfig.maxBackupDays * 24 * 60 * 60 * 1000);
 
-      // Remove old backups (older than MAX_BACKUP_DAYS days, but keep at least MAX_BACKUPS most recent)
-      for (let i = CrontabService.MAX_BACKUPS; i < backupFilesWithStats.length; i++) {
+      // Remove old backups (older than maxBackupDays, but keep at least maxBackups most recent)
+      for (let i = backupConfig.maxBackups; i < backupFilesWithStats.length; i++) {
         if (backupFilesWithStats[i].mtime < maxDaysAgo) {
           await fs.remove(backupFilesWithStats[i].path);
         }
@@ -345,6 +350,12 @@ export class CrontabService {
 
       // Add log redirection only if command doesn't already have it
       if (job.logFile && !hasRedirect) {
+        // Extract directory from log file path and create it if needed
+        const logDir = job.logFile.substring(0, job.logFile.lastIndexOf('/'));
+        if (logDir) {
+          fullCommand = `mkdir -p ${logDir} && ${fullCommand}`;
+        }
+
         if (job.logStderr) {
           fullCommand = `${fullCommand} >> ${job.logFile} 2>> ${job.logStderr}`;
         } else {
@@ -716,6 +727,55 @@ export class CrontabService {
   }
 
   /**
+   * Clean up old backups based on retention policy
+   */
+  async cleanupOldBackups(): Promise<void> {
+    const fs = await import('fs-extra');
+    const os = await import('os');
+    const path = await import('path');
+
+    try {
+      const backupDir = path.join(os.homedir(), '.cron-manager', 'backups');
+
+      // Check if backup directory exists
+      const dirExists = await fs.pathExists(backupDir);
+      if (!dirExists) {
+        return;
+      }
+
+      const files = await fs.readdir(backupDir);
+      const backupFilesWithStats = [];
+
+      for (const file of files) {
+        if (file.startsWith('crontab-') && file.endsWith('.bak')) {
+          const filePath = path.join(backupDir, file);
+          const stats = await fs.stat(filePath);
+          backupFilesWithStats.push({
+            path: filePath,
+            mtime: stats.mtime.getTime(),
+          });
+        }
+      }
+
+      // Sort by modification time, most recent first
+      backupFilesWithStats.sort((a, b) => b.mtime - a.mtime);
+
+      // Get backup config
+      const backupConfig = this.configService.getBackupConfig();
+      const maxDaysAgo = Date.now() - (backupConfig.maxBackupDays * 24 * 60 * 60 * 1000);
+
+      // Remove old backups (older than maxBackupDays, but keep at least maxBackups most recent)
+      for (let i = backupConfig.maxBackups; i < backupFilesWithStats.length; i++) {
+        if (backupFilesWithStats[i].mtime < maxDaysAgo) {
+          await fs.remove(backupFilesWithStats[i].path);
+        }
+      }
+    } catch (error: any) {
+      // Silently ignore errors in cleanup
+    }
+  }
+
+  /**
    * Compare current crontab with a backup file
    */
   async diffWithBackup(backupPath: string): Promise<{ current: string; backup: string; diff: Array<{ type: 'add' | 'remove' | 'same'; line: string; lineNumber?: number }> }> {
@@ -764,4 +824,9 @@ export class CrontabService {
   }
 }
 
-export const crontabService = new CrontabService();
+// Export singleton will be initialized in main/index.ts
+export let crontabService: CrontabService;
+
+export function initCrontabService(configService: ConfigService) {
+  crontabService = new CrontabService(configService);
+}

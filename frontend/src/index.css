@@ -125,6 +125,7 @@ code, .mono {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex: 1;
 }
 .action-bar-right {
   display: flex;
@@ -532,6 +533,7 @@ td:nth-child(2) {
 }
 
 input[type="text"],
+input[type="number"],
 textarea {
   width: 100%;
   padding: 10px 14px;
@@ -546,6 +548,7 @@ textarea {
   outline: none;
 }
 input[type="text"]:focus,
+input[type="number"]:focus,
 textarea:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(37,99,235,0.1);

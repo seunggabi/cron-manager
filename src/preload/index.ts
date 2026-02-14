@@ -65,6 +65,12 @@ const api = {
 
     create: (logPath: string): Promise<IpcResponse<void>> =>
       ipcRenderer.invoke('logs:create', logPath),
+
+    checkDir: (logPath?: string, workingDir?: string): Promise<IpcResponse<{ exists: boolean; dir: string }>> =>
+      ipcRenderer.invoke('logs:checkDir', logPath, workingDir),
+
+    createDir: (logPath?: string, workingDir?: string): Promise<IpcResponse<{ dir: string }>> =>
+      ipcRenderer.invoke('logs:createDir', logPath, workingDir),
   },
 
   // Files API
@@ -107,6 +113,15 @@ const api = {
 
     deleteGlobalVar: (key: string): Promise<IpcResponse<GlobalEnv>> =>
       ipcRenderer.invoke('env:deleteGlobalVar', key),
+  },
+
+  // Config API
+  config: {
+    getBackupConfig: (): Promise<IpcResponse<{ maxBackups: number; maxBackupDays: number }>> =>
+      ipcRenderer.invoke('config:getBackupConfig'),
+
+    updateBackupConfig: (maxBackups: number, maxBackupDays: number): Promise<IpcResponse<void>> =>
+      ipcRenderer.invoke('config:updateBackupConfig', maxBackups, maxBackupDays),
   },
 };
 
