@@ -1,0 +1,693 @@
+import { exec } from 'child_process';
+import { promisify } from 'util';
+import { nanoid } from 'nanoid';
+import type { CronJob, GlobalEnv } from '../../../shared/types';
+import { extractJobName } from '../utils/jobNameExtractor';
+
+const execAsync = promisify(exec);
+
+export class CrontabService {
+  private static MARKER_PREFIX = '# CRON-MANAGER:';
+  private globalEnv: GlobalEnv = {};
+
+  /**
+   * Read current user's crontab
+   */
+  async readCrontab(): Promise<string> {
+    try {
+      const { stdout } = await execAsync('crontab -l');
+      return stdout;
+    } catch (error: any) {
+      // crontab -l returns error if no crontab exists
+      if (error.message.includes('no crontab')) {
+        return '';
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Backup current crontab before changes
+   */
+  async backupCrontab(): Promise<string | null> {
+    const fs = await import('fs-extra');
+    const os = await import('os');
+    const path = await import('path');
+
+    try {
+      // Read current crontab
+      const currentCrontab = await this.readCrontab();
+      if (!currentCrontab) {
+        return null; // No crontab to backup
+      }
+
+      // Create backup directory
+      const backupDir = path.join(os.homedir(), '.cron-manager', 'backups');
+      await fs.ensureDir(backupDir);
+
+      // Create backup file with timestamp
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const backupFile = path.join(backupDir, `crontab-${timestamp}.bak`);
+      await fs.writeFile(backupFile, currentCrontab);
+
+      // Clean up old backups (keep only last 10)
+      const files = await fs.readdir(backupDir);
+      const backupFiles = files
+        .filter(f => f.startsWith('crontab-') && f.endsWith('.bak'))
+        .map(f => path.join(backupDir, f))
+        .sort()
+        .reverse(); // Most recent first
+
+      // Remove old backups
+      for (let i = 10; i < backupFiles.length; i++) {
+        await fs.remove(backupFiles[i]);
+      }
+
+      return backupFile;
+    } catch (error: any) {
+      console.error('Failed to backup crontab:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Write crontab
+   */
+  async writeCrontab(content: string): Promise<void> {
+    const fs = await import('fs-extra');
+
+    // Backup current crontab before writing
+    await this.backupCrontab();
+
+    // Create temporary file and use crontab command
+    const tempFile = `/tmp/crontab-${Date.now()}.tmp`;
+
+    try {
+      await fs.writeFile(tempFile, content);
+      await execAsync(`crontab ${tempFile}`);
+    } finally {
+      await fs.remove(tempFile);
+    }
+  }
+
+  /**
+   * Parse global environment variables from crontab header
+   */
+  private parseGlobalEnv(content: string): GlobalEnv {
+    const lines = content.split('\n');
+    const globalEnv: GlobalEnv = {};
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+
+      // Stop on empty lines (after global env section)
+      if (!trimmed) {
+        // Only break if we've found at least one env var
+        if (Object.keys(globalEnv).length > 0) {
+          break;
+        }
+        continue;
+      }
+
+      // Skip comments but continue parsing
+      if (trimmed.startsWith('#')) {
+        continue;
+      }
+
+      // Stop when we hit cron jobs (5 fields before command)
+      if (trimmed.match(/^(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+/)) {
+        break;
+      }
+
+      // Parse KEY=VALUE format
+      const match = trimmed.match(/^([A-Z_][A-Z0-9_]*)=(.*)$/);
+      if (match) {
+        const [, key, value] = match;
+        // Remove surrounding quotes if present
+        globalEnv[key] = value.replace(/^["']|["']$/g, '');
+      }
+    }
+
+    return globalEnv;
+  }
+
+  /**
+   * Parse crontab content to CronJob objects
+   */
+  parseCrontab(content: string): CronJob[] {
+    // Parse global environment variables first
+    this.globalEnv = this.parseGlobalEnv(content);
+
+    const lines = content.split('\n');
+    const jobs: CronJob[] = [];
+    let currentMetadata: Partial<CronJob> = {};
+    let inGlobalEnvSection = true;
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+
+      // Skip global env lines
+      if (inGlobalEnvSection) {
+        // Check if it's a CRON-MANAGER metadata comment
+        if (line.startsWith(CrontabService.MARKER_PREFIX)) {
+          inGlobalEnvSection = false;
+        } else if (!line) {
+          // Empty line, might be end of global env section
+          // Don't exit yet, just continue
+          continue;
+        } else if (line.startsWith('#')) {
+          // Regular comment in global env section, skip
+          continue;
+        } else if (line.match(/^[A-Z_][A-Z0-9_]*=/)) {
+          // Global env variable, skip
+          continue;
+        } else {
+          // Something else (cron job), exit global env section
+          inGlobalEnvSection = false;
+        }
+      }
+
+      // Skip empty lines
+      if (!line) {
+        currentMetadata = {};
+        continue;
+      }
+
+      // Parse metadata comments
+      if (line.startsWith(CrontabService.MARKER_PREFIX)) {
+        const metaLine = line.substring(CrontabService.MARKER_PREFIX.length).trim();
+
+        if (metaLine.startsWith('ID:')) {
+          currentMetadata.id = metaLine.substring(3).trim();
+        } else if (metaLine.startsWith('NAME:')) {
+          currentMetadata.name = metaLine.substring(5).trim();
+        } else if (metaLine.startsWith('DESC:')) {
+          currentMetadata.description = metaLine.substring(5).trim();
+        } else if (metaLine.startsWith('ENV:')) {
+          const envPart = metaLine.substring(4).trim();
+          try {
+            currentMetadata.env = JSON.parse(envPart);
+          } catch {
+            // Invalid JSON, skip
+          }
+        } else if (metaLine.startsWith('TAGS:')) {
+          const tagsPart = metaLine.substring(5).trim();
+          currentMetadata.tags = tagsPart.split(',').map(t => t.trim());
+        } else if (metaLine.startsWith('LOG:')) {
+          currentMetadata.logFile = metaLine.substring(4).trim();
+        } else if (metaLine.startsWith('LOGERR:')) {
+          currentMetadata.logStderr = metaLine.substring(7).trim();
+        } else if (metaLine.startsWith('WORKDIR:')) {
+          currentMetadata.workingDir = metaLine.substring(8).trim();
+        }
+        continue;
+      }
+
+      // Parse cron job line
+      if (line.startsWith('#')) {
+        // Commented out job (disabled)
+        const jobLine = line.substring(1).trim();
+        const job = this.parseCronLine(jobLine, currentMetadata);
+        if (job) {
+          job.enabled = false;
+          jobs.push(job);
+          currentMetadata = {};
+        }
+      } else {
+        // Active job
+        const job = this.parseCronLine(line, currentMetadata);
+        if (job) {
+          job.enabled = true;
+          jobs.push(job);
+          currentMetadata = {};
+        }
+      }
+    }
+
+    return jobs;
+  }
+
+  /**
+   * Parse single cron line
+   */
+  private parseCronLine(line: string, metadata: Partial<CronJob>): CronJob | null {
+    // Cron format: minute hour day month weekday command
+    const parts = line.match(/^(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(.+)$/);
+
+    if (!parts) {
+      return null;
+    }
+
+    const [, minute, hour, day, month, weekday, command] = parts;
+    const schedule = `${minute} ${hour} ${day} ${month} ${weekday}`;
+
+    return {
+      id: metadata.id || nanoid(),
+      name: metadata.name || extractJobName(command),
+      description: metadata.description,
+      schedule,
+      command,
+      enabled: true,
+      env: metadata.env,
+      workingDir: metadata.workingDir,
+      logFile: metadata.logFile,
+      logStderr: metadata.logStderr,
+      tags: metadata.tags,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+  }
+
+  /**
+   * Convert CronJob objects to crontab content
+   */
+  serializeCrontab(jobs: CronJob[]): string {
+    const lines: string[] = [];
+
+    // Add global environment variables at the top
+    const globalEnvKeys = Object.keys(this.globalEnv).sort();
+    if (globalEnvKeys.length > 0) {
+      for (const key of globalEnvKeys) {
+        const value = this.globalEnv[key];
+        // Quote value if it contains spaces
+        const quotedValue = value.includes(' ') ? `"${value}"` : value;
+        lines.push(`${key}=${quotedValue}`);
+      }
+      lines.push(''); // Empty line after global env
+    }
+
+    for (const job of jobs) {
+      // Add metadata comments
+      lines.push(`${CrontabService.MARKER_PREFIX}ID:${job.id}`);
+      lines.push(`${CrontabService.MARKER_PREFIX}NAME:${job.name}`);
+
+      if (job.description) {
+        lines.push(`${CrontabService.MARKER_PREFIX}DESC:${job.description}`);
+      }
+
+      if (job.env && Object.keys(job.env).length > 0) {
+        lines.push(`${CrontabService.MARKER_PREFIX}ENV:${JSON.stringify(job.env)}`);
+      }
+
+      if (job.tags && job.tags.length > 0) {
+        lines.push(`${CrontabService.MARKER_PREFIX}TAGS:${job.tags.join(',')}`);
+      }
+
+      if (job.logFile) {
+        lines.push(`${CrontabService.MARKER_PREFIX}LOG:${job.logFile}`);
+      }
+
+      if (job.logStderr) {
+        lines.push(`${CrontabService.MARKER_PREFIX}LOGERR:${job.logStderr}`);
+      }
+
+      if (job.workingDir) {
+        lines.push(`${CrontabService.MARKER_PREFIX}WORKDIR:${job.workingDir}`);
+      }
+
+      // Build command with environment variables
+      let fullCommand = job.command;
+
+      if (job.workingDir) {
+        fullCommand = `cd ${job.workingDir} && ${fullCommand}`;
+      }
+
+      if (job.env && Object.keys(job.env).length > 0) {
+        const envVars = Object.entries(job.env)
+          .map(([key, value]) => `${key}="${value}"`)
+          .join(' ');
+        fullCommand = `${envVars} ${fullCommand}`;
+      }
+
+      // Add log redirection
+      if (job.logFile) {
+        if (job.logStderr) {
+          fullCommand = `${fullCommand} >> ${job.logFile} 2>> ${job.logStderr}`;
+        } else {
+          fullCommand = `${fullCommand} >> ${job.logFile} 2>&1`;
+        }
+      }
+
+      // Add cron line
+      const cronLine = `${job.schedule} ${fullCommand}`;
+      lines.push(job.enabled ? cronLine : `#${cronLine}`);
+
+      // Add empty line for readability
+      lines.push('');
+    }
+
+    return lines.join('\n');
+  }
+
+  /**
+   * Get all jobs
+   */
+  async getAllJobs(): Promise<CronJob[]> {
+    const content = await this.readCrontab();
+    return this.parseCrontab(content);
+  }
+
+  /**
+   * Get job by ID
+   */
+  async getJobById(id: string): Promise<CronJob | null> {
+    const jobs = await this.getAllJobs();
+    return jobs.find(job => job.id === id) || null;
+  }
+
+  /**
+   * Add new job
+   */
+  async addJob(job: Omit<CronJob, 'id' | 'createdAt' | 'updatedAt'>): Promise<CronJob> {
+    const jobs = await this.getAllJobs();
+
+    const newJob: CronJob = {
+      ...job,
+      id: nanoid(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    jobs.push(newJob);
+    await this.writeCrontab(this.serializeCrontab(jobs));
+
+    return newJob;
+  }
+
+  /**
+   * Update job
+   */
+  async updateJob(id: string, updates: Partial<CronJob>): Promise<CronJob | null> {
+    const jobs = await this.getAllJobs();
+    const index = jobs.findIndex(job => job.id === id);
+
+    if (index === -1) {
+      return null;
+    }
+
+    jobs[index] = {
+      ...jobs[index],
+      ...updates,
+      id,
+      updatedAt: new Date(),
+    };
+
+    await this.writeCrontab(this.serializeCrontab(jobs));
+
+    return jobs[index];
+  }
+
+  /**
+   * Delete job
+   */
+  async deleteJob(id: string): Promise<boolean> {
+    const jobs = await this.getAllJobs();
+    const filteredJobs = jobs.filter(job => job.id !== id);
+
+    if (filteredJobs.length === jobs.length) {
+      return false;
+    }
+
+    await this.writeCrontab(this.serializeCrontab(filteredJobs));
+    return true;
+  }
+
+  /**
+   * Toggle job enabled/disabled
+   */
+  async toggleJob(id: string): Promise<CronJob | null> {
+    const job = await this.getJobById(id);
+
+    if (!job) {
+      return null;
+    }
+
+    return this.updateJob(id, { enabled: !job.enabled });
+  }
+
+  /**
+   * Run job immediately
+   */
+  async runJob(id: string): Promise<any> {
+    const job = await this.getJobById(id);
+
+    if (!job) {
+      throw new Error('Job not found');
+    }
+
+    // Build command
+    let command = job.command;
+
+    if (job.workingDir) {
+      command = `cd ${job.workingDir} && ${command}`;
+    }
+
+    // Merge environment variables (cron-like environment)
+    // Priority: job env > global env > minimal process env
+    const globalEnv = await this.getGlobalEnv();
+    const mergedEnv = {
+      // Minimal essential vars from process
+      PATH: process.env.PATH || '/usr/bin:/bin',
+      // Global env from crontab
+      ...globalEnv,
+      // Job-specific env (highest priority)
+      ...job.env,
+    };
+
+    console.log('[runJob] Using environment:', mergedEnv);
+
+    // Execute command
+    const startTime = Date.now();
+    try {
+      const { stdout, stderr } = await execAsync(command, {
+        timeout: 300000, // 5 minutes timeout
+        env: mergedEnv,
+      });
+
+      const duration = Date.now() - startTime;
+
+      return {
+        exitCode: 0,
+        stdout,
+        stderr,
+        duration,
+      };
+    } catch (execError: any) {
+      const duration = Date.now() - startTime;
+
+      return {
+        exitCode: execError.code || 1,
+        stdout: execError.stdout || '',
+        stderr: execError.stderr || execError.message,
+        duration,
+        error: true,
+      };
+    }
+  }
+
+  /**
+   * Test job in 1 minute (creates temp job, runs, auto-deletes)
+   */
+  async testJobIn1Minute(command: string, options?: {
+    env?: Record<string, string>;
+    workingDir?: string;
+  }): Promise<CronJob> {
+    const now = new Date();
+    const testTime = new Date(now.getTime() + 60000); // 1 minute from now
+
+    const minute = testTime.getMinutes();
+    const hour = testTime.getHours();
+    const schedule = `${minute} ${hour} * * *`;
+
+    const testJob = await this.addJob({
+      name: `[TEST] ${command.substring(0, 30)}`,
+      description: 'Auto-generated test job - will be deleted after execution',
+      schedule,
+      command,
+      enabled: true,
+      env: options?.env,
+      workingDir: options?.workingDir,
+      tags: ['test', 'auto-delete'],
+    });
+
+    // Schedule deletion after 2 minutes
+    setTimeout(async () => {
+      try {
+        await this.deleteJob(testJob.id);
+      } catch (error) {
+        console.error('Failed to delete test job:', error);
+      }
+    }, 120000);
+
+    return testJob;
+  }
+
+  /**
+   * Reorder jobs in crontab file
+   */
+  async reorderJobs(jobIds: string[]): Promise<CronJob[]> {
+    const jobs = await this.getAllJobs();
+
+    // Create a map for quick lookup
+    const jobMap = new Map(jobs.map(job => [job.id, job]));
+
+    // Build reordered array based on jobIds
+    const reorderedJobs: CronJob[] = [];
+
+    for (const id of jobIds) {
+      const job = jobMap.get(id);
+      if (job) {
+        reorderedJobs.push(job);
+        jobMap.delete(id);
+      }
+    }
+
+    // Append any jobs that weren't in the jobIds list (shouldn't happen normally)
+    jobMap.forEach(job => reorderedJobs.push(job));
+
+    // Write the reordered crontab
+    await this.writeCrontab(this.serializeCrontab(reorderedJobs));
+
+    return reorderedJobs;
+  }
+
+  /**
+   * List all available backups with metadata
+   */
+  async listBackups(): Promise<Array<{
+    filename: string;
+    timestamp: Date;
+    path: string;
+    size: number;
+  }>> {
+    const fs = await import('fs-extra');
+    const os = await import('os');
+    const path = await import('path');
+
+    try {
+      const backupDir = path.join(os.homedir(), '.cron-manager', 'backups');
+
+      // Check if backup directory exists
+      const dirExists = await fs.pathExists(backupDir);
+      if (!dirExists) {
+        return [];
+      }
+
+      const files = await fs.readdir(backupDir);
+      const backups = [];
+
+      for (const file of files) {
+        if (file.startsWith('crontab-') && file.endsWith('.bak')) {
+          const filePath = path.join(backupDir, file);
+          const stats = await fs.stat(filePath);
+
+          // Parse timestamp from filename
+          // Format: crontab-2024-02-14T16-30-00-123Z.bak
+          const timestampStr = file.replace('crontab-', '').replace('.bak', '').replace(/-/g, ':');
+          const timestamp = new Date(timestampStr.replace(/:/g, '-', 2).replace(/-/g, ':', 2));
+
+          backups.push({
+            filename: file,
+            timestamp: stats.mtime, // Use file modification time as more reliable
+            path: filePath,
+            size: stats.size,
+          });
+        }
+      }
+
+      // Sort by timestamp, most recent first
+      return backups.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+    } catch (error: any) {
+      console.error('Failed to list backups:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Restore crontab from a backup file
+   */
+  async restoreBackup(backupPath: string): Promise<void> {
+    const fs = await import('fs-extra');
+
+    try {
+      // Check if backup file exists
+      const exists = await fs.pathExists(backupPath);
+      if (!exists) {
+        throw new Error('Backup file not found');
+      }
+
+      // Read backup content
+      const backupContent = await fs.readFile(backupPath, 'utf-8');
+
+      // Create a backup of current state before restoring
+      await this.backupCrontab();
+
+      // Write the backup content as current crontab
+      const tempFile = `/tmp/crontab-restore-${Date.now()}.tmp`;
+      try {
+        await fs.writeFile(tempFile, backupContent);
+        await execAsync(`crontab ${tempFile}`);
+      } finally {
+        await fs.remove(tempFile);
+      }
+    } catch (error: any) {
+      throw new Error(`Failed to restore backup: ${error.message}`);
+    }
+  }
+
+  /**
+   * Get global environment variables
+   */
+  async getGlobalEnv(): Promise<GlobalEnv> {
+    // Refresh from crontab to ensure we have latest
+    const content = await this.readCrontab();
+    console.log('[getGlobalEnv] Crontab content first 500 chars:', content.substring(0, 500));
+    this.globalEnv = this.parseGlobalEnv(content);
+    console.log('[getGlobalEnv] Parsed global env:', this.globalEnv);
+    console.log('[getGlobalEnv] Number of env vars:', Object.keys(this.globalEnv).length);
+    return { ...this.globalEnv };
+  }
+
+  /**
+   * Set global environment variables
+   */
+  async setGlobalEnv(env: GlobalEnv): Promise<void> {
+    // Update in-memory global env
+    this.globalEnv = { ...env };
+
+    // Get current jobs (this will overwrite this.globalEnv, so we need to restore it)
+    const jobs = await this.getAllJobs();
+
+    // Restore the env we want to save (getAllJobs overwrites this.globalEnv)
+    this.globalEnv = { ...env };
+
+    // Serialize and write back (this will include the new global env)
+    await this.writeCrontab(this.serializeCrontab(jobs));
+  }
+
+  /**
+   * Update specific global environment variable
+   */
+  async updateGlobalEnvVar(key: string, value: string): Promise<GlobalEnv> {
+    console.log('[updateGlobalEnvVar] Called with key:', key, 'value:', value);
+    const currentEnv = await this.getGlobalEnv();
+    console.log('[updateGlobalEnvVar] Current env before update:', currentEnv);
+    currentEnv[key] = value;
+    console.log('[updateGlobalEnvVar] Env after adding new var:', currentEnv);
+    await this.setGlobalEnv(currentEnv);
+    console.log('[updateGlobalEnvVar] setGlobalEnv completed');
+    return currentEnv;
+  }
+
+  /**
+   * Delete specific global environment variable
+   */
+  async deleteGlobalEnvVar(key: string): Promise<GlobalEnv> {
+    const currentEnv = await this.getGlobalEnv();
+    delete currentEnv[key];
+    await this.setGlobalEnv(currentEnv);
+    return currentEnv;
+  }
+}
+
+export const crontabService = new CrontabService();

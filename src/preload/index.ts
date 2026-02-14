@@ -1,0 +1,107 @@
+import { contextBridge, ipcRenderer } from 'electron';
+import type {
+  CronJob,
+  CreateJobRequest,
+  UpdateJobRequest,
+  ParseScheduleResponse,
+  SchedulePreset,
+  GlobalEnv
+} from '../../shared/types';
+
+export interface IpcResponse<T = any> {
+  success: boolean;
+  data?: T;
+  error?: string;
+}
+
+// Define the API that will be exposed to the renderer
+const api = {
+  // Jobs API
+  jobs: {
+    getAll: (): Promise<IpcResponse<CronJob[]>> =>
+      ipcRenderer.invoke('jobs:getAll'),
+
+    create: (data: CreateJobRequest): Promise<IpcResponse<CronJob>> =>
+      ipcRenderer.invoke('jobs:create', data),
+
+    update: (id: string, updates: UpdateJobRequest): Promise<IpcResponse<CronJob>> =>
+      ipcRenderer.invoke('jobs:update', id, updates),
+
+    delete: (id: string): Promise<IpcResponse<void>> =>
+      ipcRenderer.invoke('jobs:delete', id),
+
+    toggle: (id: string): Promise<IpcResponse<CronJob>> =>
+      ipcRenderer.invoke('jobs:toggle', id),
+
+    run: (id: string): Promise<IpcResponse<any>> =>
+      ipcRenderer.invoke('jobs:run', id),
+
+    sync: (): Promise<IpcResponse<CronJob[]>> =>
+      ipcRenderer.invoke('jobs:sync'),
+
+    testIn1Minute: (command: string, options?: {
+      env?: Record<string, string>;
+      workingDir?: string;
+    }): Promise<IpcResponse<CronJob>> =>
+      ipcRenderer.invoke('jobs:testIn1Minute', command, options),
+
+    reorder: (jobIds: string[]): Promise<IpcResponse<CronJob[]>> =>
+      ipcRenderer.invoke('jobs:reorder', jobIds),
+  },
+
+  // Schedule API
+  schedule: {
+    parse: (schedule: string, count?: number): Promise<IpcResponse<ParseScheduleResponse>> =>
+      ipcRenderer.invoke('schedule:parse', schedule, count),
+
+    getPresets: (): Promise<IpcResponse<SchedulePreset[]>> =>
+      ipcRenderer.invoke('schedule:getPresets'),
+  },
+
+  // Logs API
+  logs: {
+    open: (logPath?: string, workingDir?: string): Promise<IpcResponse<void>> =>
+      ipcRenderer.invoke('logs:open', logPath, workingDir),
+  },
+
+  // Files API
+  files: {
+    open: (filePath: string): Promise<IpcResponse<void>> =>
+      ipcRenderer.invoke('files:open', filePath),
+  },
+
+  // Backups API
+  backups: {
+    list: (): Promise<IpcResponse<Array<{
+      filename: string;
+      timestamp: Date;
+      path: string;
+      size: number;
+    }>>> =>
+      ipcRenderer.invoke('backups:list'),
+
+    restore: (backupPath: string): Promise<IpcResponse<void>> =>
+      ipcRenderer.invoke('backups:restore', backupPath),
+  },
+
+  // Global Environment Variables API
+  env: {
+    getGlobal: (): Promise<IpcResponse<GlobalEnv>> =>
+      ipcRenderer.invoke('env:getGlobal'),
+
+    setGlobal: (env: GlobalEnv): Promise<IpcResponse<void>> =>
+      ipcRenderer.invoke('env:setGlobal', env),
+
+    updateGlobalVar: (key: string, value: string): Promise<IpcResponse<GlobalEnv>> =>
+      ipcRenderer.invoke('env:updateGlobalVar', key, value),
+
+    deleteGlobalVar: (key: string): Promise<IpcResponse<GlobalEnv>> =>
+      ipcRenderer.invoke('env:deleteGlobalVar', key),
+  },
+};
+
+// Expose the API to the renderer process
+contextBridge.exposeInMainWorld('electronAPI', api);
+
+// Type declaration for TypeScript
+export type ElectronAPI = typeof api;

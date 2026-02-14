@@ -1,0 +1,93 @@
+{
+  "name": "cron-manager",
+  "version": "0.1.0",
+  "description": "Crontab Manager - Electron Desktop App",
+  "main": "dist-electron/main/index.js",
+  "author": "seunggabi",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "dev": "tsx scripts/dev-runner.ts",
+    "build": "tsc && vite build && electron-builder",
+    "build:dev": "tsc && vite build",
+    "preview": "vite preview",
+    "electron:build": "npm run build:dev && electron-builder",
+    "electron:build:mac": "npm run build:dev && electron-builder --mac",
+    "electron:build:win": "npm run build:dev && electron-builder --win",
+    "electron:build:linux": "npm run build:dev && electron-builder --linux",
+    "package": "npm run build:dev && electron-builder --dir",
+    "lint": "eslint .",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@radix-ui/react-dialog": "^1.0.5",
+    "@radix-ui/react-dropdown-menu": "^2.0.6",
+    "@radix-ui/react-label": "^2.0.2",
+    "@radix-ui/react-select": "^2.0.0",
+    "@radix-ui/react-slot": "^1.0.2",
+    "@radix-ui/react-switch": "^1.0.3",
+    "@radix-ui/react-tabs": "^1.0.4",
+    "@radix-ui/react-toast": "^1.1.5",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.1.0",
+    "croner": "^8.0.1",
+    "date-fns": "^3.0.6",
+    "fs-extra": "^11.2.0",
+    "lucide-react": "^0.460.0",
+    "nanoid": "^5.0.4",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-hook-form": "^7.49.3",
+    "react-router-dom": "^6.21.1",
+    "tailwind-merge": "^2.2.0",
+    "tailwindcss-animate": "^1.0.7",
+    "winston": "^3.11.0",
+    "zod": "^3.22.4",
+    "zustand": "^4.4.7"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "@types/fs-extra": "^11.0.4",
+    "@types/node": "^20.10.6",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^5.1.1",
+    "electron": "^28.1.0",
+    "electron-builder": "^24.9.1",
+    "eslint": "^9.39.1",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.4.24",
+    "globals": "^16.5.0",
+    "tsx": "^4.7.0",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.48.0",
+    "vite": "^7.3.1",
+    "vite-plugin-electron": "^0.28.0",
+    "vite-plugin-electron-renderer": "^0.14.5"
+  },
+  "build": {
+    "appId": "com.seunggabi.cron-manager",
+    "productName": "Cron Manager",
+    "directories": {
+      "output": "release/${version}"
+    },
+    "files": [
+      "dist",
+      "dist-electron"
+    ],
+    "mac": {
+      "target": ["dmg", "zip"],
+      "category": "public.app-category.developer-tools",
+      "icon": "build/icon.icns"
+    },
+    "win": {
+      "target": ["nsis", "zip"],
+      "icon": "build/icon.ico"
+    },
+    "linux": {
+      "target": ["AppImage", "deb"],
+      "category": "Development",
+      "icon": "build/icon.png"
+    }
+  }
+}
