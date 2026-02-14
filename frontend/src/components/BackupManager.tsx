@@ -248,7 +248,7 @@ export function BackupManager() {
       <div className="table-card" style={{ padding: '24px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
           <h3 style={{ fontSize: '16px', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
-            {t('backups.config')}
+            {t('backups.configTitle')}
           </h3>
           <button
             onClick={handleSaveConfig}

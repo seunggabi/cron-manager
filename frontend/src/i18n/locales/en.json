@@ -97,7 +97,7 @@
   },
   "backups": {
     "title": "Backup Management",
-    "config": "Backup Retention Settings",
+    "configTitle": "Backup Retention Settings",
     "noBackups": "No backup files",
     "autoBackupInfo": "Backups are automatically created when you modify cron jobs",
     "searchPlaceholder": "Search (timestamp, filename)",

@@ -327,10 +327,20 @@ function App() {
     setEditingValue(job[field]);
   };
 
-  const handleCellKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>, job: CronJob) => {
+  const handleCellKeyDown = async (e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>, job: CronJob, field?: 'name' | 'command' | 'schedule') => {
     if (e.key === 'Enter') {
-      e.preventDefault();
-      await handleCellSave(job);
+      // For textarea (command field), require Cmd/Ctrl+Enter to save
+      if (field === 'command') {
+        if (e.metaKey || e.ctrlKey) {
+          e.preventDefault();
+          await handleCellSave(job);
+        }
+        // Allow normal Enter for line breaks in textarea
+      } else {
+        // For input fields, Enter saves immediately
+        e.preventDefault();
+        await handleCellSave(job);
+      }
     } else if (e.key === 'Escape') {
       e.preventDefault();
       handleCellCancel();
@@ -900,21 +910,26 @@ function App() {
                         </td>
                         <td className="command-cell">
                           {editingCell?.jobId === job.id && editingCell?.field === 'command' ? (
-                            <input
-                              type="text"
+                            <textarea
                               value={editingValue}
                               onChange={(e) => setEditingValue(e.target.value)}
-                              onKeyDown={(e) => handleCellKeyDown(e, job)}
+                              onKeyDown={(e) => handleCellKeyDown(e, job, 'command')}
                               onBlur={() => handleCellSave(job)}
                               autoFocus
                               className="mono"
                               style={{
                                 width: '100%',
+                                minHeight: '60px',
+                                resize: 'vertical',
                                 padding: '6px 10px',
                                 border: '1.5px solid var(--accent)',
                                 borderRadius: 'var(--radius)',
                                 fontSize: '12px',
+                                fontFamily: 'monospace',
+                                whiteSpace: 'pre-wrap',
+                                wordBreak: 'break-word',
                               }}
+                              placeholder="Cmd/Ctrl+Enter to save, Esc to cancel"
                             />
                           ) : (
                             <>
