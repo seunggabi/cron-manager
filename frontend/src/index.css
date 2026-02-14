@@ -155,6 +155,15 @@ code, .mono {
   50% { opacity: 0.4; }
 }
 
+@keyframes pulse-urgent {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.urgent-pulse {
+  animation: pulse-urgent 1s ease-in-out infinite;
+}
+
 /* Buttons */
 .btn {
   display: inline-flex;
@@ -227,7 +236,7 @@ thead th {
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--text-tertiary);
-  text-align: left;
+  text-align: center;
   background: var(--bg);
   border-bottom: 1px solid var(--border);
   white-space: nowrap;
@@ -249,7 +258,7 @@ tbody tr {
 tbody tr:last-child { border-bottom: none; }
 tbody tr:hover { background: var(--surface-hover); }
 
-td { padding: 14px 16px; vertical-align: top; }
+td { padding: 14px 16px; vertical-align: top; text-align: center; }
 
 /* Column widths */
 th:first-child,
@@ -270,6 +279,12 @@ td:nth-child(2) {
 .env-table td:first-child {
   width: 110px;
   min-width: 110px;
+  text-align: left;
+}
+
+/* Environment variables table - value column left aligned */
+.env-table th:nth-child(3),
+.env-table td:nth-child(3) {
   text-align: left;
 }
 
@@ -653,3 +668,35 @@ tr:hover .drag-handle { opacity: 1; }
 .cat-system { background: #f0fdf4; color: #15803d; }
 .cat-commerce { background: #fce7f3; color: #be185d; }
 .cat-media { background: #f5f3ff; color: #7c3aed; }
+
+/* Resizable columns */
+.resize-handle {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 8px;
+  cursor: col-resize;
+  user-select: none;
+  z-index: 1;
+}
+.resize-handle::after {
+  content: '';
+  position: absolute;
+  right: 3px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2px;
+  height: 16px;
+  background: var(--border);
+  border-radius: 1px;
+  opacity: 0;
+  transition: opacity var(--transition);
+}
+thead th:hover .resize-handle::after {
+  opacity: 1;
+}
+.resize-handle:hover::after {
+  opacity: 1;
+  background: var(--accent);
+}
