@@ -1,6 +1,20 @@
 # Cron Manager - Electron Desktop App
 
+[![Build and Release](https://github.com/seunggabi/cron-manager/actions/workflows/build-release.yml/badge.svg)](https://github.com/seunggabi/cron-manager/actions/workflows/build-release.yml)
+[![GitHub release](https://img.shields.io/github/v/release/seunggabi/cron-manager)](https://github.com/seunggabi/cron-manager/releases/latest)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 A modern, feature-rich GUI-based crontab manager built with Electron, React, and TypeScript. Manage your cron jobs with ease through an intuitive interface with real-time synchronization, backup management, and advanced features.
+
+## 📥 Download
+
+Download the latest version for your platform:
+
+- 🍎 **macOS**: [Download DMG](https://github.com/seunggabi/cron-manager/releases/latest)
+- 🪟 **Windows**: [Download Installer](https://github.com/seunggabi/cron-manager/releases/latest)
+- 🐧 **Linux**: [Download AppImage](https://github.com/seunggabi/cron-manager/releases/latest) or [Download DEB](https://github.com/seunggabi/cron-manager/releases/latest)
+
+All releases are automatically built and published via GitHub Actions.
 
 ## ✨ Features
 
