@@ -83,7 +83,8 @@ export class CrontabService {
       const backupConfig = this.configService.getBackupConfig();
       const maxDaysAgo = Date.now() - (backupConfig.maxBackupDays * 24 * 60 * 60 * 1000);
 
-      // Remove old backups (older than maxBackupDays, but keep at least maxBackups most recent)
+      // Remove old backups (AND condition: beyond maxBackups AND older than maxBackupDays)
+      // Keep at least maxBackups most recent files, delete only if older than maxBackupDays
       for (let i = backupConfig.maxBackups; i < backupFilesWithStats.length; i++) {
         if (backupFilesWithStats[i].mtime < maxDaysAgo) {
           await fs.remove(backupFilesWithStats[i].path);
@@ -764,7 +765,8 @@ export class CrontabService {
       const backupConfig = this.configService.getBackupConfig();
       const maxDaysAgo = Date.now() - (backupConfig.maxBackupDays * 24 * 60 * 60 * 1000);
 
-      // Remove old backups (older than maxBackupDays, but keep at least maxBackups most recent)
+      // Remove old backups (AND condition: beyond maxBackups AND older than maxBackupDays)
+      // Keep at least maxBackups most recent files, delete only if older than maxBackupDays
       for (let i = backupConfig.maxBackups; i < backupFilesWithStats.length; i++) {
         if (backupFilesWithStats[i].mtime < maxDaysAgo) {
           await fs.remove(backupFilesWithStats[i].path);

@@ -269,6 +269,18 @@ export function BackupManager() {
             </span>
           </div>
         </div>
+        <div style={{
+          marginTop: '12px',
+          padding: '12px',
+          background: 'var(--accent-light)',
+          borderRadius: 'var(--radius)',
+          fontSize: '12px',
+          color: 'var(--text-secondary)',
+          lineHeight: '1.5'
+        }}>
+          💡 <strong>정리 정책 (AND 조건):</strong> 최신 {maxBackups}개는 무조건 유지하고,
+          {maxBackups + 1}번째부터는 {maxBackupDays}일 이상 경과 시 자동 삭제됩니다.
+        </div>
       </div>
 
       {/* Search */}
