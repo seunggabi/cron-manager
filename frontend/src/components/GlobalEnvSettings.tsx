@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Plus, Trash2, RefreshCw, Edit, X, Check, Search, ChevronUp, ChevronDown } from 'lucide-react';
+import { Plus, Trash2, Edit, X, Check, Search, ChevronUp, ChevronDown } from 'lucide-react';
 
 const api = window.electronAPI;
 

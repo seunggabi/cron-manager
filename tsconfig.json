@@ -19,7 +19,7 @@
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
     "paths": {
-      "@cron-manager/shared": ["./shared/types"]
+      "@cron-manager/shared": ["./shared/dist/types"]
     }
   },
   "include": ["frontend/src", "src/preload/types.d.ts"],

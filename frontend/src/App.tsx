@@ -3,7 +3,7 @@ import { Play, Trash2, Plus, RefreshCw, FolderOpen, FileText, Edit, ChevronUp, C
 import { JobForm } from './components/JobForm';
 import { GlobalEnvSettings } from './components/GlobalEnvSettings';
 import { BackupManager } from './components/BackupManager';
-import { AlertDialog, useAlertDialog } from './components/AlertDialog';
+import { useAlertDialog } from './components/AlertDialog';
 import { NextRunCell } from './components/NextRunCell';
 import type { CronJob, CreateJobRequest, UpdateJobRequest } from '@cron-manager/shared';
 import { extractLogFiles } from './utils/logFileExtractor';
@@ -102,7 +102,7 @@ function App() {
   const [editingValue, setEditingValue] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [starCount, setStarCount] = useState<number | null>(null);
-  const { alert, showAlert, closeAlert } = useAlertDialog();
+  const { showAlert } = useAlertDialog();
 
   // Resizable columns for jobs table
   const { getColumnStyle, ResizeHandle } = useResizableColumns('jobs', {
@@ -289,23 +289,6 @@ function App() {
       }
     } catch (error) {
       showAlert('작업 실행에 실패했습니다', 'error');
-    }
-  };
-
-  const handleOpenLogs = async (logFile?: string, workingDir?: string) => {
-    if (!logFile) {
-      showAlert('로그 파일이 지정되지 않았습니다', 'error');
-      return;
-    }
-
-    try {
-      const response = await api.logs.open(logFile, workingDir);
-
-      if (!response.success) {
-        showAlert(response.error || '로그 폴더를 여는데 실패했습니다', 'error');
-      }
-    } catch (error) {
-      showAlert('로그 폴더를 여는데 실패했습니다: ' + error, 'error');
     }
   };
 
@@ -863,7 +846,7 @@ function App() {
                           )}
                         </td>
                         <td>
-                          <NextRunCell nextRun={job.nextRun} />
+                          <NextRunCell nextRun={job.nextRun ? job.nextRun.toISOString() : null} />
                         </td>
                       </tr>
                     ))
