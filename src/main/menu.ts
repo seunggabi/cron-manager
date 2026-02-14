@@ -26,17 +26,17 @@ export function createApplicationMenu(mainWindow: BrowserWindow) {
 
     // File Menu
     {
-      label: '파일',
+      label: 'File',
       submenu: [
         {
-          label: '새 작업',
+          label: 'New Job',
           accelerator: 'CmdOrCtrl+N',
           click: () => {
             mainWindow.webContents.send('menu:new-job');
           },
         },
         {
-          label: '동기화',
+          label: 'Sync',
           accelerator: 'CmdOrCtrl+R',
           click: () => {
             mainWindow.webContents.send('menu:sync');
@@ -49,18 +49,18 @@ export function createApplicationMenu(mainWindow: BrowserWindow) {
 
     // Edit Menu
     {
-      label: '편집',
+      label: 'Edit',
       submenu: [
-        { role: 'undo', label: '실행 취소' },
-        { role: 'redo', label: '다시 실행' },
+        { role: 'undo', label: 'Undo' },
+        { role: 'redo', label: 'Redo' },
         { type: 'separator' },
-        { role: 'cut', label: '잘라내기' },
-        { role: 'copy', label: '복사' },
-        { role: 'paste', label: '붙여넣기' },
-        { role: 'selectAll', label: '모두 선택' },
+        { role: 'cut', label: 'Cut' },
+        { role: 'copy', label: 'Copy' },
+        { role: 'paste', label: 'Paste' },
+        { role: 'selectAll', label: 'Select All' },
         { type: 'separator' },
         {
-          label: '검색',
+          label: 'Search',
           accelerator: 'CmdOrCtrl+F',
           click: () => {
             mainWindow.webContents.send('menu:search');
@@ -71,71 +71,71 @@ export function createApplicationMenu(mainWindow: BrowserWindow) {
 
     // View Menu
     {
-      label: '보기',
+      label: 'View',
       submenu: [
         {
-          label: '작업 관리',
+          label: 'Jobs',
           accelerator: 'CmdOrCtrl+1',
           click: () => {
             mainWindow.webContents.send('menu:tab', 'jobs');
           },
         },
         {
-          label: '환경 변수',
+          label: 'Environment',
           accelerator: 'CmdOrCtrl+2',
           click: () => {
             mainWindow.webContents.send('menu:tab', 'env');
           },
         },
         {
-          label: '백업 관리',
+          label: 'Backups',
           accelerator: 'CmdOrCtrl+3',
           click: () => {
             mainWindow.webContents.send('menu:tab', 'backups');
           },
         },
         { type: 'separator' },
-        { role: 'reload', label: '새로고침' },
-        { role: 'forceReload', label: '강제 새로고침' },
-        { role: 'toggleDevTools', label: '개발자 도구' },
+        { role: 'reload', label: 'Reload' },
+        { role: 'forceReload', label: 'Force Reload' },
+        { role: 'toggleDevTools', label: 'Developer Tools' },
         { type: 'separator' },
-        { role: 'resetZoom', label: '실제 크기' },
-        { role: 'zoomIn', label: '확대' },
-        { role: 'zoomOut', label: '축소' },
+        { role: 'resetZoom', label: 'Actual Size' },
+        { role: 'zoomIn', label: 'Zoom In' },
+        { role: 'zoomOut', label: 'Zoom Out' },
         { type: 'separator' },
-        { role: 'togglefullscreen', label: '전체 화면' },
+        { role: 'togglefullscreen', label: 'Toggle Fullscreen' },
       ],
     },
 
     // Window Menu
     {
-      label: '윈도우',
+      label: 'Window',
       submenu: [
-        { role: 'minimize', label: '최소화' },
-        { role: 'zoom', label: '확대/축소' },
+        { role: 'minimize', label: 'Minimize' },
+        { role: 'zoom', label: 'Zoom' },
         ...(isMac
           ? [
               { type: 'separator' as const },
-              { role: 'front' as const, label: '모두 앞으로 가져오기' },
+              { role: 'front' as const, label: 'Bring All to Front' },
               { type: 'separator' as const },
               { role: 'window' as const },
             ]
-          : [{ role: 'close' as const, label: '닫기' }]),
+          : [{ role: 'close' as const, label: 'Close' }]),
       ],
     },
 
     // Help Menu
     {
-      label: '도움말',
+      label: 'Help',
       submenu: [
         {
-          label: 'GitHub 저장소',
+          label: 'GitHub Repository',
           click: async () => {
             await shell.openExternal('https://github.com/seunggabi/cron-manager');
           },
         },
         {
-          label: '이슈 보고',
+          label: 'Report Issue',
           click: async () => {
             await shell.openExternal('https://github.com/seunggabi/cron-manager/issues');
           },
