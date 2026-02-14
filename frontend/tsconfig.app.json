@@ -15,6 +15,9 @@
     "moduleDetection": "force",
     "noEmit": true,
     "jsx": "react-jsx",
+    "paths": {
+      "@cron-manager/shared": ["../shared/types"]
+    },
 
     /* Linting */
     "strict": true,

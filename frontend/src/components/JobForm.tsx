@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
-import type { CronJob } from '@cron-manager/shared';
+import type { CronJob, CreateJobRequest, UpdateJobRequest } from '@cron-manager/shared';
 
 interface JobFormProps {
   job?: CronJob | null;
   onClose: () => void;
-  onSubmit: (data: any) => void;
+  onSubmit: (data: CreateJobRequest | UpdateJobRequest) => Promise<void>;
 }
 
 export function JobForm({ job, onClose, onSubmit }: JobFormProps) {
@@ -17,6 +17,14 @@ export function JobForm({ job, onClose, onSubmit }: JobFormProps) {
   const [env, setEnv] = useState(
     job?.env ? Object.entries(job.env).map(([k, v]) => `${k}=${v}`).join('\n') : ''
   );
+
+  // Parse log file path from command (>> redirection)
+  useEffect(() => {
+    const match = command.match(/>>\s*([^\s&|;]+)/);
+    if (match) {
+      setLogFile(match[1]);
+    }
+  }, [command]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,14 +40,35 @@ export function JobForm({ job, onClose, onSubmit }: JobFormProps) {
       });
     }
 
+    // Generate name from command if not provided
+    let autoName = command;
+    if (!name) {
+      // Remove >> redirect part
+      const beforeRedirect = command.split('>>')[0].trim();
+      // Extract last 2 path segments
+      const parts = beforeRedirect.split('/').filter((p: string) => p);
+      autoName = parts.slice(-2).join('/');
+    }
+
     onSubmit({
-      name: name || command.substring(0, 50),
+      name: name || autoName,
       description: description || undefined,
       schedule,
       command,
       logFile: logFile || undefined,
       env: Object.keys(envObj).length > 0 ? envObj : undefined,
     });
+  };
+
+  // Handle Ctrl/Cmd + Enter to submit
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      e.preventDefault();
+      const form = e.currentTarget.closest('form');
+      if (form) {
+        form.requestSubmit();
+      }
+    }
   };
 
   // Preset schedules
@@ -53,150 +82,138 @@ export function JobForm({ job, onClose, onSubmit }: JobFormProps) {
   ];
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-auto">
-        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-          <h2 className="text-xl font-semibold">
-            {job ? '작업 수정' : '새 Cron 작업'}
-          </h2>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg"
-          >
-            <X className="w-5 h-5" />
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <h2>{job ? '작업 수정' : '새 Cron 작업'}</h2>
+          <button onClick={onClose} className="modal-close" aria-label="폼 닫기">
+            <X />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {/* 환경변수 (맨 위) */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              환경변수 (선택사항)
-            </label>
+        <form onSubmit={handleSubmit} className="modal-body">
+          {/* 환경변수 */}
+          <div className="field">
+            <label className="field-label">환경변수 (선택사항)</label>
             <textarea
               value={env}
               onChange={(e) => setEnv(e.target.value)}
+              onKeyDown={handleKeyDown}
               placeholder="NODE_ENV=production&#10;PATH=/usr/local/bin:/usr/bin&#10;API_KEY=your-key"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg font-mono text-sm"
+              className="mono"
               rows={3}
             />
-            <p className="mt-1 text-xs text-gray-500">
-              한 줄에 하나씩 KEY=VALUE 형식으로 입력
-            </p>
+            <span className="field-hint">한 줄에 하나씩 KEY=VALUE 형식으로 입력</span>
           </div>
 
+          <div className="divider"></div>
+
           {/* 스케줄 타임 */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              스케줄 타임 (Cron 표현식) *
+          <div className="field">
+            <label className="field-label">
+              스케줄 타임 (Cron 표현식) <span className="required">*</span>
             </label>
-            <div className="flex gap-2 mb-2">
-              <input
-                type="text"
-                value={schedule}
-                onChange={(e) => setSchedule(e.target.value)}
-                placeholder="* * * * *"
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg font-mono"
-                required
-              />
-            </div>
-            <div className="flex flex-wrap gap-2">
+            <input
+              type="text"
+              value={schedule}
+              onChange={(e) => setSchedule(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="* * * * *"
+              className="mono"
+              required
+              autoFocus
+            />
+            <div className="presets">
               {presets.map((preset) => (
                 <button
                   key={preset.value}
                   type="button"
                   onClick={() => setSchedule(preset.value)}
-                  className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded"
+                  className="preset"
                 >
                   {preset.label}
                 </button>
               ))}
             </div>
-            <p className="mt-1 text-xs text-gray-500">
-              분 시 일 월 요일 (예: 0 9 * * * = 매일 9시)
-            </p>
+            <span className="field-hint">분 시 일 월 요일 (예: 0 9 * * * = 매일 9시)</span>
           </div>
 
+          <div className="divider"></div>
+
           {/* 실행 명령어 */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              실행 명령어 *
+          <div className="field">
+            <label className="field-label">
+              실행 명령어 <span className="required">*</span>
             </label>
             <input
               type="text"
               value={command}
               onChange={(e) => setCommand(e.target.value)}
+              onKeyDown={handleKeyDown}
               placeholder="/usr/local/bin/backup.sh"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg font-mono"
+              className="mono"
               required
             />
           </div>
 
+          <div className="divider"></div>
+
           {/* 작업 이름 */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              작업 이름
-            </label>
+          <div className="field">
+            <label className="field-label">작업 이름</label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
+              onKeyDown={handleKeyDown}
               placeholder="백업 작업"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
             />
           </div>
 
-          {/* 설명 (주석) */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              설명 (선택사항)
-            </label>
+          <div className="divider"></div>
+
+          {/* 설명 */}
+          <div className="field">
+            <label className="field-label">설명 (선택사항)</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
+              onKeyDown={handleKeyDown}
               placeholder="이 작업은 매일 데이터베이스 백업을 수행합니다"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
               rows={2}
             />
-            <p className="mt-1 text-xs text-gray-500">
-              crontab 파일에 주석으로 저장됩니다
-            </p>
+            <span className="field-hint">crontab 파일에 주석으로 저장됩니다</span>
           </div>
 
-          {/* 로그 파일 지정 */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              로그 파일 경로 (선택사항)
-            </label>
+          <div className="divider"></div>
+
+          {/* 로그 파일 */}
+          <div className="field">
+            <label className="field-label">로그 파일 경로 (자동 파싱)</label>
             <input
               type="text"
               value={logFile}
-              onChange={(e) => setLogFile(e.target.value)}
-              placeholder="/var/log/cron/backup.log"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg font-mono"
+              readOnly
+              placeholder="명령어에서 >> 뒤 경로 자동 파싱"
+              className="mono"
+              style={{
+                background: 'var(--surface)',
+                cursor: 'not-allowed',
+                opacity: 0.7
+              }}
             />
-            <p className="mt-1 text-xs text-gray-500">
-              지정하지 않으면 로그가 저장되지 않습니다
-            </p>
-          </div>
-
-          {/* 버튼 */}
-          <div className="flex gap-3 pt-4 border-t">
-            <button
-              type="submit"
-              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
-            >
-              {job ? '수정' : '추가'}
-            </button>
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
-            >
-              취소
-            </button>
+            <span className="field-hint">명령어에 &gt;&gt; /path/to/log.txt 형식으로 작성하면 자동으로 파싱됩니다</span>
           </div>
         </form>
+
+        <div className="modal-footer">
+          <button type="button" onClick={onClose} className="btn">
+            취소
+          </button>
+          <button type="submit" onClick={handleSubmit} className="btn btn-primary">
+            {job ? '수정 완료' : '작업 추가'}
+          </button>
+        </div>
       </div>
     </div>
   );

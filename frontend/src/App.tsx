@@ -1,16 +1,16 @@
-import { useEffect, useState } from 'react';
-import { Play, Pause, Trash2, Plus, RefreshCw, FolderOpen, FileText, Edit, ChevronUp, ChevronDown, Save, ListChecks, Settings, Database } from 'lucide-react';
+import { useEffect, useState, useMemo } from 'react';
+import { Play, Trash2, Plus, RefreshCw, FolderOpen, FileText, Edit, ChevronUp, ChevronDown, Save, ListChecks, Settings, Database, Clock, Search, X } from 'lucide-react';
 import { JobForm } from './components/JobForm';
 import { GlobalEnvSettings } from './components/GlobalEnvSettings';
 import { BackupManager } from './components/BackupManager';
-import type { CronJob } from '@cron-manager/shared';
+import type { CronJob, CreateJobRequest, UpdateJobRequest } from '@cron-manager/shared';
 import { extractLogFiles } from './utils/logFileExtractor';
 import { extractScriptPath } from './utils/scriptPathExtractor';
 
 // Electron IPC API
-const api = (window as any).electronAPI;
+const api = window.electronAPI;
 
-type SortField = 'name' | 'schedule' | 'enabled' | 'nextRun';
+type SortField = 'name' | 'schedule' | 'command' | 'enabled' | 'nextRun';
 type SortDirection = 'asc' | 'desc';
 type TabType = 'jobs' | 'env' | 'backups';
 
@@ -22,6 +22,9 @@ function App() {
   const [editingJob, setEditingJob] = useState<CronJob | null>(null);
   const [sortField, setSortField] = useState<SortField>('name');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [editingCell, setEditingCell] = useState<{ jobId: string; field: 'name' | 'command' | 'schedule' } | null>(null);
+  const [editingValue, setEditingValue] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState<string>('');
 
   const fetchJobs = async () => {
     setLoading(true);
@@ -30,11 +33,9 @@ function App() {
       if (response.success && response.data) {
         setJobs(response.data);
       } else {
-        console.error('Failed to fetch jobs:', response.error);
         alert(response.error || '작업 목록을 불러오는데 실패했습니다');
       }
     } catch (error) {
-      console.error('Failed to fetch jobs:', error);
       alert('작업 목록을 불러오는데 실패했습니다');
     } finally {
       setLoading(false);
@@ -45,9 +46,31 @@ function App() {
     fetchJobs();
   }, []);
 
-  const handleCreate = async (data: any) => {
+  // Keyboard shortcuts for tab switching
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Check if Cmd (Mac) or Ctrl (Windows/Linux) is pressed
+      if (e.metaKey || e.ctrlKey) {
+        if (e.key === '1') {
+          e.preventDefault();
+          setActiveTab('jobs');
+        } else if (e.key === '2') {
+          e.preventDefault();
+          setActiveTab('env');
+        } else if (e.key === '3') {
+          e.preventDefault();
+          setActiveTab('backups');
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  const handleCreate = async (data: CreateJobRequest | UpdateJobRequest) => {
     try {
-      const response = await api.jobs.create(data);
+      const response = await api.jobs.create(data as CreateJobRequest);
       if (response.success) {
         await fetchJobs();
         setShowForm(false);
@@ -56,12 +79,11 @@ function App() {
         alert(response.error || '작업 추가에 실패했습니다');
       }
     } catch (error) {
-      console.error('Failed to create job:', error);
       alert('작업 추가에 실패했습니다');
     }
   };
 
-  const handleUpdate = async (data: any) => {
+  const handleUpdate = async (data: CreateJobRequest | UpdateJobRequest) => {
     if (!editingJob) return;
 
     try {
@@ -70,12 +92,10 @@ function App() {
         await fetchJobs();
         setEditingJob(null);
         setShowForm(false);
-        alert('작업이 수정되었습니다');
       } else {
         alert(response.error || '작업 수정에 실패했습니다');
       }
     } catch (error) {
-      console.error('Failed to update job:', error);
       alert('작업 수정에 실패했습니다');
     }
   };
@@ -85,7 +105,6 @@ function App() {
       await api.jobs.toggle(id);
       await fetchJobs();
     } catch (error) {
-      console.error('Failed to toggle job:', error);
       alert('작업 토글에 실패했습니다');
     }
   };
@@ -98,7 +117,6 @@ function App() {
       await fetchJobs();
       alert('작업이 삭제되었습니다');
     } catch (error) {
-      console.error('Failed to delete job:', error);
       alert('작업 삭제에 실패했습니다');
     }
   };
@@ -116,7 +134,6 @@ function App() {
         alert(response.error || '작업 실행에 실패했습니다');
       }
     } catch (error) {
-      console.error('Failed to run job:', error);
       alert('작업 실행에 실패했습니다');
     }
   };
@@ -127,7 +144,6 @@ function App() {
       await fetchJobs();
       alert('동기화 완료');
     } catch (error) {
-      console.error('Failed to sync:', error);
       alert('동기화에 실패했습니다');
     }
   };
@@ -138,19 +154,13 @@ function App() {
       return;
     }
 
-    console.log('Opening log file:', logFile, 'workingDir:', workingDir);
-
     try {
       const response = await api.logs.open(logFile, workingDir);
-      console.log('Log open response:', response);
 
       if (!response.success) {
         alert(response.error || '로그 폴더를 여는데 실패했습니다');
-      } else {
-        console.log('터미널이 열렸습니다!');
       }
     } catch (error) {
-      console.error('Failed to open logs:', error);
       alert('로그 폴더를 여는데 실패했습니다: ' + error);
     }
   };
@@ -165,21 +175,71 @@ function App() {
     try {
       await api.files.open(scriptPath);
     } catch (error) {
-      console.error('Failed to open script folder:', error);
       alert('실행 파일 폴더를 여는데 실패했습니다');
     }
   };
 
   const handleEdit = (job: CronJob) => {
-    console.log('[handleEdit] Called with job:', job);
     setEditingJob(job);
     setShowForm(true);
-    console.log('[handleEdit] showForm set to true');
   };
 
   const handleCloseForm = () => {
     setShowForm(false);
     setEditingJob(null);
+  };
+
+  const handleCellDoubleClick = (job: CronJob, field: 'name' | 'command' | 'schedule') => {
+    setEditingCell({ jobId: job.id, field });
+    setEditingValue(job[field]);
+  };
+
+  const handleCellKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>, job: CronJob) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      await handleCellSave(job);
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      handleCellCancel();
+    }
+  };
+
+  const handleCellSave = async (job: CronJob) => {
+    if (!editingCell) return;
+
+    const { field } = editingCell;
+    const trimmedValue = editingValue.trim();
+
+    if (!trimmedValue) {
+      alert('값을 입력해주세요');
+      return;
+    }
+
+    if (trimmedValue === job[field]) {
+      setEditingCell(null);
+      setEditingValue('');
+      return;
+    }
+
+    try {
+      const updateData = { [field]: trimmedValue };
+      const response = await api.jobs.update(job.id, updateData);
+
+      if (response.success) {
+        await fetchJobs();
+        setEditingCell(null);
+        setEditingValue('');
+      } else {
+        alert(response.error || '수정에 실패했습니다');
+      }
+    } catch (error) {
+      alert('수정에 실패했습니다');
+    }
+  };
+
+  const handleCellCancel = () => {
+    setEditingCell(null);
+    setEditingValue('');
   };
 
   const handleSort = (field: SortField) => {
@@ -193,7 +253,7 @@ function App() {
 
   const handleSaveSortOrder = async () => {
     try {
-      const jobIds = sortedJobs.map(job => job.id);
+      const jobIds = filteredAndSortedJobs.map(job => job.id);
       const response = await api.jobs.reorder(jobIds);
       if (response.success) {
         alert('정렬 순서가 저장되었습니다');
@@ -202,116 +262,198 @@ function App() {
         alert(response.error || '정렬 저장에 실패했습니다');
       }
     } catch (error) {
-      console.error('Failed to save sort order:', error);
       alert('정렬 저장에 실패했습니다');
     }
   };
 
-  const sortedJobs = [...jobs].sort((a, b) => {
-    let aValue: any;
-    let bValue: any;
-
-    switch (sortField) {
-      case 'name':
-        aValue = a.name.toLowerCase();
-        bValue = b.name.toLowerCase();
-        break;
-      case 'schedule':
-        aValue = a.schedule;
-        bValue = b.schedule;
-        break;
-      case 'enabled':
-        aValue = a.enabled ? 1 : 0;
-        bValue = b.enabled ? 1 : 0;
-        break;
-      case 'nextRun':
-        aValue = a.nextRun ? new Date(a.nextRun).getTime() : 0;
-        bValue = b.nextRun ? new Date(b.nextRun).getTime() : 0;
-        break;
-      default:
-        return 0;
+  const filteredAndSortedJobs = useMemo(() => {
+    // Filter jobs by search query
+    let filtered = jobs;
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = jobs.filter(job =>
+        job.name.toLowerCase().includes(query) ||
+        job.command.toLowerCase().includes(query) ||
+        job.schedule.toLowerCase().includes(query) ||
+        (job.description && job.description.toLowerCase().includes(query))
+      );
     }
 
-    if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
-    if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
-    return 0;
-  });
+    // Sort filtered jobs
+    return [...filtered].sort((a, b) => {
+      let aValue: any;
+      let bValue: any;
 
-  const truncateCommand = (command: string, maxLength: number = 40) => {
-    if (command.length <= maxLength) return command;
-    return command.substring(0, maxLength) + '...';
-  };
+      switch (sortField) {
+        case 'name':
+          aValue = a.name.toLowerCase();
+          bValue = b.name.toLowerCase();
+          break;
+        case 'schedule':
+          aValue = a.schedule;
+          bValue = b.schedule;
+          break;
+        case 'command':
+          aValue = a.command.toLowerCase();
+          bValue = b.command.toLowerCase();
+          break;
+        case 'enabled':
+          aValue = a.enabled ? 1 : 0;
+          bValue = b.enabled ? 1 : 0;
+          break;
+        case 'nextRun':
+          aValue = a.nextRun ? new Date(a.nextRun).getTime() : 0;
+          bValue = b.nextRun ? new Date(b.nextRun).getTime() : 0;
+          break;
+        default:
+          return 0;
+      }
+
+      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [jobs, sortField, sortDirection, searchQuery]);
 
   if (loading && jobs.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-lg">로딩 중...</div>
+      <div className="app" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ fontSize: '15px', color: 'var(--text-secondary)' }}>로딩 중...</div>
       </div>
     );
   }
 
   const tabs = [
     { id: 'jobs' as TabType, label: '작업 관리', icon: ListChecks },
-    { id: 'env' as TabType, label: '전역 환경변수', icon: Settings },
+    { id: 'env' as TabType, label: '환경변수', icon: Settings },
     { id: 'backups' as TabType, label: '백업 관리', icon: Database },
   ];
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Cron Manager</h1>
-          <p className="text-gray-600">
-            Crontab 작업을 GUI로 쉽게 관리하세요
-          </p>
-        </div>
+  const activeJobsCount = jobs.filter(j => j.enabled).length;
 
-        {/* Tabs */}
-        <div className="mb-6">
-          <div className="border-b border-gray-200">
-            <div className="flex space-x-1">
-              {tabs.map((tab) => {
-                const Icon = tab.icon;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`
-                      flex items-center gap-2 px-6 py-3 font-medium text-sm border-b-2 transition-all
-                      ${activeTab === tab.id
-                        ? 'border-blue-600 text-blue-600 bg-blue-50/50'
-                        : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                      }
-                    `}
-                  >
-                    <Icon className="w-4 h-4" />
-                    {tab.label}
-                  </button>
-                );
-              })}
-            </div>
+  return (
+    <div className="app">
+      {/* Header */}
+      <div className="header">
+        <div className="header-top">
+          <div>
+            <h1>
+              <span className="icon">
+                <Clock size={16} />
+              </span>
+              Cron Manager
+            </h1>
+            <div className="header-sub">Crontab 작업을 GUI로 쉽게 관리하세요</div>
           </div>
         </div>
+      </div>
 
-        {/* Tab Content */}
-        {activeTab === 'jobs' && (
-          <div>
-            {/* Jobs Header Actions */}
-            <div className="flex items-center justify-end gap-2 mb-6">
-              <button
-                onClick={handleSaveSortOrder}
-                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center gap-2 transition-colors shadow-sm"
-                title="현재 정렬 순서를 crontab 파일에 저장"
-              >
-                <Save className="w-4 h-4" />
-                정렬 저장
+      {/* Tabs */}
+      <div className="tabs">
+        {tabs.map((tab) => {
+          const Icon = tab.icon;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`tab ${activeTab === tab.id ? 'active' : ''}`}
+            >
+              <Icon />
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Tab Content */}
+      {activeTab === 'jobs' && (
+        <div>
+          {/* Action Bar */}
+          <div className="action-bar">
+            <div className="action-bar-left">
+              {jobs.length > 0 && (
+                <>
+                  <div className="summary-pill">
+                    <span className="dot"></span>
+                    활성 {activeJobsCount} / 전체 {jobs.length}
+                  </div>
+                  {/* Search Input */}
+                  <div style={{ position: 'relative', flex: 1 }}>
+                    <Search size={16} style={{
+                      position: 'absolute',
+                      left: '12px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      color: 'var(--text-tertiary)',
+                      pointerEvents: 'none'
+                    }} />
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="검색 (이름, 명령어, 스케줄)"
+                      style={{
+                        width: '100%',
+                        padding: '8px 36px 8px 36px',
+                        fontSize: '13px',
+                        border: '1px solid var(--border)',
+                        borderRadius: 'var(--radius)',
+                        background: 'var(--surface)',
+                        color: 'var(--text-primary)',
+                        transition: 'all var(--transition)',
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = 'var(--accent)';
+                        e.target.style.boxShadow = '0 0 0 3px rgba(37,99,235,0.1)';
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = 'var(--border)';
+                        e.target.style.boxShadow = 'none';
+                      }}
+                    />
+                    {searchQuery && (
+                      <button
+                        onClick={() => setSearchQuery('')}
+                        style={{
+                          position: 'absolute',
+                          right: '8px',
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          padding: '4px',
+                          border: 'none',
+                          background: 'transparent',
+                          cursor: 'pointer',
+                          color: 'var(--text-tertiary)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          borderRadius: '4px',
+                          transition: 'all var(--transition)',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = 'var(--bg)';
+                          e.currentTarget.style.color = 'var(--text-primary)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = 'transparent';
+                          e.currentTarget.style.color = 'var(--text-tertiary)';
+                        }}
+                        title="검색 지우기"
+                      >
+                        <X size={14} />
+                      </button>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+            <div className="action-bar-right">
+              <button onClick={handleSaveSortOrder} className="btn" title="현재 정렬 순서를 crontab 파일에 저장">
+                <Save />
+                저장
               </button>
-              <button
-                onClick={handleSync}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2 transition-colors shadow-sm"
-              >
-                <RefreshCw className="w-4 h-4" />
+              <button onClick={handleSync} className="btn">
+                <RefreshCw />
                 동기화
               </button>
               <button
@@ -319,210 +461,257 @@ function App() {
                   setEditingJob(null);
                   setShowForm(true);
                 }}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2 transition-colors shadow-sm"
+                className="btn btn-primary"
               >
-                <Plus className="w-4 h-4" />
+                <Plus />
                 새 작업
               </button>
             </div>
+          </div>
 
-            {/* Jobs Table */}
-            {jobs.length === 0 ? (
-              <div className="text-center py-16 bg-white rounded-lg border border-gray-200 shadow-sm">
-                <ListChecks className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500 mb-4">등록된 Cron 작업이 없습니다</p>
-                <button
-                  onClick={() => setShowForm(true)}
-                  className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 inline-flex items-center gap-2 transition-colors shadow-sm"
-                >
-                  <Plus className="w-4 h-4" />
-                  첫 작업 추가하기
-                </button>
-              </div>
-            ) : (
-              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
+          {/* Jobs Table */}
+          {jobs.length === 0 ? (
+            <div className="empty">
+              <div className="empty-icon">📋</div>
+              <div className="empty-text">등록된 Cron 작업이 없습니다</div>
+              <button
+                onClick={() => setShowForm(true)}
+                className="btn btn-primary"
+                style={{ marginTop: '20px' }}
+              >
+                <Plus />
+                첫 작업 추가하기
+              </button>
+            </div>
+          ) : (
+            <div className="table-card">
+              <div className="table-wrap">
+                <table>
+                  <thead>
                     <tr>
-                      <th
-                        className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-gray-200 transition-colors"
-                        onClick={() => handleSort('enabled')}
-                      >
-                        <div className="flex items-center gap-2">
-                          상태
-                          {sortField === 'enabled' && (
-                            sortDirection === 'asc' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
-                          )}
-                        </div>
+                      <th>액션</th>
+                      <th onClick={() => handleSort('enabled')}>
+                        상태
+                        {sortField === 'enabled' && (
+                          <span className="sort-icon">
+                            {sortDirection === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                          </span>
+                        )}
                       </th>
-                      <th
-                        className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-gray-200 transition-colors"
-                        onClick={() => handleSort('name')}
-                      >
-                        <div className="flex items-center gap-2">
-                          이름
-                          {sortField === 'name' && (
-                            sortDirection === 'asc' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
-                          )}
-                        </div>
+                      <th onClick={() => handleSort('name')}>
+                        이름
+                        {sortField === 'name' && (
+                          <span className="sort-icon">
+                            {sortDirection === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                          </span>
+                        )}
                       </th>
-                      <th
-                        className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-gray-200 transition-colors"
-                        onClick={() => handleSort('schedule')}
-                      >
-                        <div className="flex items-center gap-2">
-                          스케줄
-                          {sortField === 'schedule' && (
-                            sortDirection === 'asc' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
-                          )}
-                        </div>
+                      <th onClick={() => handleSort('schedule')}>
+                        스케줄
+                        {sortField === 'schedule' && (
+                          <span className="sort-icon">
+                            {sortDirection === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                          </span>
+                        )}
                       </th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      <th onClick={() => handleSort('command')}>
                         명령어
+                        {sortField === 'command' && (
+                          <span className="sort-icon">
+                            {sortDirection === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                          </span>
+                        )}
                       </th>
-                      <th
-                        className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-gray-200 transition-colors"
-                        onClick={() => handleSort('nextRun')}
-                      >
-                        <div className="flex items-center gap-2">
-                          다음 실행
-                          {sortField === 'nextRun' && (
-                            sortDirection === 'asc' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
-                          )}
-                        </div>
-                      </th>
-                      <th className="px-6 py-4 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                        액션
+                      <th onClick={() => handleSort('nextRun')}>
+                        다음 실행
+                        {sortField === 'nextRun' && (
+                          <span className="sort-icon">
+                            {sortDirection === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                          </span>
+                        )}
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    {sortedJobs.map((job) => (
-                      <tr
-                        key={job.id}
-                        className={`transition-colors ${
-                          job.enabled
-                            ? 'hover:bg-blue-50/30'
-                            : 'bg-gray-50/50 hover:bg-gray-100/50 opacity-75'
-                        }`}
-                      >
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span
-                            className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
-                              job.enabled
-                                ? 'bg-green-100 text-green-700 border border-green-200'
-                                : 'bg-gray-200 text-gray-600 border border-gray-300'
-                            }`}
-                          >
-                            {job.enabled ? '활성' : '비활성'}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex flex-col">
-                            <span className={`font-semibold ${job.enabled ? 'text-gray-900' : 'text-gray-600'}`}>
-                              {job.name}
-                            </span>
-                            {job.description && (
-                              <span className="text-sm text-gray-500 mt-1">{job.description}</span>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <code className="px-3 py-1.5 bg-gray-100 border border-gray-200 rounded text-xs font-mono text-gray-700">
-                            {job.schedule}
-                          </code>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-2">
-                            <code
-                              className="text-sm font-mono text-gray-700 break-all"
-                            >
-                              {job.command}
-                            </code>
-                            {/* Script folder button - always shown */}
-                            <button
-                              onClick={() => handleOpenScriptFolder(job.command)}
-                              className="p-1 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded transition-colors"
-                              title="실행 파일 폴더 열기"
-                            >
-                              <FolderOpen className="w-4 h-4" />
-                            </button>
-                            {/* Log file buttons - only shown when log files exist */}
-                            {(() => {
-                              // Prefer job.logFile if set, otherwise extract from command
-                              const logFiles = job.logFile ? [job.logFile] : extractLogFiles(job.command);
-                              return logFiles.map((logFile, idx) => (
-                                <button
-                                  key={idx}
-                                  onClick={() => handleOpenLogs(logFile, job.workingDir)}
-                                  className="p-1 text-green-600 hover:text-green-700 hover:bg-green-50 rounded transition-colors"
-                                  title={`로그 파일 열기: ${logFile}`}
-                                >
-                                  <FileText className="w-4 h-4" />
-                                </button>
-                              ));
-                            })()}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 font-medium">
-                          {job.nextRun ? new Date(job.nextRun).toLocaleString('ko-KR', {
-                            month: 'short',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          }) : '-'}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right">
-                          <div className="flex items-center justify-end gap-1.5">
-                            <button
-                              onClick={() => handleEdit(job)}
-                              className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-                              title="수정"
-                            >
-                              <Edit className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => handleToggle(job.id)}
-                              className={`p-2 rounded-lg transition-colors ${
-                                job.enabled
-                                  ? 'text-orange-600 hover:text-orange-700 hover:bg-orange-50'
-                                  : 'text-green-600 hover:text-green-700 hover:bg-green-50'
-                              }`}
-                              title={job.enabled ? '비활성화' : '활성화'}
-                            >
-                              {job.enabled ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                            </button>
-                            <button
-                              onClick={() => handleRun(job.id)}
-                              className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
-                              title="즉시 실행"
-                            >
-                              <Play className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => handleDelete(job.id)}
-                              className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
-                              title="삭제"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
+                  <tbody>
+                    {filteredAndSortedJobs.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} style={{ textAlign: 'center', padding: '40px' }}>
+                          <div style={{ color: 'var(--text-tertiary)', fontSize: '14px' }}>
+                            "{searchQuery}" 검색 결과가 없습니다
                           </div>
                         </td>
                       </tr>
-                    ))}
+                    ) : (
+                      filteredAndSortedJobs.map((job) => (
+                      <tr key={job.id}>
+                        <td>
+                          <div className="actions">
+                            <button
+                              onClick={() => handleEdit(job)}
+                              className="icon-btn edit"
+                              title="수정"
+                              data-tooltip="수정"
+                            >
+                              <Edit />
+                            </button>
+                            <button
+                              onClick={() => handleRun(job.id)}
+                              className="icon-btn play"
+                              title="즉시 실행"
+                              data-tooltip="즉시 실행"
+                            >
+                              <Play />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(job.id)}
+                              className="icon-btn delete"
+                              title="삭제"
+                              data-tooltip="삭제"
+                            >
+                              <Trash2 />
+                            </button>
+                          </div>
+                        </td>
+                        <td>
+                          <button
+                            onClick={() => handleToggle(job.id)}
+                            className={`badge ${job.enabled ? 'badge-active' : 'badge-inactive'}`}
+                            title={job.enabled ? '클릭하여 비활성화' : '클릭하여 활성화'}
+                          >
+                            {job.enabled && <span className="dot"></span>}
+                            {job.enabled ? '활성' : '비활성'}
+                          </button>
+                        </td>
+                        <td>
+                          {editingCell?.jobId === job.id && editingCell?.field === 'name' ? (
+                            <input
+                              type="text"
+                              value={editingValue}
+                              onChange={(e) => setEditingValue(e.target.value)}
+                              onKeyDown={(e) => handleCellKeyDown(e, job)}
+                              onBlur={() => handleCellSave(job)}
+                              autoFocus
+                              style={{
+                                width: '100%',
+                                padding: '6px 10px',
+                                border: '1.5px solid var(--accent)',
+                                borderRadius: 'var(--radius)',
+                                fontSize: '13.5px',
+                                fontWeight: 700,
+                              }}
+                            />
+                          ) : (
+                            <div onDoubleClick={() => handleCellDoubleClick(job, 'name')} style={{ cursor: 'pointer' }}>
+                              <div className="job-name">{job.name}</div>
+                              {job.description && <div className="job-desc">{job.description}</div>}
+                            </div>
+                          )}
+                        </td>
+                        <td>
+                          {editingCell?.jobId === job.id && editingCell?.field === 'schedule' ? (
+                            <input
+                              type="text"
+                              value={editingValue}
+                              onChange={(e) => setEditingValue(e.target.value)}
+                              onKeyDown={(e) => handleCellKeyDown(e, job)}
+                              onBlur={() => handleCellSave(job)}
+                              autoFocus
+                              className="mono"
+                              style={{
+                                width: '100%',
+                                padding: '6px 10px',
+                                border: '1.5px solid var(--accent)',
+                                borderRadius: 'var(--radius)',
+                                fontSize: '12px',
+                              }}
+                            />
+                          ) : (
+                            <code
+                              className="schedule-code"
+                              onDoubleClick={() => handleCellDoubleClick(job, 'schedule')}
+                              style={{ cursor: 'pointer' }}
+                            >
+                              {job.schedule}
+                            </code>
+                          )}
+                        </td>
+                        <td className="command-cell">
+                          {editingCell?.jobId === job.id && editingCell?.field === 'command' ? (
+                            <input
+                              type="text"
+                              value={editingValue}
+                              onChange={(e) => setEditingValue(e.target.value)}
+                              onKeyDown={(e) => handleCellKeyDown(e, job)}
+                              onBlur={() => handleCellSave(job)}
+                              autoFocus
+                              className="mono"
+                              style={{
+                                width: '100%',
+                                padding: '6px 10px',
+                                border: '1.5px solid var(--accent)',
+                                borderRadius: 'var(--radius)',
+                                fontSize: '12px',
+                              }}
+                            />
+                          ) : (
+                            <>
+                              <code
+                                className="command-text"
+                                onDoubleClick={() => handleCellDoubleClick(job, 'command')}
+                                style={{ cursor: 'pointer', display: 'block' }}
+                              >
+                                {job.command}
+                              </code>
+                              <div className="command-links">
+                                <button
+                                  onClick={() => handleOpenScriptFolder(job.command)}
+                                  className="command-link"
+                                  title="실행 파일 폴더 열기"
+                                >
+                                  <FolderOpen />
+                                  실행파일
+                                </button>
+                                {extractLogFiles(job.command).map((logFile, idx) => (
+                                  <button
+                                    key={idx}
+                                    onClick={() => handleOpenLogs(logFile, job.workingDir)}
+                                    className="command-link"
+                                    title={`로그 파일 열기: ${logFile}`}
+                                  >
+                                    <FileText />
+                                    로그
+                                  </button>
+                                ))}
+                              </div>
+                            </>
+                          )}
+                        </td>
+                        <td>
+                          <div className="next-run">
+                            {job.nextRun
+                              ? new Date(job.nextRun).toLocaleString('ko-KR', {
+                                  month: 'short',
+                                  day: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                })
+                              : '-'}
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                    )}
                   </tbody>
                 </table>
               </div>
             </div>
-            )}
-          </div>
-        )}
+          )}
+        </div>
+      )}
 
-        {activeTab === 'env' && <GlobalEnvSettings />}
+      {activeTab === 'env' && <GlobalEnvSettings />}
 
-        {activeTab === 'backups' && <BackupManager />}
-      </div>
+      {activeTab === 'backups' && <BackupManager />}
 
       {/* Form Modal */}
       {showForm && (

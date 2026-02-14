@@ -124,4 +124,11 @@ export const logsApi = {
     }
     await handleIpcResponse(window.electronAPI.logs.open(logPath));
   },
+
+  create: async (logPath: string): Promise<void> => {
+    if (!isElectron) {
+      throw new Error('Electron API not available');
+    }
+    await handleIpcResponse(window.electronAPI.logs.create(logPath));
+  },
 };

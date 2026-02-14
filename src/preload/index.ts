@@ -62,6 +62,9 @@ const api = {
   logs: {
     open: (logPath?: string, workingDir?: string): Promise<IpcResponse<void>> =>
       ipcRenderer.invoke('logs:open', logPath, workingDir),
+
+    create: (logPath: string): Promise<IpcResponse<void>> =>
+      ipcRenderer.invoke('logs:create', logPath),
   },
 
   // Files API
@@ -82,6 +85,13 @@ const api = {
 
     restore: (backupPath: string): Promise<IpcResponse<void>> =>
       ipcRenderer.invoke('backups:restore', backupPath),
+
+    diff: (backupPath: string): Promise<IpcResponse<{
+      current: string;
+      backup: string;
+      diff: Array<{ type: 'add' | 'remove' | 'same'; line: string; lineNumber?: number }>;
+    }>> =>
+      ipcRenderer.invoke('backups:diff', backupPath),
   },
 
   // Global Environment Variables API

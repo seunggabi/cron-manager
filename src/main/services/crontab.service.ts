@@ -8,6 +8,8 @@ const execAsync = promisify(exec);
 
 export class CrontabService {
   private static MARKER_PREFIX = '# CRON-MANAGER:';
+  private static MAX_BACKUPS = 10; // 최소 유지 백업 개수
+  private static MAX_BACKUP_DAYS = 7; // 최대 유지 일수
   private globalEnv: GlobalEnv = {};
 
   /**
@@ -45,27 +47,46 @@ export class CrontabService {
       const backupDir = path.join(os.homedir(), '.cron-manager', 'backups');
       await fs.ensureDir(backupDir);
 
-      // Create backup file with timestamp
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      // Create backup file with timestamp (KST/UTC+9 in ISO 8601 format)
+      const now = new Date();
+      const kstOffset = 9 * 60; // KST is UTC+9
+      const kstDate = new Date(now.getTime() + kstOffset * 60 * 1000);
+      const isoString = kstDate.toISOString();
+      // Format: YYYY-MM-DDThh:mm:ss+09:00 (ISO 8601 with KST timezone)
+      const timestamp = isoString.slice(0, 19) + '+09:00';
       const backupFile = path.join(backupDir, `crontab-${timestamp}.bak`);
       await fs.writeFile(backupFile, currentCrontab);
 
-      // Clean up old backups (keep only last 10)
+      // Clean up old backups (keep backups from last 3 days, but at least 3 most recent)
       const files = await fs.readdir(backupDir);
-      const backupFiles = files
-        .filter(f => f.startsWith('crontab-') && f.endsWith('.bak'))
-        .map(f => path.join(backupDir, f))
-        .sort()
-        .reverse(); // Most recent first
+      const backupFilesWithStats = [];
 
-      // Remove old backups
-      for (let i = 10; i < backupFiles.length; i++) {
-        await fs.remove(backupFiles[i]);
+      for (const file of files) {
+        if (file.startsWith('crontab-') && file.endsWith('.bak')) {
+          const filePath = path.join(backupDir, file);
+          const stats = await fs.stat(filePath);
+          backupFilesWithStats.push({
+            path: filePath,
+            mtime: stats.mtime.getTime(),
+          });
+        }
+      }
+
+      // Sort by modification time, most recent first
+      backupFilesWithStats.sort((a, b) => b.mtime - a.mtime);
+
+      // Keep backups from last MAX_BACKUP_DAYS days
+      const maxDaysAgo = Date.now() - (CrontabService.MAX_BACKUP_DAYS * 24 * 60 * 60 * 1000);
+
+      // Remove old backups (older than MAX_BACKUP_DAYS days, but keep at least MAX_BACKUPS most recent)
+      for (let i = CrontabService.MAX_BACKUPS; i < backupFilesWithStats.length; i++) {
+        if (backupFilesWithStats[i].mtime < maxDaysAgo) {
+          await fs.remove(backupFilesWithStats[i].path);
+        }
       }
 
       return backupFile;
     } catch (error: any) {
-      console.error('Failed to backup crontab:', error);
       return null;
     }
   }
@@ -308,6 +329,9 @@ export class CrontabService {
       // Build command with environment variables
       let fullCommand = job.command;
 
+      // Check if command already has log redirection
+      const hasRedirect = /\s*>>\s*.+/.test(fullCommand);
+
       if (job.workingDir) {
         fullCommand = `cd ${job.workingDir} && ${fullCommand}`;
       }
@@ -319,8 +343,8 @@ export class CrontabService {
         fullCommand = `${envVars} ${fullCommand}`;
       }
 
-      // Add log redirection
-      if (job.logFile) {
+      // Add log redirection only if command doesn't already have it
+      if (job.logFile && !hasRedirect) {
         if (job.logStderr) {
           fullCommand = `${fullCommand} >> ${job.logFile} 2>> ${job.logStderr}`;
         } else {
@@ -435,13 +459,6 @@ export class CrontabService {
       throw new Error('Job not found');
     }
 
-    // Build command
-    let command = job.command;
-
-    if (job.workingDir) {
-      command = `cd ${job.workingDir} && ${command}`;
-    }
-
     // Merge environment variables (cron-like environment)
     // Priority: job env > global env > minimal process env
     const globalEnv = await this.getGlobalEnv();
@@ -454,14 +471,13 @@ export class CrontabService {
       ...job.env,
     };
 
-    console.log('[runJob] Using environment:', mergedEnv);
-
-    // Execute command
+    // Execute command with cwd option (safer than cd && command)
     const startTime = Date.now();
     try {
-      const { stdout, stderr } = await execAsync(command, {
+      const { stdout, stderr } = await execAsync(job.command, {
         timeout: 300000, // 5 minutes timeout
         env: mergedEnv,
+        cwd: job.workingDir || undefined,
       });
 
       const duration = Date.now() - startTime;
@@ -475,12 +491,31 @@ export class CrontabService {
     } catch (execError: any) {
       const duration = Date.now() - startTime;
 
+      // Check if logfile exists (command might have succeeded despite timeout)
+      let logFileExists = false;
+      if (job.logFile) {
+        try {
+          const fs = await import('fs/promises');
+          const logPath = job.logFile.replace(/^~/, process.env.HOME || '');
+          await fs.access(logPath);
+          logFileExists = true;
+        } catch {
+          // Logfile doesn't exist
+        }
+      }
+
+      // If timeout but logfile exists, consider it successful
+      const isTimeout = execError.killed || execError.signal === 'SIGTERM';
+      const isSuccess = isTimeout && logFileExists;
+
       return {
-        exitCode: execError.code || 1,
+        exitCode: isSuccess ? 0 : (execError.code || 1),
         stdout: execError.stdout || '',
-        stderr: execError.stderr || execError.message,
+        stderr: isSuccess ?
+          `명령이 백그라운드에서 실행 중입니다. 로그 파일을 확인하세요: ${job.logFile}` :
+          (execError.stderr || execError.message),
         duration,
-        error: true,
+        error: !isSuccess,
       };
     }
   }
@@ -515,7 +550,7 @@ export class CrontabService {
       try {
         await this.deleteJob(testJob.id);
       } catch (error) {
-        console.error('Failed to delete test job:', error);
+        // Silently ignore deletion errors for test jobs
       }
     }, 120000);
 
@@ -583,8 +618,7 @@ export class CrontabService {
 
           // Parse timestamp from filename
           // Format: crontab-2024-02-14T16-30-00-123Z.bak
-          const timestampStr = file.replace('crontab-', '').replace('.bak', '').replace(/-/g, ':');
-          const timestamp = new Date(timestampStr.replace(/:/g, '-', 2).replace(/-/g, ':', 2));
+          // Timestamp parsed from filename not needed; using stats.mtime instead
 
           backups.push({
             filename: file,
@@ -598,7 +632,6 @@ export class CrontabService {
       // Sort by timestamp, most recent first
       return backups.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
     } catch (error: any) {
-      console.error('Failed to list backups:', error);
       return [];
     }
   }
@@ -641,10 +674,7 @@ export class CrontabService {
   async getGlobalEnv(): Promise<GlobalEnv> {
     // Refresh from crontab to ensure we have latest
     const content = await this.readCrontab();
-    console.log('[getGlobalEnv] Crontab content first 500 chars:', content.substring(0, 500));
     this.globalEnv = this.parseGlobalEnv(content);
-    console.log('[getGlobalEnv] Parsed global env:', this.globalEnv);
-    console.log('[getGlobalEnv] Number of env vars:', Object.keys(this.globalEnv).length);
     return { ...this.globalEnv };
   }
 
@@ -669,13 +699,9 @@ export class CrontabService {
    * Update specific global environment variable
    */
   async updateGlobalEnvVar(key: string, value: string): Promise<GlobalEnv> {
-    console.log('[updateGlobalEnvVar] Called with key:', key, 'value:', value);
     const currentEnv = await this.getGlobalEnv();
-    console.log('[updateGlobalEnvVar] Current env before update:', currentEnv);
     currentEnv[key] = value;
-    console.log('[updateGlobalEnvVar] Env after adding new var:', currentEnv);
     await this.setGlobalEnv(currentEnv);
-    console.log('[updateGlobalEnvVar] setGlobalEnv completed');
     return currentEnv;
   }
 
@@ -687,6 +713,54 @@ export class CrontabService {
     delete currentEnv[key];
     await this.setGlobalEnv(currentEnv);
     return currentEnv;
+  }
+
+  /**
+   * Compare current crontab with a backup file
+   */
+  async diffWithBackup(backupPath: string): Promise<{ current: string; backup: string; diff: Array<{ type: 'add' | 'remove' | 'same'; line: string; lineNumber?: number }> }> {
+    const fs = await import('fs-extra');
+    const path = await import('path');
+    const os = await import('os');
+
+    // Read current crontab
+    const current = await this.readCrontab();
+
+    // Validate and read backup file
+    const backupDir = path.join(os.homedir(), '.cron-manager', 'backups');
+    const resolvedPath = path.resolve(backupPath);
+    if (!resolvedPath.startsWith(backupDir)) {
+      throw new Error('Invalid backup path');
+    }
+
+    const backup = await fs.readFile(backupPath, 'utf-8');
+
+    // Simple line-by-line diff
+    const currentLines = current.split('\n');
+    const backupLines = backup.split('\n');
+    const diff: Array<{ type: 'add' | 'remove' | 'same'; line: string; lineNumber?: number }> = [];
+
+    const maxLength = Math.max(currentLines.length, backupLines.length);
+
+    for (let i = 0; i < maxLength; i++) {
+      const currentLine = currentLines[i];
+      const backupLine = backupLines[i];
+
+      if (currentLine === backupLine) {
+        if (currentLine !== undefined) {
+          diff.push({ type: 'same', line: currentLine, lineNumber: i + 1 });
+        }
+      } else {
+        if (backupLine !== undefined) {
+          diff.push({ type: 'remove', line: backupLine, lineNumber: i + 1 });
+        }
+        if (currentLine !== undefined) {
+          diff.push({ type: 'add', line: currentLine, lineNumber: i + 1 });
+        }
+      }
+    }
+
+    return { current, backup, diff };
   }
 }
 
