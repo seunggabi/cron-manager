@@ -173,11 +173,13 @@ function App() {
     }
   }, [showAlert, t]);
 
-  const handleSync = useCallback(async () => {
+  const handleSync = useCallback(async (showSuccessAlert: boolean = true) => {
     try {
       await api.jobs.sync();
       await fetchJobs();
-      showAlert(t('success.syncCompleted'), 'success');
+      if (showSuccessAlert) {
+        showAlert(t('success.syncCompleted'), 'success');
+      }
     } catch (error) {
       showAlert(t('errors.syncFailed'), 'error');
     }
@@ -246,9 +248,10 @@ function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleSync]);
 
+  // Auto-sync on app start
   useEffect(() => {
-    fetchJobs();
-  }, []);
+    handleSync(false); // Sync without showing success alert
+  }, [handleSync]);
 
   const handleCreate = async (data: CreateJobRequest | UpdateJobRequest) => {
     try {
@@ -717,7 +720,7 @@ function App() {
                 <Save />
                 {t('common.save')} <span style={{ opacity: 0.6, fontSize: '11px' }}>(⌘S)</span>
               </button>
-              <button onClick={handleSync} className="btn">
+              <button onClick={() => handleSync()} className="btn">
                 <RefreshCw />
                 {t('common.sync')} <span style={{ opacity: 0.6, fontSize: '11px' }}>(⌘R)</span>
               </button>
