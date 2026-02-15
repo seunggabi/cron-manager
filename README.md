@@ -20,6 +20,55 @@ Download the latest version for your platform:
 
 All releases are automatically built and published via GitHub Actions.
 
+## 📦 Installation
+
+### macOS
+
+1. Download the `.dmg` file from the [latest release](https://github.com/seunggabi/cron-manager/releases/latest)
+2. Open the DMG file and drag "Cron Manager" to the Applications folder
+3. **Important**: macOS may block the app with a "damaged" error because it's not signed with an Apple Developer certificate
+
+**To bypass Gatekeeper (choose one method):**
+
+**Method 1: Right-click to open (Recommended)**
+1. Open Finder and go to Applications
+2. **Right-click** (or Control+click) on "Cron Manager"
+3. Select "Open" from the menu
+4. Click "Open" in the security dialog
+5. The app will launch and won't be blocked again
+
+**Method 2: Remove quarantine attribute (Terminal)**
+```bash
+sudo xattr -rd com.apple.quarantine "/Applications/Cron Manager.app"
+```
+Enter your password when prompted, then launch the app normally.
+
+**Method 3: System Settings**
+1. Try to open the app normally (it will be blocked)
+2. Open System Settings → Privacy & Security
+3. Scroll down to find "Cron Manager was blocked"
+4. Click "Open Anyway"
+5. Try opening the app again and click "Open"
+
+### Windows
+
+1. Download the `.exe` installer from the [latest release](https://github.com/seunggabi/cron-manager/releases/latest)
+2. Run the installer
+3. Windows SmartScreen may show a warning - click "More info" and then "Run anyway"
+4. Follow the installation wizard
+
+### Linux
+
+**AppImage (Universal)**
+1. Download the `.AppImage` file
+2. Make it executable: `chmod +x Cron.Manager-*.AppImage`
+3. Run it: `./Cron.Manager-*.AppImage`
+
+**Debian/Ubuntu (.deb)**
+1. Download the `.deb` file
+2. Install: `sudo dpkg -i cron-manager_*_amd64.deb`
+3. Run: `cron-manager` or find it in your applications menu
+
 ## 📸 Screenshots
 
 ### Main Interface - Job Management
