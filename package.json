@@ -1,6 +1,6 @@
 {
   "name": "cron-manager",
-  "version": "0.7.2",
+  "version": "0.7.3",
   "description": "Crontab Manager - Electron Desktop App",
   "main": "dist-electron/main/index.js",
   "author": {
