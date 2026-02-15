@@ -1,0 +1,36 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle with gradient -->
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2563eb;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1d4ed8;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Main circle background -->
+  <circle cx="256" cy="256" r="224" fill="url(#grad1)"/>
+
+  <!-- Clock face -->
+  <circle cx="256" cy="256" r="176" stroke="white" stroke-width="32" fill="none"/>
+
+  <!-- Clock marks (12, 3, 6, 9) -->
+  <line x1="256" y1="96" x2="256" y2="128" stroke="white" stroke-width="32" stroke-linecap="round"/>
+  <line x1="256" y1="384" x2="256" y2="416" stroke="white" stroke-width="32" stroke-linecap="round"/>
+  <line x1="416" y1="256" x2="384" y2="256" stroke="white" stroke-width="32" stroke-linecap="round"/>
+  <line x1="96" y1="256" x2="128" y2="256" stroke="white" stroke-width="32" stroke-linecap="round"/>
+
+  <!-- Clock hands pointing to 3:00 (cron time) -->
+  <line x1="256" y1="256" x2="256" y2="160" stroke="white" stroke-width="40" stroke-linecap="round"/>
+  <line x1="256" y1="256" x2="336" y2="256" stroke="white" stroke-width="40" stroke-linecap="round"/>
+
+  <!-- Center dot -->
+  <circle cx="256" cy="256" r="32" fill="white"/>
+
+  <!-- Gear teeth for automation symbol -->
+  <g opacity="0.9">
+    <path d="M256 32 L280 64 L256 96 L232 64 Z" fill="white"/>
+    <path d="M256 416 L280 448 L256 480 L232 448 Z" fill="white"/>
+    <path d="M32 256 L64 280 L96 256 L64 232 Z" fill="white"/>
+    <path d="M416 256 L448 280 L480 256 L448 232 Z" fill="white"/>
+  </g>
+</svg>

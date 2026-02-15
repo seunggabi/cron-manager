@@ -13,6 +13,12 @@ dist-electron/
 # Build artifacts
 release/
 build/
+!build/icon.*
+!build/*.icns
+!build/*.ico
+!build/*.png
+!build/*.svg
+!build/README.txt
 
 # Test files
 test-*.js
