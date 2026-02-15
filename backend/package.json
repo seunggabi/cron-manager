@@ -7,10 +7,12 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "test": "vitest"
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "@cron-manager/shared": "*",
+    "@cron-manager/shared": "file:../shared",
     "cors": "^2.8.5",
     "croner": "^8.0.1",
     "dotenv": "^16.3.1",

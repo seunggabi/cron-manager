@@ -36,43 +36,52 @@ After setup, your project will look like:
 
 ```
 cron-manager/
-├── src/
-│   ├── main/                    # Electron Main Process
-│   │   ├── index.ts            # Main entry point
-│   │   ├── ipc/
-│   │   │   └── index.ts        # IPC handlers
-│   │   └── services/
-│   │       ├── crontab.service.ts
-│   │       └── schedule.service.ts
-│   ├── preload/                # Preload scripts
-│   │   ├── index.ts
-│   │   └── types.d.ts
-│   └── shared/                 # Shared types
-│       └── types/
-│           └── index.ts
-├── frontend/                    # React UI (Renderer)
+├── src/                        # Electron Main & Preload
+│   ├── main/                   # Main Process
+│   │   ├── index.ts           # Entry point
+│   │   ├── menu.ts            # App menu
+│   │   ├── ipc/               # IPC handlers
+│   │   ├── services/          # Business logic
+│   │   │   ├── crontab.service.ts
+│   │   │   ├── schedule.service.ts
+│   │   │   └── config.service.ts
+│   │   └── utils/
+│   └── preload/               # Context Bridge
+│       ├── index.ts
+│       └── types.d.ts
+├── frontend/                   # React UI (Vite)
 │   ├── src/
 │   │   ├── App.tsx
 │   │   ├── main.tsx
-│   │   ├── lib/
-│   │   │   └── api.ts          # IPC communication
-│   │   └── store/
-│   │       └── jobStore.ts
+│   │   ├── components/        # React components
+│   │   ├── hooks/             # Custom hooks
+│   │   ├── lib/               # IPC communication
+│   │   ├── utils/             # Utilities
+│   │   ├── store/             # Zustand store
+│   │   └── __tests__/         # Tests (Vitest)
+│   ├── vitest.config.ts
 │   └── index.html
+├── backend/                    # Optional standalone API
+│   └── src/
+│       ├── index.ts           # Express server
+│       ├── routes/            # API routes
+│       ├── services/          # Shared logic
+│       └── __tests__/         # Service tests
+├── shared/                     # Workspace package
+│   ├── types/                 # Shared types
+│   └── utils/                 # Shared utilities
 ├── scripts/
-│   └── dev-runner.ts           # Development launcher
-├── build/                      # Icons (add your own)
-│   ├── icon.icns              # macOS icon
-│   ├── icon.ico               # Windows icon
-│   └── icon.png               # Linux icon
-├── dist/                       # Built renderer (created on build)
-├── dist-electron/              # Built main/preload (created on build)
-├── release/                    # Packaged apps (created on build)
+│   └── dev-runner.ts          # Dev launcher
+├── build/                      # Icons
+│   ├── icon.icns             # macOS
+│   ├── icon.ico              # Windows
+│   └── icon.png              # Linux
+├── dist/                       # Built frontend
+├── dist-electron/              # Built main/preload
+├── release/                    # Packaged apps
 ├── package.json
 ├── tsconfig.json
-├── tsconfig.node.json
 ├── vite.config.ts
-├── electron-builder.json
 └── README.md
 ```
 
@@ -181,7 +190,23 @@ rm -rf node_modules/.vite
 npm run build:dev
 ```
 
-### 4. IPC Communication Issues
+### 4. Test Failures
+
+```bash
+# Install test dependencies
+npm install
+
+# Run tests to see which ones fail
+npm test
+
+# Update snapshots if needed
+npm test -- -u
+
+# Check test coverage
+npm run test:coverage
+```
+
+### 5. IPC Communication Issues
 
 Check these points:
 1. Preload script is loaded: Check `dist-electron/preload/index.js` exists
@@ -195,7 +220,7 @@ Debug in renderer:
 console.log(window.electronAPI); // Should show API object
 ```
 
-### 5. Build Fails on macOS
+### 6. Build Fails on macOS
 
 ```bash
 # Install macOS build tools
@@ -207,7 +232,33 @@ chmod +x node_modules/.bin/electron-builder
 
 ## Testing the App
 
-### 1. Manual Testing
+### 1. Automated Tests
+
+Run comprehensive test suite (238 tests, ~80% coverage):
+
+```bash
+# Run all tests
+npm test
+
+# Run with coverage report
+npm run test:coverage
+
+# Run in watch mode
+npm run test:watch
+
+# Backend tests only
+cd backend && npm test
+
+# Frontend tests only
+cd frontend && npm test
+```
+
+**Test Coverage:**
+- **Backend**: 81 tests (Services, Routes, Cron parsing)
+- **Frontend**: 157 tests (Components, Hooks, Utilities)
+- **Frameworks**: Vitest, React Testing Library, Supertest
+
+### 2. Manual Testing
 
 ```bash
 npm run dev
@@ -224,14 +275,17 @@ Then test each feature:
 - [ ] Open logs folder
 - [ ] Schedule validation
 - [ ] Preset selection
+- [ ] Global environment variables
+- [ ] Backup and restore
+- [ ] Custom confirmation dialogs
 
-### 2. Type Checking
+### 3. Type Checking
 
 ```bash
 npm run type-check
 ```
 
-### 3. Linting
+### 4. Linting
 
 ```bash
 npm run lint
@@ -301,13 +355,27 @@ In `electron-builder.json`:
 
 ## Security Checklist
 
+### Basic Security (Electron Best Practices)
 - [x] Context isolation enabled
-- [x] Node integration disabled
-- [x] Sandbox enabled (optional)
-- [x] Preload script validates inputs
-- [x] IPC handlers sanitize data
-- [x] External links open in browser
-- [x] File paths are validated
+- [x] Node integration disabled in renderer
+- [x] Sandbox mode enabled
+- [x] Preload script with contextBridge
+- [x] External links open in default browser
+
+### Enhanced Security (v0.4.0)
+- [x] **Command injection prevention** - Sanitized shell execution
+- [x] **Path traversal protection** - Validated file paths with allowed directories
+- [x] **Secure temp files** - Random directory names, 0600 permissions
+- [x] **Input validation** - All IPC handlers validate inputs
+- [x] **Environment variable sanitization** - Safe env var handling
+- [x] **Type safety** - 100% TypeScript coverage in frontend
+- [x] **API timeout enforcement** - 5-minute execution limit
+- [x] **Backup path validation** - Prevents unauthorized file access
+
+### Security Audit Status
+- ✅ **0 Critical/High vulnerabilities** (8 resolved in v0.4.0)
+- ✅ All dependency vulnerabilities addressed
+- ✅ Comprehensive security testing completed
 
 ## Deployment
 

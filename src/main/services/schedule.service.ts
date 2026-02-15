@@ -8,8 +8,9 @@ export class ScheduleService {
     try {
       new Cron(schedule);
       return { valid: true };
-    } catch (error: any) {
-      return { valid: false, error: error.message };
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Invalid schedule';
+      return { valid: false, error: message };
     }
   }
 
@@ -21,10 +22,22 @@ export class ScheduleService {
       const cron = new Cron(schedule);
       const runs: Date[] = [];
 
+      // Use nextRuns method if available (more efficient)
+      if (typeof (cron as any).nextRuns === 'function') {
+        const nextRuns = (cron as any).nextRuns(count);
+        return nextRuns || [];
+      }
+
+      // Fallback: manually iterate
+      let currentTime = new Date();
       for (let i = 0; i < count; i++) {
-        const next = cron.nextRun();
+        const next = cron.nextRun(currentTime);
         if (next) {
           runs.push(next);
+          // Use this run as the reference for the next iteration
+          currentTime = new Date(next.getTime() + 1000); // Add 1 second
+        } else {
+          break;
         }
       }
 

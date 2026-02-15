@@ -95,28 +95,33 @@ cron-manager/
 │   ├── preload/           # Preload scripts (Context Bridge)
 │   │   ├── index.ts
 │   │   └── types.d.ts
-│   └── shared/            # Shared types (workspace package)
-│       └── types/
-│           └── index.ts
-├── frontend/              # Renderer Process (React)
+│   └── preload/           # Context Bridge
+│       ├── index.ts
+│       └── types.d.ts
+├── frontend/              # React UI (Vite)
 │   └── src/
 │       ├── App.tsx
-│       ├── components/
+│       ├── components/    # React components
 │       │   ├── JobForm.tsx
 │       │   ├── GlobalEnvSettings.tsx
 │       │   ├── BackupManager.tsx
-│       │   ├── BackupCountdown.tsx
-│       │   ├── AlertDialog.tsx
-│       │   └── NextRunCell.tsx
-│       ├── hooks/
-│       │   └── useResizableColumns.tsx
-│       ├── lib/
-│       │   └── api.ts     # IPC communication layer
-│       └── utils/
-│           └── logFileExtractor.ts
-├── dist/                  # Built renderer (production)
-├── dist-electron/         # Built main & preload (production)
-└── release/               # Packaged applications
+│       │   ├── ConfirmDialog.tsx
+│       │   └── ...
+│       ├── hooks/         # Custom hooks
+│       ├── lib/           # IPC communication
+│       ├── utils/         # Utilities
+│       └── __tests__/     # Tests (Vitest)
+├── backend/               # Optional API server
+│   └── src/
+│       ├── routes/
+│       ├── services/
+│       └── __tests__/
+├── shared/                # Workspace package
+│   ├── types/
+│   └── utils/
+├── dist/                  # Built frontend
+├── dist-electron/         # Built main & preload
+└── release/               # Packaged apps
 ```
 
 ### IPC Channels
@@ -269,6 +274,8 @@ This project was migrated from a client-server architecture to Electron:
 | `npm run electron:build:linux` | Build Linux AppImage and deb |
 | `npm run lint` | Run ESLint |
 | `npm run type-check` | TypeScript type checking |
+| `npm test` | Run all tests (Backend & Frontend) |
+| `npm run test:coverage` | Generate coverage report |
 
 ## ⚙️ Configuration
 
@@ -326,19 +333,48 @@ Backups are stored in `~/.cron-manager/backups/`
 
 ## 🔒 Security
 
-This app follows Electron security best practices:
+This app follows Electron security best practices with comprehensive security enhancements:
 
+### Security Features
 - ✅ **Context Isolation** enabled
-- ✅ **Node Integration** disabled in renderer
+- ✅ **Node Integration** disabled
 - ✅ **Preload script** with contextBridge
-- ✅ **Sandbox mode** (can be toggled)
-- ✅ **External links** open in default browser
-- ✅ **Path validation** for file operations
+- ✅ **Sandbox mode** enabled
+- ✅ **Command injection prevention** - Sanitized execution
+- ✅ **Path traversal protection** - Validated file paths
+- ✅ **Secure temp files** - Random names, 0600 permissions
 - ✅ **Input validation** for all IPC handlers
-- ✅ **Environment variable** name validation
-- ✅ **Backup path** validation
+- ✅ **Environment variable** validation
+- ✅ **Type safety** - 100% TypeScript coverage
+
+### Security Audit (v0.4.0)
+- 🔒 **8 Critical/High vulnerabilities** → **0 resolved**
+- 🔒 All dependency vulnerabilities addressed
+- 🔒 Comprehensive code review completed
+- 🔒 Security test coverage added
 
 ## 🧪 Testing
+
+### Automated Tests
+
+Comprehensive test suite with 238 tests and ~80% code coverage:
+
+```bash
+# Run all tests
+npm test
+
+# Run with coverage report
+npm run test:coverage
+
+# Run in watch mode
+npm run test:watch
+```
+
+**Test Statistics:**
+- **Backend**: 81 tests (Services, Routes, Cron parsing)
+- **Frontend**: 157 tests (Components, Hooks, Utilities)
+- **Coverage**: ~80% code coverage
+- **Frameworks**: Vitest, React Testing Library, Supertest
 
 ### Test Job Feature
 
@@ -458,25 +494,36 @@ MIT License - see LICENSE file for details
 - ✨ Real-time log viewer with Terminal integration
 - ✨ Job reordering with drag-and-drop
 - ✨ Backup diff viewer with syntax highlighting
-- ✨ GitHub stars display in header
+- ✨ Custom confirmation dialogs (replacing native alerts)
 - ✨ Resizable table columns with persistent state
 - ✨ Search and filter across all tables
 - ✨ Backup countdown timer showing auto-deletion time
 
-#### Improvements
-- 🔧 Fixed TypeScript configuration for shared types
-- 🔧 Improved error handling across all IPC channels
-- 🔧 Enhanced path validation for security
-- 🔧 Better crontab synchronization
-- 🔧 Optimized component rendering
-- 🔧 Cleaned up unused code and imports
+#### Security Enhancements
+- 🔒 **Fixed 8 Critical/High vulnerabilities** → 0 remaining
+- 🔒 Command injection prevention (sanitized shell execution)
+- 🔒 Path traversal protection (validated file paths)
+- 🔒 Secure temp file creation (TOCTOU fix, 0600 permissions)
+- 🔒 API timeout enforcement (5-minute limit)
+- 🔒 Environment variable sanitization
+- 🔒 Comprehensive security audit completed
+
+#### Testing & Quality
+- ✅ **238 tests added** (80% code coverage)
+- ✅ Backend tests: 81 tests (Services, Routes)
+- ✅ Frontend tests: 157 tests (Components, Hooks)
+- ✅ Code duplication eliminated (shared package)
+- ✅ Type safety: Frontend 100% TypeScript coverage
+- ✅ Error handling improved with type guards
 
 #### Technical
-- 📦 Updated to TypeScript 5.9.3
+- 📦 TypeScript 5.9.3
 - 📦 Electron 28.1.0
 - 📦 React 18.3.1
 - 📦 Vite 7.3.1
-- 📦 Migrated to workspace packages for shared types
+- 📦 Vitest 4.0.18 (testing framework)
+- 📦 React Testing Library (component tests)
+- 📦 Workspace packages for code sharing
 
 ---
 

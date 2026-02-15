@@ -102,18 +102,23 @@ export class CrontabService {
    */
   async writeCrontab(content: string): Promise<void> {
     const fs = await import('fs-extra');
+    const os = await import('os');
+    const path = await import('path');
 
     // Backup current crontab before writing
     await this.backupCrontab();
 
-    // Create temporary file and use crontab command
-    const tempFile = `/tmp/crontab-${Date.now()}.tmp`;
+    // Create secure temporary directory
+    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'crontab-'));
+    const tempFile = path.join(tmpDir, 'crontab.tmp');
 
     try {
-      await fs.writeFile(tempFile, content);
+      // Write with restrictive permissions (0600)
+      await fs.writeFile(tempFile, content, { mode: 0o600 });
       await execAsync(`crontab ${tempFile}`);
     } finally {
-      await fs.remove(tempFile);
+      // Clean up temporary directory and file
+      await fs.remove(tmpDir);
     }
   }
 
@@ -286,6 +291,14 @@ export class CrontabService {
   }
 
   /**
+   * Shell escape a string for safe use in shell commands
+   */
+  private shellEscape(str: string): string {
+    // Replace single quotes with '\'' (end quote, escaped quote, start quote)
+    return `'${str.replace(/'/g, "'\\''")}'`;
+  }
+
+  /**
    * Convert CronJob objects to crontab content
    */
   serializeCrontab(jobs: CronJob[]): string {
@@ -339,12 +352,12 @@ export class CrontabService {
       const hasRedirect = /\s*>>\s*.+/.test(fullCommand);
 
       if (job.workingDir) {
-        fullCommand = `cd ${job.workingDir} && ${fullCommand}`;
+        fullCommand = `cd ${this.shellEscape(job.workingDir)} && ${fullCommand}`;
       }
 
       if (job.env && Object.keys(job.env).length > 0) {
         const envVars = Object.entries(job.env)
-          .map(([key, value]) => `${key}="${value}"`)
+          .map(([key, value]) => `${key}=${this.shellEscape(value)}`)
           .join(' ');
         fullCommand = `${envVars} ${fullCommand}`;
       }
@@ -354,13 +367,13 @@ export class CrontabService {
         // Extract directory from log file path and create it if needed
         const logDir = job.logFile.substring(0, job.logFile.lastIndexOf('/'));
         if (logDir) {
-          fullCommand = `mkdir -p ${logDir} && ${fullCommand}`;
+          fullCommand = `mkdir -p ${this.shellEscape(logDir)} && ${fullCommand}`;
         }
 
         if (job.logStderr) {
-          fullCommand = `${fullCommand} >> ${job.logFile} 2>> ${job.logStderr}`;
+          fullCommand = `${fullCommand} >> ${this.shellEscape(job.logFile)} 2>> ${this.shellEscape(job.logStderr)}`;
         } else {
-          fullCommand = `${fullCommand} >> ${job.logFile} 2>&1`;
+          fullCommand = `${fullCommand} >> ${this.shellEscape(job.logFile)} 2>&1`;
         }
       }
 

@@ -8,8 +8,9 @@ export class ScheduleService {
     try {
       new Cron(schedule);
       return { valid: true };
-    } catch (error: any) {
-      return { valid: false, error: error.message };
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Invalid schedule';
+      return { valid: false, error: message };
     }
   }
 

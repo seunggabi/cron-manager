@@ -1,0 +1,1 @@
+export { extractScriptPath } from './scriptPathExtractor';

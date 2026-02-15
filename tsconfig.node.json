@@ -17,7 +17,8 @@
     "declarationMap": true,
     "sourceMap": true,
     "paths": {
-      "@cron-manager/shared": ["./shared/dist/types"]
+      "@cron-manager/shared": ["./shared/dist/index.d.ts"],
+      "@cron-manager/shared/*": ["./shared/dist/*"]
     }
   },
   "include": [
