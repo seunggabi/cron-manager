@@ -120,64 +120,64 @@ describe('ScheduleService', () => {
   });
 
   describe('toHumanReadable', () => {
-    it('converts simple schedules to Korean', () => {
-      expect(service.toHumanReadable('* * * * *')).toBe('매분마다');
-      expect(service.toHumanReadable('0 * * * *')).toBe('매시간마다');
-      expect(service.toHumanReadable('0 0 * * *')).toBe('매일 자정');
-      expect(service.toHumanReadable('0 0 * * 0')).toBe('매주 일요일 자정');
-      expect(service.toHumanReadable('0 0 1 * *')).toBe('매월 1일 자정');
+    it('converts simple schedules to i18n keys', () => {
+      expect(service.toHumanReadable('* * * * *')).toBe('schedule.humanReadable.everyMinute');
+      expect(service.toHumanReadable('0 * * * *')).toBe('schedule.humanReadable.everyHour');
+      expect(service.toHumanReadable('0 0 * * *')).toBe('schedule.humanReadable.dailyMidnight');
+      expect(service.toHumanReadable('0 0 * * 0')).toBe('schedule.humanReadable.weeklySunday');
+      expect(service.toHumanReadable('0 0 1 * *')).toBe('schedule.humanReadable.monthly');
     });
 
     it('converts interval schedules', () => {
-      expect(service.toHumanReadable('*/5 * * * *')).toContain('5분마다');
-      expect(service.toHumanReadable('0 */2 * * *')).toContain('2시간마다');
-      expect(service.toHumanReadable('0 0 */3 * *')).toContain('3일마다');
+      expect(service.toHumanReadable('*/5 * * * *')).toContain('every 5 minutes');
+      expect(service.toHumanReadable('0 */2 * * *')).toContain('every 2 hours');
+      expect(service.toHumanReadable('0 0 */3 * *')).toContain('every 3 days');
     });
 
     it('converts specific time schedules', () => {
       const result1 = service.toHumanReadable('30 14 * * *');
-      expect(result1).toContain('30분');
-      expect(result1).toContain('14시');
+      expect(result1).toContain('minute 30');
+      expect(result1).toContain('hour 14');
 
       const result2 = service.toHumanReadable('0 9 * * *');
-      expect(result2).toContain('0분');
-      expect(result2).toContain('9시');
+      expect(result2).toContain('minute 0');
+      expect(result2).toContain('hour 9');
     });
 
     it('converts day of month schedules', () => {
       const result = service.toHumanReadable('0 0 15 * *');
-      expect(result).toContain('15일');
+      expect(result).toContain('day 15');
     });
 
     it('converts month schedules', () => {
       const result = service.toHumanReadable('0 0 1 6 *');
-      expect(result).toContain('6월');
+      expect(result).toContain('Jun');
     });
 
     it('converts day of week schedules', () => {
       const result1 = service.toHumanReadable('0 0 * * 1');
-      expect(result1).toContain('월요일');
+      expect(result1).toContain('Monday');
 
       const result2 = service.toHumanReadable('0 0 * * 5');
-      expect(result2).toContain('금요일');
+      expect(result2).toContain('Friday');
     });
 
     it('converts multiple values with commas', () => {
       const result1 = service.toHumanReadable('0,30 * * * *');
-      expect(result1).toContain('0,30분');
+      expect(result1).toContain('minute 0,30');
 
       const result2 = service.toHumanReadable('0 9,12,18 * * *');
-      expect(result2).toContain('9,12,18시');
+      expect(result2).toContain('hour 9,12,18');
 
       const result3 = service.toHumanReadable('0 0 * 1,6,12 *');
-      expect(result3).toContain('1월');
-      expect(result3).toContain('6월');
-      expect(result3).toContain('12월');
+      expect(result3).toContain('Jan');
+      expect(result3).toContain('Jun');
+      expect(result3).toContain('Dec');
 
       const result4 = service.toHumanReadable('0 0 * * 1,3,5');
-      expect(result4).toContain('월요일');
-      expect(result4).toContain('수요일');
-      expect(result4).toContain('금요일');
+      expect(result4).toContain('Monday');
+      expect(result4).toContain('Wednesday');
+      expect(result4).toContain('Friday');
     });
 
     it('handles complex combinations', () => {
@@ -186,16 +186,16 @@ describe('ScheduleService', () => {
       expect(result.length).toBeGreaterThan(0);
     });
 
-    it('returns Invalid schedule for malformed input', () => {
-      expect(service.toHumanReadable('* * *')).toBe('Invalid schedule');
-      expect(service.toHumanReadable('')).toBe('Invalid schedule');
-      expect(service.toHumanReadable('invalid')).toBe('Invalid schedule');
+    it('returns i18n key for malformed input', () => {
+      expect(service.toHumanReadable('* * *')).toBe('schedule.humanReadable.invalidSchedule');
+      expect(service.toHumanReadable('')).toBe('schedule.humanReadable.invalidSchedule');
+      expect(service.toHumanReadable('invalid')).toBe('schedule.humanReadable.invalidSchedule');
     });
 
     it('handles edge cases gracefully', () => {
       // All wildcards except one field
-      expect(service.toHumanReadable('30 * * * *')).toContain('30분');
-      expect(service.toHumanReadable('* 14 * * *')).toContain('14시');
+      expect(service.toHumanReadable('30 * * * *')).toContain('minute 30');
+      expect(service.toHumanReadable('* 14 * * *')).toContain('hour 14');
     });
   });
 
@@ -390,7 +390,7 @@ describe('ScheduleService', () => {
         expect(runs.length).toBeGreaterThan(0);
 
         const humanReadable = service.toHumanReadable(result.schedule);
-        expect(humanReadable).toBe('매시간마다');
+        expect(humanReadable).toBe('schedule.humanReadable.everyHour');
       }
     });
   });
@@ -399,12 +399,12 @@ describe('ScheduleService', () => {
     it('handles empty string schedule', () => {
       expect(service.validateSchedule('').valid).toBe(false);
       expect(service.getNextRuns('')).toEqual([]);
-      expect(service.toHumanReadable('')).toBe('Invalid schedule');
+      expect(service.toHumanReadable('')).toBe('schedule.humanReadable.invalidSchedule');
     });
 
     it('handles whitespace-only schedule', () => {
       expect(service.validateSchedule('     ').valid).toBe(false);
-      expect(service.toHumanReadable('     ')).toBe('Invalid schedule');
+      expect(service.toHumanReadable('     ')).toBe('schedule.humanReadable.invalidSchedule');
     });
 
     it('handles schedule with extra whitespace', () => {

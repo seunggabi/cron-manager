@@ -1,6 +1,6 @@
 {
   "name": "cron-manager",
-  "version": "0.7.15",
+  "version": "0.8.0",
   "description": "Crontab Manager - Electron Desktop App",
   "main": "dist-electron/main/index.js",
   "author": {
@@ -23,6 +23,12 @@
     "package": "npm run build:dev && electron-builder --dir",
     "lint": "eslint .",
     "type-check": "tsc --noEmit",
+    "test": "npm run test:backend && npm run test:frontend",
+    "test:backend": "cd backend && npm test",
+    "test:frontend": "cd frontend && npm run test:run",
+    "test:coverage": "npm run test:backend:coverage && npm run test:frontend:coverage",
+    "test:backend:coverage": "cd backend && npm run test:coverage",
+    "test:frontend:coverage": "cd frontend && npm run test:coverage",
     "demo:scenario": "open DEMO_SCENARIO.md",
     "demo:convert": "bash scripts/convert-to-gif.sh"
   },

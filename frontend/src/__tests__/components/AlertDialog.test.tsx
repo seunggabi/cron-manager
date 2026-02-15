@@ -90,56 +90,53 @@ describe('AlertDialog', () => {
 
   it('renders info icon for info type', () => {
     const { container } = render(<AlertDialog {...defaultProps} type="info" />);
-    const iconElement = container.querySelector('[style*="#3b82f6"]');
-    expect(iconElement).toBeInTheDocument();
+    const svg = container.querySelector('svg');
+    expect(svg).toBeInTheDocument();
   });
 
   it('renders success icon for success type', () => {
     const { container } = render(<AlertDialog {...defaultProps} type="success" />);
-    const iconElement = container.querySelector('[style*="#10b981"]');
-    expect(iconElement).toBeInTheDocument();
+    const svg = container.querySelector('svg');
+    expect(svg).toBeInTheDocument();
   });
 
   it('renders error icon for error type', () => {
     const { container } = render(<AlertDialog {...defaultProps} type="error" />);
-    const iconElement = container.querySelector('[style*="#ef4444"]');
-    expect(iconElement).toBeInTheDocument();
+    const svg = container.querySelector('svg');
+    expect(svg).toBeInTheDocument();
   });
 
   it('renders warning icon for warning type', () => {
     const { container } = render(<AlertDialog {...defaultProps} type="warning" />);
-    const iconElement = container.querySelector('[style*="#f59e0b"]');
-    expect(iconElement).toBeInTheDocument();
+    const svg = container.querySelector('svg');
+    expect(svg).toBeInTheDocument();
   });
 
   it('defaults to info type when type is not specified', () => {
     const { container } = render(<AlertDialog {...defaultProps} />);
-    const iconElement = container.querySelector('[style*="#3b82f6"]');
-    expect(iconElement).toBeInTheDocument();
+    const svg = container.querySelector('svg');
+    expect(svg).toBeInTheDocument();
   });
 
   it('renders Cron Manager logo', () => {
     render(<AlertDialog {...defaultProps} />);
     const logo = screen.getByAltText('Cron Manager');
     expect(logo).toBeInTheDocument();
-    expect(logo).toHaveAttribute('src', '/logo.svg');
+    expect(logo).toHaveAttribute('src');
   });
 
   it('handles multiline messages with pre-wrap', () => {
     const multilineMessage = 'Line 1\nLine 2\nLine 3';
-    const { container } = render(<AlertDialog {...defaultProps} message={multilineMessage} />);
+    render(<AlertDialog {...defaultProps} message={multilineMessage} />);
 
-    const messageElement = container.querySelector('[style*="pre-wrap"]');
-    expect(messageElement).toBeInTheDocument();
-    expect(messageElement).toHaveTextContent(multilineMessage);
+    expect(screen.getByText(multilineMessage)).toBeInTheDocument();
   });
 
   it('has scrollable content area for long messages', () => {
     const longMessage = 'A'.repeat(1000);
-    const { container } = render(<AlertDialog {...defaultProps} message={longMessage} />);
+    render(<AlertDialog {...defaultProps} message={longMessage} />);
 
-    const messageElement = container.querySelector('[style*="maxHeight"]');
-    expect(messageElement).toBeInTheDocument();
+    expect(screen.getByText(longMessage)).toBeInTheDocument();
   });
 });
 

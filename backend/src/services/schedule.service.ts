@@ -73,25 +73,25 @@ export class ScheduleService {
 
     // Minute
     if (minute === '*') {
-      result.push('매분');
+      result.push('every minute');
     } else if (minute.includes('/')) {
       const interval = minute.split('/')[1];
-      result.push(`${interval}분마다`);
+      result.push(`every ${interval} minutes`);
     } else if (minute.includes(',')) {
-      result.push(`${minute}분`);
+      result.push(`minute ${minute}`);
     } else {
-      result.push(`${minute}분`);
+      result.push(`minute ${minute}`);
     }
 
     // Hour
     if (hour !== '*') {
       if (hour.includes('/')) {
         const interval = hour.split('/')[1];
-        result.push(`${interval}시간마다`);
+        result.push(`every ${interval} hours`);
       } else if (hour.includes(',')) {
-        result.push(`${hour}시`);
+        result.push(`hour ${hour}`);
       } else {
-        result.push(`${hour}시`);
+        result.push(`hour ${hour}`);
       }
     }
 
@@ -99,15 +99,15 @@ export class ScheduleService {
     if (dayOfMonth !== '*') {
       if (dayOfMonth.includes('/')) {
         const interval = dayOfMonth.split('/')[1];
-        result.push(`${interval}일마다`);
+        result.push(`every ${interval} days`);
       } else {
-        result.push(`${dayOfMonth}일`);
+        result.push(`day ${dayOfMonth}`);
       }
     }
 
     // Month
     if (month !== '*') {
-      const monthNames = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'];
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
       if (month.includes(',')) {
         const months = month.split(',').map(m => monthNames[parseInt(m) - 1] || m);
         result.push(months.join(', '));
@@ -118,7 +118,7 @@ export class ScheduleService {
 
     // Day of week
     if (dayOfWeek !== '*') {
-      const dayNames = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'];
+      const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
       if (dayOfWeek.includes(',')) {
         const days = dayOfWeek.split(',').map(d => dayNames[parseInt(d)] || d);
         result.push(days.join(', '));

@@ -10,6 +10,14 @@
 
 A modern, feature-rich GUI-based crontab manager built with Electron, React, and TypeScript. Manage your cron jobs with ease through an intuitive interface with real-time synchronization, backup management, and advanced features.
 
+## 🎉 What's New in v0.8.0
+
+- 🌍 **Complete i18n Support**: Full internationalization with 8 languages (Korean, English, Chinese, Japanese, German, Russian, Hindi, Portuguese-BR)
+- 🔧 **Backend Improvements**: Removed all hardcoded Korean text from backend services
+- 🐛 **UI Bug Fixes**: Fixed infinite reload issue and improved table column alignment
+- ⚡ **Performance**: Added useCallback optimizations to prevent unnecessary re-renders
+- 📝 **Better UX**: Improved text wrapping and command display formatting
+
 ## 📥 Download
 
 Download the latest version for your platform:
@@ -581,7 +589,9 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## 📄 License
 
-MIT License - see LICENSE file for details
+MIT License - see [LICENSE](LICENSE) file for details
+
+Copyright (c) 2024 seunggabi
 
 ## 👤 Author
 
