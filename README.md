@@ -1,8 +1,12 @@
 # Cron Manager - Electron Desktop App
 
 [![Build and Release](https://github.com/seunggabi/cron-manager/actions/workflows/build-release.yml/badge.svg)](https://github.com/seunggabi/cron-manager/actions/workflows/build-release.yml)
-[![GitHub release](https://img.shields.io/github/v/release/seunggabi/cron-manager)](https://github.com/seunggabi/cron-manager/releases/latest)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Latest Release](https://img.shields.io/github/v/release/seunggabi/cron-manager?color=blue)](https://github.com/seunggabi/cron-manager/releases/latest)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
+[![GitHub Stars](https://img.shields.io/github/stars/seunggabi/cron-manager?style=social)](https://github.com/seunggabi/cron-manager/stargazers)
+[![Node.js](https://img.shields.io/badge/Node.js-20-339933?logo=node.js)](https://nodejs.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript)](https://www.typescriptlang.org)
+[![Electron](https://img.shields.io/badge/Electron-28-47848F?logo=electron)](https://www.electronjs.org)
 
 A modern, feature-rich GUI-based crontab manager built with Electron, React, and TypeScript. Manage your cron jobs with ease through an intuitive interface with real-time synchronization, backup management, and advanced features.
 
@@ -15,6 +19,28 @@ Download the latest version for your platform:
 - 🐧 **Linux**: [Download AppImage](https://github.com/seunggabi/cron-manager/releases/latest) or [Download DEB](https://github.com/seunggabi/cron-manager/releases/latest)
 
 All releases are automatically built and published via GitHub Actions.
+
+## 📸 Screenshots
+
+### Main Interface - Job Management
+![Job Management](example/m1_job.png)
+*Manage cron jobs with intuitive UI - ID column, sorting, inline editing*
+
+### Quick Edit Mode
+![Quick Edit](example/m1_job_quick_edit.png)
+*Double-click to edit job names and schedules inline*
+
+### Environment Variables
+![Environment Variables](example/m2_env.png)
+*Configure global and per-job environment variables*
+
+### Backup Management
+![Backup Management](example/m3_backup.png)
+*Automatic backups with diff viewer and restore functionality*
+
+### Multi-Language Support
+![Language Selection](example/locale.png)
+*8 languages supported: English, Korean, Japanese, Chinese, German, Russian, Hindi, Portuguese*
 
 ## ✨ Features
 
