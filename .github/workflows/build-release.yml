@@ -6,6 +6,9 @@ on:
       - 'v*.*.*'  # Trigger on version tags (v0.5.0, v1.0.0, etc.)
   workflow_dispatch:  # Allow manual trigger from GitHub UI
 
+permissions:
+  contents: write
+
 jobs:
   build:
     name: Build ${{ matrix.os }}
