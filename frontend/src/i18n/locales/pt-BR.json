@@ -294,7 +294,8 @@
         "4": "quinta-feira",
         "5": "sexta-feira",
         "6": "sábado"
-      }
+      },
+      "backgroundRunning": "Comando está sendo executado em segundo plano. Verifique o arquivo de log: {{logFile}}"
     }
   }
 }

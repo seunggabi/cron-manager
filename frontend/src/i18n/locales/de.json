@@ -294,7 +294,8 @@
         "4": "Donnerstag",
         "5": "Freitag",
         "6": "Samstag"
-      }
+      },
+      "backgroundRunning": "Befehl wird im Hintergrund ausgeführt. Überprüfen Sie die Protokolldatei: {{logFile}}"
     }
   }
 }

@@ -111,10 +111,6 @@ function App() {
 
   // Resizable columns for jobs table
   const { getColumnStyle, ResizeHandle } = useResizableColumns('jobs', {
-    action: 160,
-    status: 100,
-    name: 200,
-    schedule: 150,
     command: 380,
     nextRun: 180,
     id: 150,
@@ -392,6 +388,23 @@ function App() {
   const handleCellCancel = () => {
     setEditingCell(null);
     setEditingValue('');
+  };
+
+  const handleAddLog = async (job: CronJob) => {
+    const defaultLogPath = `~/logs/${job.name.replace(/\s+/g, '-')}.log`;
+    try {
+      const response = await api.jobs.update(job.id, {
+        logFile: defaultLogPath,
+      });
+      if (response.success) {
+        await fetchJobs();
+        showAlert(t('success.logAdded'), 'success');
+      } else {
+        showAlert(response.error || t('errors.updateFailed'), 'error');
+      }
+    } catch (error) {
+      showAlert(t('errors.updateFailed'), 'error');
+    }
   };
 
   const handleSort = (field: SortField) => {
@@ -695,7 +708,11 @@ function App() {
               )}
             </div>
             <div className="action-bar-right">
-              <button onClick={handleSaveSortOrder} className="btn" title={t('jobs.saveOrder')}>
+              <button
+                onClick={handleSaveSortOrder}
+                className="btn"
+                title={t('jobs.saveOrder')}
+              >
                 <Save />
                 {t('common.save')} <span style={{ opacity: 0.6, fontSize: '11px' }}>(⌘S)</span>
               </button>
@@ -736,7 +753,7 @@ function App() {
                 <table>
                   <thead>
                     <tr>
-                      <th style={getColumnStyle('action')}>
+                      <th style={{ ...getColumnStyle('action'), textAlign: 'center' }}>
                         {t('common.actions')}
                         <ResizeHandle columnName="action" />
                       </th>
@@ -927,9 +944,9 @@ function App() {
                               <code
                                 className="command-text"
                                 onDoubleClick={() => handleCellDoubleClick(job, 'command')}
-                                style={{ cursor: 'pointer', display: 'block' }}
+                                style={{ cursor: 'pointer', display: 'block', whiteSpace: 'pre-wrap' }}
                               >
-                                {job.command}
+                                {job.command.replace(/ (>>|>) /g, '\n$1 ')}
                               </code>
                               <div className="command-links">
                                 <button
@@ -940,14 +957,29 @@ function App() {
                                   <FolderOpen />
                                   {t('jobs.table.executable')}
                                 </button>
-                                {extractLogFiles(job.command).map((logFile, idx) => (
-                                  <LogButton
-                                    key={idx}
-                                    logFile={logFile}
-                                    workingDir={job.workingDir}
-                                    showAlert={showAlert}
-                                  />
-                                ))}
+                                {extractLogFiles(job.command).length > 0 ? (
+                                  extractLogFiles(job.command).map((logFile, idx) => (
+                                    <LogButton
+                                      key={idx}
+                                      logFile={logFile}
+                                      workingDir={job.workingDir}
+                                      showAlert={showAlert}
+                                    />
+                                  ))
+                                ) : (
+                                  <button
+                                    onClick={() => handleAddLog(job)}
+                                    className="command-link"
+                                    style={{
+                                      color: '#6366f1',
+                                      borderColor: '#6366f1',
+                                    }}
+                                    title={t('logs.addLog')}
+                                  >
+                                    <Plus />
+                                    {t('logs.addLog')}
+                                  </button>
+                                )}
                               </div>
                             </>
                           )}

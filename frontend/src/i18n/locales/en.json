@@ -144,7 +144,8 @@
   "logs": {
     "createDir": "Create Log Directory",
     "openLog": "Open Log File",
-    "log": "Log"
+    "log": "Log",
+    "addLog": "Add Log"
   },
   "errors": {
     "crontabPermissionDenied": "Permission denied to access crontab. Please grant Full Disk Access permission in System Settings → Privacy & Security → Full Disk Access.",
@@ -181,7 +182,8 @@
     "orderSaved": "Order saved successfully",
     "backupRestored": "Backup restored successfully",
     "runCompleted": "Execution completed",
-    "configSaved": "Configuration saved successfully"
+    "configSaved": "Configuration saved successfully",
+    "logAdded": "Log file added successfully"
   },
   "dialogs": {
     "deleteEnv": "Delete environment variable \"{{key}}\"?",
@@ -295,7 +297,8 @@
         "4": "Thursday",
         "5": "Friday",
         "6": "Saturday"
-      }
+      },
+      "backgroundRunning": "Command is running in the background. Check the log file: {{logFile}}"
     }
   }
 }

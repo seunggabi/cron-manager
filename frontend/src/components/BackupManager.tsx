@@ -424,7 +424,7 @@ export function BackupManager() {
                           {formatFileSize(backup.size)}
                         </code>
                       </td>
-                      <td>
+                      <td style={{ textAlign: 'center' }}>
                         {isScheduled && deletionTime ? (
                           <BackupCountdown deletionTime={deletionTime} />
                         ) : (

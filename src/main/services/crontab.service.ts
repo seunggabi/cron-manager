@@ -11,6 +11,9 @@ export class CrontabService {
   private static MARKER_PREFIX = '# CRON-MANAGER:';
   private globalEnv: GlobalEnv = {};
   private configService: ConfigService;
+  private lastWriteTime: number = 0;
+  private pendingWrite: NodeJS.Timeout | null = null;
+  private pendingContent: string | null = null;
 
   constructor(configService: ConfigService) {
     this.configService = configService;
@@ -18,16 +21,14 @@ export class CrontabService {
 
   /**
    * Check if user has permission to access crontab
-   * Attempts a dummy write to trigger macOS permission request if needed
+   * Verifies read access; on macOS, both read and write require Full Disk Access
    */
   async checkPermission(): Promise<{ hasPermission: boolean; error?: string }> {
     try {
-      // Read current crontab (or empty if none exists)
-      const currentCrontab = await this.readCrontab();
-
-      // Write back the same content (dummy write to check permission)
-      // This triggers macOS permission request popup if user doesn't have Full Disk Access
-      await this.writeCrontab(currentCrontab);
+      // Read current crontab to verify permission
+      // On macOS, both read and write require Full Disk Access,
+      // so successful read confirms write permission as well
+      await this.readCrontab();
 
       return { hasPermission: true };
     } catch (error: any) {
@@ -74,7 +75,7 @@ export class CrontabService {
       const backupDir = path.join(os.homedir(), '.cron-manager', 'backups');
       await fs.ensureDir(backupDir);
 
-      // Create backup file with timestamp in user's local timezone
+      // Create backup file with timestamp in ISO 8601 format (filesystem-safe)
       const now = new Date();
       const year = now.getFullYear();
       const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -86,8 +87,8 @@ export class CrontabService {
       const offsetHours = String(Math.floor(Math.abs(timezoneOffset) / 60)).padStart(2, '0');
       const offsetMinutes = String(Math.abs(timezoneOffset) % 60).padStart(2, '0');
       const offsetSign = timezoneOffset >= 0 ? '+' : '-';
-      // Format: YYYY-MM-DDThh-mm-ss+hh-mm (using hyphens for filesystem compatibility)
-      const timestamp = `${year}-${month}-${day}T${hours}-${minutes}-${seconds}${offsetSign}${offsetHours}-${offsetMinutes}`;
+      // Format: 2024-05-20T19_25_05+09_00 (underscore for time parts, filesystem-safe)
+      const timestamp = `${year}-${month}-${day}T${hours}_${minutes}_${seconds}${offsetSign}${offsetHours}_${offsetMinutes}`;
       const backupFile = path.join(backupDir, `crontab-${timestamp}.bak`);
       await fs.writeFile(backupFile, currentCrontab);
 
@@ -128,9 +129,44 @@ export class CrontabService {
   }
 
   /**
-   * Write crontab
+   * Write crontab with 1-second throttle to prevent performance issues
    */
   async writeCrontab(content: string): Promise<void> {
+    const now = Date.now();
+    const timeSinceLastWrite = now - this.lastWriteTime;
+
+    // If more than 1 second has passed, write immediately
+    if (timeSinceLastWrite >= 1000) {
+      await this.doWriteCrontab(content);
+      this.lastWriteTime = now;
+      this.pendingContent = null;
+      if (this.pendingWrite) {
+        clearTimeout(this.pendingWrite);
+        this.pendingWrite = null;
+      }
+      return;
+    }
+
+    // Otherwise, schedule a write for later (throttle)
+    this.pendingContent = content;
+    if (this.pendingWrite) {
+      clearTimeout(this.pendingWrite);
+    }
+
+    this.pendingWrite = setTimeout(async () => {
+      if (this.pendingContent) {
+        await this.doWriteCrontab(this.pendingContent);
+        this.lastWriteTime = Date.now();
+        this.pendingContent = null;
+        this.pendingWrite = null;
+      }
+    }, 1000 - timeSinceLastWrite);
+  }
+
+  /**
+   * Internal method to actually write crontab
+   */
+  private async doWriteCrontab(content: string): Promise<void> {
     const fs = await import('fs-extra');
     const os = await import('os');
     const path = await import('path');
@@ -400,12 +436,6 @@ export class CrontabService {
 
       // Add log redirection only if command doesn't already have it
       if (job.logFile && !hasRedirect) {
-        // Extract directory from log file path and create it if needed
-        const logDir = job.logFile.substring(0, job.logFile.lastIndexOf('/'));
-        if (logDir) {
-          fullCommand = `mkdir -p ${this.shellEscape(logDir)} && ${fullCommand}`;
-        }
-
         if (job.logStderr) {
           fullCommand = `${fullCommand} >> ${this.shellEscape(job.logFile)} 2>> ${this.shellEscape(job.logStderr)}`;
         } else {
@@ -573,7 +603,7 @@ export class CrontabService {
         exitCode: isSuccess ? 0 : (execError.code || 1),
         stdout: execError.stdout || '',
         stderr: isSuccess ?
-          `명령이 백그라운드에서 실행 중입니다. 로그 파일을 확인하세요: ${job.logFile}` :
+          `Command is running in the background. Check the log file: ${job.logFile}` :
           (execError.stderr || execError.message),
         duration,
         error: !isSuccess,

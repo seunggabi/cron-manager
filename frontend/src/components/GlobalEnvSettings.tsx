@@ -315,7 +315,13 @@ export function GlobalEnvSettings() {
                           }}
                         />
                       ) : (
-                        <code className="mono" style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                        <code className="mono" style={{
+                          fontSize: '12px',
+                          color: 'var(--text-secondary)',
+                          wordBreak: 'break-all',
+                          whiteSpace: 'pre-wrap',
+                          overflowWrap: 'anywhere'
+                        }}>
                           {envVar.value}
                         </code>
                       )}

@@ -172,6 +172,24 @@ code, .mono {
   animation: pulse-urgent 1s ease-in-out infinite;
 }
 
+@keyframes pulse-save {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.btn-unsaved {
+  animation: pulse-save 1.5s ease-in-out infinite;
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+.btn-unsaved:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+  box-shadow: 0 2px 8px rgba(37,99,235,0.25);
+}
+
 /* Buttons */
 .btn {
   display: inline-flex;
@@ -266,14 +284,15 @@ tbody tr {
 tbody tr:last-child { border-bottom: none; }
 tbody tr:hover { background: var(--surface-hover); }
 
-td { padding: 14px 16px; vertical-align: top; text-align: center; }
+td { padding: 14px 16px; vertical-align: top; text-align: left; }
+td:first-child,
+td:nth-child(2) { text-align: center; } /* Action and Status columns center aligned */
 
 /* Column widths */
 th:first-child,
 td:first-child {
   width: 160px;
   min-width: 160px;
-  text-align: left;
 }
 
 th:nth-child(2),

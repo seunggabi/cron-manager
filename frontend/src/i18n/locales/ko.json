@@ -144,7 +144,8 @@
   "logs": {
     "createDir": "로그 디렉토리 생성",
     "openLog": "로그 파일 열기",
-    "log": "로그"
+    "log": "로그",
+    "addLog": "로그 추가"
   },
   "errors": {
     "crontabPermissionDenied": "crontab 접근 권한이 거부되었습니다. 시스템 설정 → 개인 정보 보호 및 보안 → 전체 디스크 접근 권한에서 권한을 부여해주세요.",
@@ -181,7 +182,8 @@
     "orderSaved": "정렬 순서가 저장되었습니다",
     "backupRestored": "백업이 성공적으로 복구되었습니다",
     "runCompleted": "실행 완료",
-    "configSaved": "설정이 성공적으로 저장되었습니다"
+    "configSaved": "설정이 성공적으로 저장되었습니다",
+    "logAdded": "로그 파일이 추가되었습니다"
   },
   "dialogs": {
     "deleteEnv": "\"{{key}}\" 환경변수를 삭제하시겠습니까?",
@@ -295,7 +297,8 @@
         "4": "목요일",
         "5": "금요일",
         "6": "토요일"
-      }
+      },
+      "backgroundRunning": "명령이 백그라운드에서 실행 중입니다. 로그 파일을 확인하세요: {{logFile}}"
     }
   }
 }
