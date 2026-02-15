@@ -1,0 +1,188 @@
+{
+  "common": {
+    "loading": "読み込み中...",
+    "saving": "保存中...",
+    "restoring": "復元中...",
+    "save": "保存",
+    "cancel": "キャンセル",
+    "close": "閉じる",
+    "confirm": "確認",
+    "delete": "削除",
+    "edit": "編集",
+    "add": "追加",
+    "search": "検索",
+    "clear": "クリア",
+    "clearSearch": "検索をクリア",
+    "sync": "同期",
+    "open": "開く",
+    "actions": "操作",
+    "status": "ステータス",
+    "active": "有効",
+    "inactive": "無効",
+    "latest": "最新",
+    "language": "言語"
+  },
+  "languages": {
+    "ko": "한국어",
+    "en": "English",
+    "zh-CN": "简体中文",
+    "ja": "日本語",
+    "ru": "Русский",
+    "hi": "हिन्दी",
+    "de": "Deutsch",
+    "pt-BR": "Português (BR)"
+  },
+  "header": {
+    "title": "Cron Manager",
+    "subtitle": "crontab ジョブを簡単に管理"
+  },
+  "tabs": {
+    "jobs": "ジョブ",
+    "env": "環境変数",
+    "backups": "バックアップ"
+  },
+  "jobs": {
+    "title": "Cron ジョブ",
+    "newJob": "新規ジョブ",
+    "editJob": "ジョブを編集",
+    "newCronJob": "新規 Cron ジョブ",
+    "runNow": "今すぐ実行",
+    "testIn1Minute": "1分テスト",
+    "noJobs": "登録された cron ジョブがありません",
+    "addFirstJob": "最初のジョブを追加",
+    "searchPlaceholder": "検索（名前、コマンド、スケジュール）",
+    "noSearchResults": "「{{query}}」の結果が見つかりません",
+    "saveOrder": "現在の順序を crontab ファイルに保存",
+    "activeCount": "有効 {{active}} / 合計 {{total}}",
+    "table": {
+      "name": "名前",
+      "schedule": "スケジュール",
+      "command": "コマンド",
+      "nextRun": "次回実行",
+      "id": "ID",
+      "executable": "実行ファイル",
+      "openFolder": "実行ファイルフォルダを開く"
+    },
+    "form": {
+      "name": "ジョブ名",
+      "namePlaceholder": "バックアップジョブ",
+      "description": "説明（任意）",
+      "descriptionPlaceholder": "このジョブは毎日データベースバックアップを実行します",
+      "descriptionHelp": "crontab ファイルにコメントとして保存されます",
+      "schedule": "スケジュール（Cron 式）",
+      "required": "*",
+      "schedulePlaceholder": "分 時 日 月 曜日（例：0 9 * * * = 毎日午前9時）",
+      "command": "コマンド",
+      "env": "環境変数（任意）",
+      "envPlaceholder": "1行に1つ、KEY=VALUE形式で入力",
+      "logFile": "ログファイルパス（自動解析）",
+      "logFileInfo": "コマンドの >> パスから自動解析",
+      "logFileHelp": "コマンドに >> /path/to/log.txt を使用すると自動解析されます",
+      "closeForm": "フォームを閉じる",
+      "submit": "ジョブを追加",
+      "submitEdit": "変更を保存",
+      "presets": {
+        "everyMinute": "毎分",
+        "every5Minutes": "5分ごと",
+        "hourly": "毎時",
+        "daily": "毎日深夜",
+        "daily9am": "毎日午前9時",
+        "weekdays9am": "平日午前9時"
+      }
+    }
+  },
+  "env": {
+    "title": "グローバル環境変数",
+    "newVar": "新しい変数を追加",
+    "noVars": "登録された環境変数がありません",
+    "searchPlaceholder": "検索（キー、値）",
+    "clearSearch": "検索をクリア",
+    "table": {
+      "key": "キー",
+      "value": "値"
+    }
+  },
+  "backups": {
+    "title": "バックアップ管理",
+    "configTitle": "バックアップ保持設定",
+    "noBackups": "バックアップファイルがありません",
+    "autoBackupInfo": "cron ジョブを変更すると自動的にバックアップが作成されます",
+    "searchPlaceholder": "検索（タイムスタンプ、ファイル名）",
+    "clearSearch": "検索をクリア",
+    "info": "バックアップ情報",
+    "totalBackups": "合計 {{count}} 個のバックアップファイル",
+    "autoCreated": "バックアップはジョブの追加/更新/削除時に自動的に作成されます",
+    "restoreWarning": "復元すると現在の crontab が選択したバックアップに置き換えられます",
+    "confirmSaveConfig": "バックアップ設定を保存しますか？",
+    "confirmSaveConfigMessage": "新しい保持ポリシーが適用され、古いバックアップが削除される可能性があります。",
+    "table": {
+      "timestamp": "タイムスタンプ",
+      "filename": "ファイル名",
+      "size": "サイズ",
+      "deletion": "自動削除"
+    },
+    "restore": "復元",
+    "compare": "比較",
+    "compareWithCurrent": "現在の crontab と比較",
+    "compareTitle": "バックアップ比較",
+    "compareSubtitle": "{{filename}} と現在の crontab を比較",
+    "config": {
+      "maxBackups": "最小保持ファイル数",
+      "maxBackupsHelp": "保持する最小バックアップファイル数",
+      "maxDays": "最大保持日数",
+      "maxDaysHelp": "バックアップファイルを保持する最大日数",
+      "policy": "クリーンアップポリシー（AND条件）：",
+      "policyDesc": "保持日数を超え、最小数を超える古いバックアップは自動的に削除されます。"
+    }
+  },
+  "logs": {
+    "createDir": "ログディレクトリを作成",
+    "openLog": "ログファイルを開く",
+    "log": "ログ"
+  },
+  "errors": {
+    "createDirFailed": "ディレクトリの作成に失敗しました",
+    "loadJobsFailed": "ジョブの読み込みに失敗しました",
+    "syncFailed": "同期に失敗しました",
+    "addJobFailed": "ジョブの追加に失敗しました",
+    "updateJobFailed": "ジョブの更新に失敗しました",
+    "deleteJobFailed": "ジョブの削除に失敗しました",
+    "toggleJobFailed": "ジョブの切り替えに失敗しました",
+    "runJobFailed": "ジョブの実行に失敗しました",
+    "saveOrderFailed": "順序の保存に失敗しました",
+    "updateFailed": "更新に失敗しました",
+    "executableNotFound": "実行ファイルパスが見つかりません",
+    "openFolderFailed": "フォルダを開けませんでした",
+    "openBackupFailed": "バックアップファイルを開けませんでした",
+    "loadEnvFailed": "環境変数の読み込みに失敗しました",
+    "addEnvFailed": "環境変数の追加に失敗しました",
+    "updateEnvFailed": "環境変数の更新に失敗しました",
+    "deleteEnvFailed": "環境変数の削除に失敗しました",
+    "loadBackupsFailed": "バックアップの読み込みに失敗しました",
+    "saveConfigFailed": "設定の保存に失敗しました",
+    "restoreBackupFailed": "バックアップの復元に失敗しました",
+    "diffFailed": "差分比較に失敗しました",
+    "enterKey": "キーを入力してください",
+    "enterValue": "値を入力してください",
+    "minBackups": "最小バックアップ数は1以上である必要があります",
+    "minDays": "保持日数は1以上である必要があります"
+  },
+  "success": {
+    "syncCompleted": "同期が完了しました",
+    "jobAdded": "ジョブが追加されました",
+    "jobDeleted": "ジョブが削除されました",
+    "orderSaved": "順序が保存されました",
+    "backupRestored": "バックアップが復元されました",
+    "runCompleted": "実行が完了しました",
+    "configSaved": "設定が保存されました"
+  },
+  "dialogs": {
+    "deleteEnv": "環境変数「{{key}}」を削除しますか？",
+    "deleteEnvConfirm": "この操作は元に戻せません。",
+    "restoreBackup": "このバックアップを復元しますか？",
+    "restoreBackupDetails": "ファイル：{{filename}}\n日付：{{date}}\n現在の crontab がこのバックアップに置き換えられます。",
+    "exitCode": "終了コード",
+    "stdout": "標準出力",
+    "stderr": "標準エラー"
+  }
+}

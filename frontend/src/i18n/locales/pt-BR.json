@@ -1,0 +1,188 @@
+{
+  "common": {
+    "loading": "Carregando...",
+    "saving": "Salvando...",
+    "restoring": "Restaurando...",
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "close": "Fechar",
+    "confirm": "Confirmar",
+    "delete": "Excluir",
+    "edit": "Editar",
+    "add": "Adicionar",
+    "search": "Pesquisar",
+    "clear": "Limpar",
+    "clearSearch": "Limpar Pesquisa",
+    "sync": "Sincronizar",
+    "open": "Abrir",
+    "actions": "Ações",
+    "status": "Status",
+    "active": "Ativo",
+    "inactive": "Inativo",
+    "latest": "Mais Recente",
+    "language": "Idioma"
+  },
+  "languages": {
+    "ko": "한국어",
+    "en": "English",
+    "zh-CN": "简体中文",
+    "ja": "日本語",
+    "ru": "Русский",
+    "hi": "हिन्दी",
+    "de": "Deutsch",
+    "pt-BR": "Português (BR)"
+  },
+  "header": {
+    "title": "Cron Manager",
+    "subtitle": "Gerencie suas tarefas crontab com facilidade"
+  },
+  "tabs": {
+    "jobs": "Tarefas",
+    "env": "Ambiente",
+    "backups": "Backups"
+  },
+  "jobs": {
+    "title": "Tarefas Cron",
+    "newJob": "Nova Tarefa",
+    "editJob": "Editar Tarefa",
+    "newCronJob": "Nova Tarefa Cron",
+    "runNow": "Executar Agora",
+    "testIn1Minute": "Teste em 1 Min",
+    "noJobs": "Nenhuma tarefa cron registrada",
+    "addFirstJob": "Adicione sua primeira tarefa",
+    "searchPlaceholder": "Pesquisar (nome, comando, agendamento)",
+    "noSearchResults": "Nenhum resultado para \"{{query}}\"",
+    "saveOrder": "Salvar ordem atual no arquivo crontab",
+    "activeCount": "Ativo {{active}} / Total {{total}}",
+    "table": {
+      "name": "Nome",
+      "schedule": "Agendamento",
+      "command": "Comando",
+      "nextRun": "Próxima Execução",
+      "id": "ID",
+      "executable": "Executável",
+      "openFolder": "Abrir pasta do executável"
+    },
+    "form": {
+      "name": "Nome da Tarefa",
+      "namePlaceholder": "Tarefa de Backup",
+      "description": "Descrição (Opcional)",
+      "descriptionPlaceholder": "Esta tarefa realiza backup diário do banco de dados",
+      "descriptionHelp": "Salvo como comentário no arquivo crontab",
+      "schedule": "Agendamento (Expressão Cron)",
+      "required": "*",
+      "schedulePlaceholder": "min hora dia mês dia_semana (ex: 0 9 * * * = Diariamente às 9h)",
+      "command": "Comando",
+      "env": "Variáveis de Ambiente (Opcional)",
+      "envPlaceholder": "Uma por linha no formato KEY=VALUE",
+      "logFile": "Caminho do Arquivo de Log (Auto-parseado)",
+      "logFileInfo": "Auto-parseado de >> caminho no comando",
+      "logFileHelp": "Use >> /caminho/para/log.txt no comando para parsing automático",
+      "closeForm": "Fechar formulário",
+      "submit": "Adicionar Tarefa",
+      "submitEdit": "Salvar Alterações",
+      "presets": {
+        "everyMinute": "A Cada Minuto",
+        "every5Minutes": "A Cada 5 Minutos",
+        "hourly": "A Cada Hora",
+        "daily": "Diariamente à Meia-Noite",
+        "daily9am": "Diariamente às 9h",
+        "weekdays9am": "Dias Úteis às 9h"
+      }
+    }
+  },
+  "env": {
+    "title": "Variáveis de Ambiente Globais",
+    "newVar": "Adicionar Nova Variável",
+    "noVars": "Nenhuma variável de ambiente registrada",
+    "searchPlaceholder": "Pesquisar (Chave, Valor)",
+    "clearSearch": "Limpar Pesquisa",
+    "table": {
+      "key": "Chave",
+      "value": "Valor"
+    }
+  },
+  "backups": {
+    "title": "Gerenciamento de Backups",
+    "configTitle": "Configurações de Retenção de Backup",
+    "noBackups": "Nenhum arquivo de backup",
+    "autoBackupInfo": "Backups são criados automaticamente quando você modifica tarefas cron",
+    "searchPlaceholder": "Pesquisar (timestamp, nome do arquivo)",
+    "clearSearch": "Limpar Pesquisa",
+    "info": "Informações de Backup",
+    "totalBackups": "Total de {{count}} arquivos de backup",
+    "autoCreated": "Backups são criados automaticamente ao adicionar/atualizar/excluir tarefas",
+    "restoreWarning": "Restaurar substituirá o crontab atual pelo backup selecionado",
+    "confirmSaveConfig": "Salvar configuração de backup?",
+    "confirmSaveConfigMessage": "Isso aplicará a nova política de retenção e pode excluir backups antigos.",
+    "table": {
+      "timestamp": "Timestamp",
+      "filename": "Nome do Arquivo",
+      "size": "Tamanho",
+      "deletion": "Auto-Exclusão"
+    },
+    "restore": "Restaurar",
+    "compare": "Comparar",
+    "compareWithCurrent": "Comparar com crontab atual",
+    "compareTitle": "Comparação de Backup",
+    "compareSubtitle": "Comparando {{filename}} com o crontab atual",
+    "config": {
+      "maxBackups": "Mín. de Arquivos a Manter",
+      "maxBackupsHelp": "Número mínimo de arquivos de backup a reter",
+      "maxDays": "Máx. de Dias de Retenção",
+      "maxDaysHelp": "Número máximo de dias para manter arquivos de backup",
+      "policy": "Política de Limpeza (condição E):",
+      "policyDesc": "Backups antigos que excedem os dias de retenção e a contagem mínima serão excluídos automaticamente."
+    }
+  },
+  "logs": {
+    "createDir": "Criar Diretório de Log",
+    "openLog": "Abrir Arquivo de Log",
+    "log": "Log"
+  },
+  "errors": {
+    "createDirFailed": "Falha ao criar diretório",
+    "loadJobsFailed": "Falha ao carregar tarefas",
+    "syncFailed": "Falha na sincronização",
+    "addJobFailed": "Falha ao adicionar tarefa",
+    "updateJobFailed": "Falha ao atualizar tarefa",
+    "deleteJobFailed": "Falha ao excluir tarefa",
+    "toggleJobFailed": "Falha ao alternar tarefa",
+    "runJobFailed": "Falha ao executar tarefa",
+    "saveOrderFailed": "Falha ao salvar ordem",
+    "updateFailed": "Falha na atualização",
+    "executableNotFound": "Caminho do executável não encontrado",
+    "openFolderFailed": "Falha ao abrir pasta",
+    "openBackupFailed": "Falha ao abrir arquivo de backup",
+    "loadEnvFailed": "Falha ao carregar variáveis de ambiente",
+    "addEnvFailed": "Falha ao adicionar variável de ambiente",
+    "updateEnvFailed": "Falha ao atualizar variável de ambiente",
+    "deleteEnvFailed": "Falha ao excluir variável de ambiente",
+    "loadBackupsFailed": "Falha ao carregar backups",
+    "saveConfigFailed": "Falha ao salvar configuração",
+    "restoreBackupFailed": "Falha ao restaurar backup",
+    "diffFailed": "Falha na comparação diff",
+    "enterKey": "Por favor, insira uma chave",
+    "enterValue": "Por favor, insira um valor",
+    "minBackups": "A contagem mínima de backup deve ser pelo menos 1",
+    "minDays": "Os dias de retenção devem ser pelo menos 1"
+  },
+  "success": {
+    "syncCompleted": "Sincronização concluída",
+    "jobAdded": "Tarefa adicionada com sucesso",
+    "jobDeleted": "Tarefa excluída com sucesso",
+    "orderSaved": "Ordem salva com sucesso",
+    "backupRestored": "Backup restaurado com sucesso",
+    "runCompleted": "Execução concluída",
+    "configSaved": "Configuração salva com sucesso"
+  },
+  "dialogs": {
+    "deleteEnv": "Excluir variável de ambiente \"{{key}}\"?",
+    "deleteEnvConfirm": "Esta ação não pode ser desfeita.",
+    "restoreBackup": "Restaurar este backup?",
+    "restoreBackupDetails": "Arquivo: {{filename}}\nData: {{date}}\nO crontab atual será substituído por este backup.",
+    "exitCode": "Código de Saída",
+    "stdout": "Stdout",
+    "stderr": "Stderr"
+  }
+}

@@ -1,0 +1,188 @@
+{
+  "common": {
+    "loading": "लोड हो रहा है...",
+    "saving": "सहेजा जा रहा है...",
+    "restoring": "पुनर्स्थापित किया जा रहा है...",
+    "save": "सहेजें",
+    "cancel": "रद्द करें",
+    "close": "बंद करें",
+    "confirm": "पुष्टि करें",
+    "delete": "हटाएं",
+    "edit": "संपादित करें",
+    "add": "जोड़ें",
+    "search": "खोजें",
+    "clear": "साफ़ करें",
+    "clearSearch": "खोज साफ़ करें",
+    "sync": "समन्वयन",
+    "open": "खोलें",
+    "actions": "क्रियाएं",
+    "status": "स्थिति",
+    "active": "सक्रिय",
+    "inactive": "निष्क्रिय",
+    "latest": "नवीनतम",
+    "language": "भाषा"
+  },
+  "languages": {
+    "ko": "한국어",
+    "en": "English",
+    "zh-CN": "简体中文",
+    "ja": "日本語",
+    "ru": "Русский",
+    "hi": "हिन्दी",
+    "de": "Deutsch",
+    "pt-BR": "Português (BR)"
+  },
+  "header": {
+    "title": "Cron Manager",
+    "subtitle": "अपने crontab कार्यों को आसानी से प्रबंधित करें"
+  },
+  "tabs": {
+    "jobs": "कार्य",
+    "env": "पर्यावरण",
+    "backups": "बैकअप"
+  },
+  "jobs": {
+    "title": "Cron कार्य",
+    "newJob": "नया कार्य",
+    "editJob": "कार्य संपादित करें",
+    "newCronJob": "नया Cron कार्य",
+    "runNow": "अभी चलाएं",
+    "testIn1Minute": "1 मिनट में परीक्षण",
+    "noJobs": "कोई cron कार्य पंजीकृत नहीं है",
+    "addFirstJob": "अपना पहला कार्य जोड़ें",
+    "searchPlaceholder": "खोजें (नाम, कमांड, शेड्यूल)",
+    "noSearchResults": "\"{{query}}\" के लिए कोई परिणाम नहीं",
+    "saveOrder": "वर्तमान क्रम को crontab फ़ाइल में सहेजें",
+    "activeCount": "सक्रिय {{active}} / कुल {{total}}",
+    "table": {
+      "name": "नाम",
+      "schedule": "शेड्यूल",
+      "command": "कमांड",
+      "nextRun": "अगला रन",
+      "id": "ID",
+      "executable": "निष्पादन योग्य",
+      "openFolder": "निष्पादन योग्य फ़ोल्डर खोलें"
+    },
+    "form": {
+      "name": "कार्य का नाम",
+      "namePlaceholder": "बैकअप कार्य",
+      "description": "विवरण (वैकल्पिक)",
+      "descriptionPlaceholder": "यह कार्य दैनिक डेटाबेस बैकअप करता है",
+      "descriptionHelp": "crontab फ़ाइल में टिप्पणी के रूप में सहेजा गया",
+      "schedule": "शेड्यूल (Cron एक्सप्रेशन)",
+      "required": "*",
+      "schedulePlaceholder": "मिनट घंटा दिन महीना सप्ताह (उदाहरण: 0 9 * * * = रोज़ सुबह 9 बजे)",
+      "command": "कमांड",
+      "env": "पर्यावरण चर (वैकल्पिक)",
+      "envPlaceholder": "प्रति पंक्ति एक KEY=VALUE प्रारूप में",
+      "logFile": "लॉग फ़ाइल पथ (स्वतः पार्स)",
+      "logFileInfo": "कमांड में >> पथ से स्वतः पार्स",
+      "logFileHelp": "स्वचालित पार्सिंग के लिए कमांड में >> /path/to/log.txt का उपयोग करें",
+      "closeForm": "फ़ॉर्म बंद करें",
+      "submit": "कार्य जोड़ें",
+      "submitEdit": "परिवर्तन सहेजें",
+      "presets": {
+        "everyMinute": "हर मिनट",
+        "every5Minutes": "हर 5 मिनट",
+        "hourly": "प्रति घंटा",
+        "daily": "रोज़ आधी रात",
+        "daily9am": "रोज़ सुबह 9 बजे",
+        "weekdays9am": "सप्ताहांत सुबह 9 बजे"
+      }
+    }
+  },
+  "env": {
+    "title": "वैश्विक पर्यावरण चर",
+    "newVar": "नया चर जोड़ें",
+    "noVars": "कोई पर्यावरण चर पंजीकृत नहीं है",
+    "searchPlaceholder": "खोजें (कुंजी, मान)",
+    "clearSearch": "खोज साफ़ करें",
+    "table": {
+      "key": "कुंजी",
+      "value": "मान"
+    }
+  },
+  "backups": {
+    "title": "बैकअप प्रबंधन",
+    "configTitle": "बैकअप प्रतिधारण सेटिंग्स",
+    "noBackups": "कोई बैकअप फ़ाइल नहीं",
+    "autoBackupInfo": "cron कार्यों को संशोधित करने पर स्वचालित रूप से बैकअप बनाए जाते हैं",
+    "searchPlaceholder": "खोजें (टाइमस्टैम्प, फ़ाइल नाम)",
+    "clearSearch": "खोज साफ़ करें",
+    "info": "बैकअप जानकारी",
+    "totalBackups": "कुल {{count}} बैकअप फ़ाइलें",
+    "autoCreated": "कार्य जोड़ने/अपडेट/हटाने पर स्वचालित रूप से बैकअप बनाए जाते हैं",
+    "restoreWarning": "पुनर्स्थापना वर्तमान crontab को चयनित बैकअप से बदल देगी",
+    "confirmSaveConfig": "बैकअप कॉन्फ़िगरेशन सहेजें?",
+    "confirmSaveConfigMessage": "यह नई प्रतिधारण नीति लागू करेगा और पुराने बैकअप हटा सकता है।",
+    "table": {
+      "timestamp": "टाइमस्टैम्प",
+      "filename": "फ़ाइल नाम",
+      "size": "आकार",
+      "deletion": "स्वतः-हटाना"
+    },
+    "restore": "पुनर्स्थापित करें",
+    "compare": "तुलना करें",
+    "compareWithCurrent": "वर्तमान crontab से तुलना करें",
+    "compareTitle": "बैकअप तुलना",
+    "compareSubtitle": "{{filename}} की वर्तमान crontab से तुलना",
+    "config": {
+      "maxBackups": "न्यूनतम फ़ाइलें रखें",
+      "maxBackupsHelp": "रखने के लिए न्यूनतम बैकअप फ़ाइलों की संख्या",
+      "maxDays": "अधिकतम प्रतिधारण दिन",
+      "maxDaysHelp": "बैकअप फ़ाइलों को रखने के लिए अधिकतम दिन",
+      "policy": "सफाई नीति (AND शर्त):",
+      "policyDesc": "प्रतिधारण दिनों और न्यूनतम गिनती से अधिक पुराने बैकअप स्वतः हटा दिए जाएंगे।"
+    }
+  },
+  "logs": {
+    "createDir": "लॉग निर्देशिका बनाएं",
+    "openLog": "लॉग फ़ाइल खोलें",
+    "log": "लॉग"
+  },
+  "errors": {
+    "createDirFailed": "निर्देशिका बनाने में विफल",
+    "loadJobsFailed": "कार्य लोड करने में विफल",
+    "syncFailed": "समन्वयन विफल",
+    "addJobFailed": "कार्य जोड़ने में विफल",
+    "updateJobFailed": "कार्य अपडेट करने में विफल",
+    "deleteJobFailed": "कार्य हटाने में विफल",
+    "toggleJobFailed": "कार्य टॉगल करने में विफल",
+    "runJobFailed": "कार्य चलाने में विफल",
+    "saveOrderFailed": "क्रम सहेजने में विफल",
+    "updateFailed": "अपडेट विफल",
+    "executableNotFound": "निष्पादन योग्य पथ नहीं मिला",
+    "openFolderFailed": "फ़ोल्डर खोलने में विफल",
+    "openBackupFailed": "बैकअप फ़ाइल खोलने में विफल",
+    "loadEnvFailed": "पर्यावरण चर लोड करने में विफल",
+    "addEnvFailed": "पर्यावरण चर जोड़ने में विफल",
+    "updateEnvFailed": "पर्यावरण चर अपडेट करने में विफल",
+    "deleteEnvFailed": "पर्यावरण चर हटाने में विफल",
+    "loadBackupsFailed": "बैकअप लोड करने में विफल",
+    "saveConfigFailed": "कॉन्फ़िगरेशन सहेजने में विफल",
+    "restoreBackupFailed": "बैकअप पुनर्स्थापित करने में विफल",
+    "diffFailed": "अंतर तुलना विफल",
+    "enterKey": "कृपया कुंजी दर्ज करें",
+    "enterValue": "कृपया मान दर्ज करें",
+    "minBackups": "न्यूनतम बैकअप गिनती कम से कम 1 होनी चाहिए",
+    "minDays": "प्रतिधारण दिन कम से कम 1 होने चाहिए"
+  },
+  "success": {
+    "syncCompleted": "समन्वयन पूर्ण",
+    "jobAdded": "कार्य सफलतापूर्वक जोड़ा गया",
+    "jobDeleted": "कार्य सफलतापूर्वक हटाया गया",
+    "orderSaved": "क्रम सफलतापूर्वक सहेजा गया",
+    "backupRestored": "बैकअप सफलतापूर्वक पुनर्स्थापित",
+    "runCompleted": "निष्पादन पूर्ण",
+    "configSaved": "कॉन्फ़िगरेशन सफलतापूर्वक सहेजा गया"
+  },
+  "dialogs": {
+    "deleteEnv": "पर्यावरण चर \"{{key}}\" हटाएं?",
+    "deleteEnvConfirm": "यह क्रिया पूर्ववत नहीं की जा सकती।",
+    "restoreBackup": "यह बैकअप पुनर्स्थापित करें?",
+    "restoreBackupDetails": "फ़ाइल: {{filename}}\nदिनांक: {{date}}\nवर्तमान crontab इस बैकअप से बदल दिया जाएगा।",
+    "exitCode": "निकास कोड",
+    "stdout": "मानक आउटपुट",
+    "stderr": "मानक त्रुटि"
+  }
+}

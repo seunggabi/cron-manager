@@ -24,6 +24,6 @@
     }
   },
   "include": ["frontend/src", "src/preload/types.d.ts"],
-  "exclude": ["node_modules", "dist", "dist-electron", "src/main", "src/preload/index.ts", "shared"],
+  "exclude": ["node_modules", "dist", "dist-electron", "src/main", "src/preload/index.ts", "shared", "**/__tests__/**", "**/*.test.ts", "**/*.test.tsx"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

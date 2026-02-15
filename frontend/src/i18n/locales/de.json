@@ -1,0 +1,188 @@
+{
+  "common": {
+    "loading": "Laden...",
+    "saving": "Speichern...",
+    "restoring": "Wiederherstellen...",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "close": "Schließen",
+    "confirm": "Bestätigen",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "add": "Hinzufügen",
+    "search": "Suchen",
+    "clear": "Löschen",
+    "clearSearch": "Suche löschen",
+    "sync": "Synchronisieren",
+    "open": "Öffnen",
+    "actions": "Aktionen",
+    "status": "Status",
+    "active": "Aktiv",
+    "inactive": "Inaktiv",
+    "latest": "Neueste",
+    "language": "Sprache"
+  },
+  "languages": {
+    "ko": "한국어",
+    "en": "English",
+    "zh-CN": "简体中文",
+    "ja": "日本語",
+    "ru": "Русский",
+    "hi": "हिन्दी",
+    "de": "Deutsch",
+    "pt-BR": "Português (BR)"
+  },
+  "header": {
+    "title": "Cron Manager",
+    "subtitle": "Verwalten Sie Ihre crontab-Jobs mit Leichtigkeit"
+  },
+  "tabs": {
+    "jobs": "Jobs",
+    "env": "Umgebung",
+    "backups": "Backups"
+  },
+  "jobs": {
+    "title": "Cron-Jobs",
+    "newJob": "Neuer Job",
+    "editJob": "Job bearbeiten",
+    "newCronJob": "Neuer Cron-Job",
+    "runNow": "Jetzt ausführen",
+    "testIn1Minute": "Test in 1 Min",
+    "noJobs": "Keine Cron-Jobs registriert",
+    "addFirstJob": "Fügen Sie Ihren ersten Job hinzu",
+    "searchPlaceholder": "Suchen (Name, Befehl, Zeitplan)",
+    "noSearchResults": "Keine Ergebnisse für \"{{query}}\"",
+    "saveOrder": "Aktuelle Reihenfolge in crontab-Datei speichern",
+    "activeCount": "Aktiv {{active}} / Gesamt {{total}}",
+    "table": {
+      "name": "Name",
+      "schedule": "Zeitplan",
+      "command": "Befehl",
+      "nextRun": "Nächste Ausführung",
+      "id": "ID",
+      "executable": "Ausführbare Datei",
+      "openFolder": "Ordner der ausführbaren Datei öffnen"
+    },
+    "form": {
+      "name": "Job-Name",
+      "namePlaceholder": "Backup-Job",
+      "description": "Beschreibung (Optional)",
+      "descriptionPlaceholder": "Dieser Job führt täglich ein Datenbank-Backup durch",
+      "descriptionHelp": "Als Kommentar in der crontab-Datei gespeichert",
+      "schedule": "Zeitplan (Cron-Ausdruck)",
+      "required": "*",
+      "schedulePlaceholder": "min std tag monat wochentag (z.B.: 0 9 * * * = Täglich um 9 Uhr)",
+      "command": "Befehl",
+      "env": "Umgebungsvariablen (Optional)",
+      "envPlaceholder": "Eine pro Zeile im Format KEY=VALUE",
+      "logFile": "Logdatei-Pfad (Auto-Parser)",
+      "logFileInfo": "Auto-geparst aus >> Pfad im Befehl",
+      "logFileHelp": "Verwenden Sie >> /path/to/log.txt im Befehl für automatisches Parsing",
+      "closeForm": "Formular schließen",
+      "submit": "Job hinzufügen",
+      "submitEdit": "Änderungen speichern",
+      "presets": {
+        "everyMinute": "Jede Minute",
+        "every5Minutes": "Alle 5 Minuten",
+        "hourly": "Stündlich",
+        "daily": "Täglich um Mitternacht",
+        "daily9am": "Täglich um 9 Uhr",
+        "weekdays9am": "Wochentags um 9 Uhr"
+      }
+    }
+  },
+  "env": {
+    "title": "Globale Umgebungsvariablen",
+    "newVar": "Neue Variable hinzufügen",
+    "noVars": "Keine Umgebungsvariablen registriert",
+    "searchPlaceholder": "Suchen (Schlüssel, Wert)",
+    "clearSearch": "Suche löschen",
+    "table": {
+      "key": "Schlüssel",
+      "value": "Wert"
+    }
+  },
+  "backups": {
+    "title": "Backup-Verwaltung",
+    "configTitle": "Backup-Aufbewahrungseinstellungen",
+    "noBackups": "Keine Backup-Dateien",
+    "autoBackupInfo": "Backups werden automatisch erstellt, wenn Sie Cron-Jobs ändern",
+    "searchPlaceholder": "Suchen (Zeitstempel, Dateiname)",
+    "clearSearch": "Suche löschen",
+    "info": "Backup-Informationen",
+    "totalBackups": "Insgesamt {{count}} Backup-Dateien",
+    "autoCreated": "Backups werden automatisch beim Hinzufügen/Aktualisieren/Löschen von Jobs erstellt",
+    "restoreWarning": "Wiederherstellen ersetzt das aktuelle crontab durch das ausgewählte Backup",
+    "confirmSaveConfig": "Backup-Konfiguration speichern?",
+    "confirmSaveConfigMessage": "Dies wendet die neue Aufbewahrungsrichtlinie an und kann alte Backups löschen.",
+    "table": {
+      "timestamp": "Zeitstempel",
+      "filename": "Dateiname",
+      "size": "Größe",
+      "deletion": "Auto-Löschung"
+    },
+    "restore": "Wiederherstellen",
+    "compare": "Vergleichen",
+    "compareWithCurrent": "Mit aktuellem crontab vergleichen",
+    "compareTitle": "Backup-Vergleich",
+    "compareSubtitle": "Vergleiche {{filename}} mit aktuellem crontab",
+    "config": {
+      "maxBackups": "Min. beizubehaltende Dateien",
+      "maxBackupsHelp": "Mindestanzahl der aufzubewahrenden Backup-Dateien",
+      "maxDays": "Max. Aufbewahrungstage",
+      "maxDaysHelp": "Maximale Anzahl der Tage für Backup-Dateien",
+      "policy": "Bereinigungsrichtlinie (UND-Bedingung):",
+      "policyDesc": "Alte Backups, die die Aufbewahrungstage und die Mindestanzahl überschreiten, werden automatisch gelöscht."
+    }
+  },
+  "logs": {
+    "createDir": "Log-Verzeichnis erstellen",
+    "openLog": "Log-Datei öffnen",
+    "log": "Log"
+  },
+  "errors": {
+    "createDirFailed": "Verzeichnis erstellen fehlgeschlagen",
+    "loadJobsFailed": "Jobs laden fehlgeschlagen",
+    "syncFailed": "Synchronisierung fehlgeschlagen",
+    "addJobFailed": "Job hinzufügen fehlgeschlagen",
+    "updateJobFailed": "Job aktualisieren fehlgeschlagen",
+    "deleteJobFailed": "Job löschen fehlgeschlagen",
+    "toggleJobFailed": "Job umschalten fehlgeschlagen",
+    "runJobFailed": "Job ausführen fehlgeschlagen",
+    "saveOrderFailed": "Reihenfolge speichern fehlgeschlagen",
+    "updateFailed": "Aktualisierung fehlgeschlagen",
+    "executableNotFound": "Pfad zur ausführbaren Datei nicht gefunden",
+    "openFolderFailed": "Ordner öffnen fehlgeschlagen",
+    "openBackupFailed": "Backup-Datei öffnen fehlgeschlagen",
+    "loadEnvFailed": "Umgebungsvariablen laden fehlgeschlagen",
+    "addEnvFailed": "Umgebungsvariable hinzufügen fehlgeschlagen",
+    "updateEnvFailed": "Umgebungsvariable aktualisieren fehlgeschlagen",
+    "deleteEnvFailed": "Umgebungsvariable löschen fehlgeschlagen",
+    "loadBackupsFailed": "Backups laden fehlgeschlagen",
+    "saveConfigFailed": "Konfiguration speichern fehlgeschlagen",
+    "restoreBackupFailed": "Backup wiederherstellen fehlgeschlagen",
+    "diffFailed": "Diff-Vergleich fehlgeschlagen",
+    "enterKey": "Bitte geben Sie einen Schlüssel ein",
+    "enterValue": "Bitte geben Sie einen Wert ein",
+    "minBackups": "Mindestanzahl der Backups muss mindestens 1 sein",
+    "minDays": "Aufbewahrungstage müssen mindestens 1 sein"
+  },
+  "success": {
+    "syncCompleted": "Synchronisierung abgeschlossen",
+    "jobAdded": "Job erfolgreich hinzugefügt",
+    "jobDeleted": "Job erfolgreich gelöscht",
+    "orderSaved": "Reihenfolge erfolgreich gespeichert",
+    "backupRestored": "Backup erfolgreich wiederhergestellt",
+    "runCompleted": "Ausführung abgeschlossen",
+    "configSaved": "Konfiguration erfolgreich gespeichert"
+  },
+  "dialogs": {
+    "deleteEnv": "Umgebungsvariable \"{{key}}\" löschen?",
+    "deleteEnvConfirm": "Diese Aktion kann nicht rückgängig gemacht werden.",
+    "restoreBackup": "Dieses Backup wiederherstellen?",
+    "restoreBackupDetails": "Datei: {{filename}}\nDatum: {{date}}\nDas aktuelle crontab wird durch dieses Backup ersetzt.",
+    "exitCode": "Exit-Code",
+    "stdout": "Stdout",
+    "stderr": "Stderr"
+  }
+}

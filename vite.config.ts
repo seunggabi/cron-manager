@@ -16,7 +16,7 @@ export default defineConfig({
           build: {
             outDir: '../dist-electron/main',
             rollupOptions: {
-              external: ['electron'],
+              external: ['electron', /^@cron-manager\/shared/],
             },
           },
         },
@@ -32,7 +32,7 @@ export default defineConfig({
           build: {
             outDir: '../dist-electron/preload',
             rollupOptions: {
-              external: ['electron'],
+              external: ['electron', /^@cron-manager\/shared/],
             },
           },
         },
@@ -48,7 +48,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@cron-manager/shared': resolve(__dirname, './shared/types'),
+      '@cron-manager/shared': resolve(__dirname, './shared/dist'),
     },
   },
   server: {

@@ -17,7 +17,7 @@ import packageJson from '../../package.json';
 // Electron IPC API
 const api = window.electronAPI;
 
-type SortField = 'name' | 'schedule' | 'command' | 'enabled' | 'nextRun';
+type SortField = 'name' | 'schedule' | 'command' | 'enabled' | 'nextRun' | 'id';
 type SortDirection = 'asc' | 'desc';
 type TabType = 'jobs' | 'env' | 'backups';
 
@@ -118,6 +118,7 @@ function App() {
     schedule: 150,
     command: 380,
     nextRun: 180,
+    id: 150,
   });
 
   // Fetch GitHub stars
@@ -448,6 +449,10 @@ function App() {
           aValue = a.nextRun ? new Date(a.nextRun).getTime() : 0;
           bValue = b.nextRun ? new Date(b.nextRun).getTime() : 0;
           break;
+        case 'id':
+          aValue = a.id.toLowerCase();
+          bValue = b.id.toLowerCase();
+          break;
         default:
           return 0;
       }
@@ -527,60 +532,36 @@ function App() {
                     }}
                   >
                     <Select.Viewport>
-                      <Select.Item
-                        value="en"
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          padding: '8px 12px',
-                          fontSize: '13px',
-                          cursor: 'pointer',
-                          borderRadius: '4px',
-                          outline: 'none',
-                          userSelect: 'none',
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.background = 'var(--accent)';
-                          e.currentTarget.style.color = 'white';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.background = 'transparent';
-                          e.currentTarget.style.color = 'var(--text-primary)';
-                        }}
-                      >
-                        <Select.ItemText>{t('languages.en')}</Select.ItemText>
-                        <Select.ItemIndicator>
-                          <Check size={14} />
-                        </Select.ItemIndicator>
-                      </Select.Item>
-                      <Select.Item
-                        value="ko"
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          padding: '8px 12px',
-                          fontSize: '13px',
-                          cursor: 'pointer',
-                          borderRadius: '4px',
-                          outline: 'none',
-                          userSelect: 'none',
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.background = 'var(--accent)';
-                          e.currentTarget.style.color = 'white';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.background = 'transparent';
-                          e.currentTarget.style.color = 'var(--text-primary)';
-                        }}
-                      >
-                        <Select.ItemText>{t('languages.ko')}</Select.ItemText>
-                        <Select.ItemIndicator>
-                          <Check size={14} />
-                        </Select.ItemIndicator>
-                      </Select.Item>
+                      {['en', 'ko', 'zh-CN', 'ja', 'ru', 'hi', 'de', 'pt-BR'].map((lang) => (
+                        <Select.Item
+                          key={lang}
+                          value={lang}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            padding: '8px 12px',
+                            fontSize: '13px',
+                            cursor: 'pointer',
+                            borderRadius: '4px',
+                            outline: 'none',
+                            userSelect: 'none',
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = 'var(--accent)';
+                            e.currentTarget.style.color = 'white';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = 'transparent';
+                            e.currentTarget.style.color = 'var(--text-primary)';
+                          }}
+                        >
+                          <Select.ItemText>{t(`languages.${lang}`)}</Select.ItemText>
+                          <Select.ItemIndicator>
+                            <Check size={14} />
+                          </Select.ItemIndicator>
+                        </Select.Item>
+                      ))}
                     </Select.Viewport>
                   </Select.Content>
                 </Select.Portal>
@@ -803,12 +784,21 @@ function App() {
                         )}
                         <ResizeHandle columnName="nextRun" />
                       </th>
+                      <th style={getColumnStyle('id')} onClick={() => handleSort('id')}>
+                        {t('jobs.table.id')}
+                        {sortField === 'id' && (
+                          <span className="sort-icon">
+                            {sortDirection === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                          </span>
+                        )}
+                        <ResizeHandle columnName="id" />
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredAndSortedJobs.length === 0 ? (
                       <tr>
-                        <td colSpan={6} style={{ textAlign: 'center', padding: '40px' }}>
+                        <td colSpan={7} style={{ textAlign: 'center', padding: '40px' }}>
                           <div style={{ color: 'var(--text-tertiary)', fontSize: '14px' }}>
                             {t('jobs.noSearchResults', { query: searchQuery })}
                           </div>
@@ -963,6 +953,11 @@ function App() {
                         </td>
                         <td>
                           <NextRunCell nextRun={job.nextRun ? job.nextRun.toISOString() : null} />
+                        </td>
+                        <td>
+                          <code className="mono" style={{ fontSize: '12px', opacity: 0.7 }}>
+                            {job.id}
+                          </code>
                         </td>
                       </tr>
                     ))

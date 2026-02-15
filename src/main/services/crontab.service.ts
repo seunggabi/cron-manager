@@ -1,6 +1,6 @@
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import { nanoid } from 'nanoid';
+import { snowflakeId } from '@cron-manager/shared/utils';
 import type { CronJob, GlobalEnv } from '../../../shared/types';
 import { extractJobName } from '../utils/jobNameExtractor';
 import type { ConfigService } from './config.service';
@@ -274,7 +274,7 @@ export class CrontabService {
     const schedule = `${minute} ${hour} ${day} ${month} ${weekday}`;
 
     return {
-      id: metadata.id || nanoid(),
+      id: metadata.id || snowflakeId(),
       name: metadata.name || extractJobName(command),
       description: metadata.description,
       schedule,
@@ -412,7 +412,7 @@ export class CrontabService {
 
     const newJob: CronJob = {
       ...job,
-      id: nanoid(),
+      id: snowflakeId(),
       createdAt: new Date(),
       updatedAt: new Date(),
     };

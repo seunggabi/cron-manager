@@ -1,0 +1,188 @@
+{
+  "common": {
+    "loading": "加载中...",
+    "saving": "保存中...",
+    "restoring": "恢复中...",
+    "save": "保存",
+    "cancel": "取消",
+    "close": "关闭",
+    "confirm": "确认",
+    "delete": "删除",
+    "edit": "编辑",
+    "add": "添加",
+    "search": "搜索",
+    "clear": "清除",
+    "clearSearch": "清除搜索",
+    "sync": "同步",
+    "open": "打开",
+    "actions": "操作",
+    "status": "状态",
+    "active": "活动",
+    "inactive": "非活动",
+    "latest": "最新",
+    "language": "语言"
+  },
+  "languages": {
+    "ko": "한국어",
+    "en": "English",
+    "zh-CN": "简体中文",
+    "ja": "日本語",
+    "ru": "Русский",
+    "hi": "हिन्दी",
+    "de": "Deutsch",
+    "pt-BR": "Português (BR)"
+  },
+  "header": {
+    "title": "Cron Manager",
+    "subtitle": "轻松管理您的 crontab 任务"
+  },
+  "tabs": {
+    "jobs": "任务",
+    "env": "环境变量",
+    "backups": "备份"
+  },
+  "jobs": {
+    "title": "Cron 任务",
+    "newJob": "新建任务",
+    "editJob": "编辑任务",
+    "newCronJob": "新建 Cron 任务",
+    "runNow": "立即运行",
+    "testIn1Minute": "1分钟测试",
+    "noJobs": "未注册任何 cron 任务",
+    "addFirstJob": "添加您的第一个任务",
+    "searchPlaceholder": "搜索（名称、命令、计划）",
+    "noSearchResults": "未找到 \"{query}\" 的结果",
+    "saveOrder": "将当前顺序保存到 crontab 文件",
+    "activeCount": "活动 {{active}} / 总计 {{total}}",
+    "table": {
+      "name": "名称",
+      "schedule": "计划",
+      "command": "命令",
+      "nextRun": "下次运行",
+      "id": "ID",
+      "executable": "可执行文件",
+      "openFolder": "打开可执行文件文件夹"
+    },
+    "form": {
+      "name": "任务名称",
+      "namePlaceholder": "备份任务",
+      "description": "描述（可选）",
+      "descriptionPlaceholder": "此任务每天执行数据库备份",
+      "descriptionHelp": "作为注释保存在 crontab 文件中",
+      "schedule": "计划（Cron 表达式）",
+      "required": "*",
+      "schedulePlaceholder": "分 时 日 月 周（例如：0 9 * * * = 每天上午9点）",
+      "command": "命令",
+      "env": "环境变量（可选）",
+      "envPlaceholder": "每行一个，格式为 KEY=VALUE",
+      "logFile": "日志文件路径（自动解析）",
+      "logFileInfo": "从命令中 >> 路径自动解析",
+      "logFileHelp": "在命令中使用 >> /path/to/log.txt 以自动解析",
+      "closeForm": "关闭表单",
+      "submit": "添加任务",
+      "submitEdit": "保存更改",
+      "presets": {
+        "everyMinute": "每分钟",
+        "every5Minutes": "每5分钟",
+        "hourly": "每小时",
+        "daily": "每天午夜",
+        "daily9am": "每天上午9点",
+        "weekdays9am": "工作日上午9点"
+      }
+    }
+  },
+  "env": {
+    "title": "全局环境变量",
+    "newVar": "添加新变量",
+    "noVars": "未注册任何环境变量",
+    "searchPlaceholder": "搜索（键、值）",
+    "clearSearch": "清除搜索",
+    "table": {
+      "key": "键",
+      "value": "值"
+    }
+  },
+  "backups": {
+    "title": "备份管理",
+    "configTitle": "备份保留设置",
+    "noBackups": "无备份文件",
+    "autoBackupInfo": "修改 cron 任务时会自动创建备份",
+    "searchPlaceholder": "搜索（时间戳、文件名）",
+    "clearSearch": "清除搜索",
+    "info": "备份信息",
+    "totalBackups": "共 {{count}} 个备份文件",
+    "autoCreated": "备份在添加/更新/删除任务时自动创建",
+    "restoreWarning": "恢复将用所选备份替换当前 crontab",
+    "confirmSaveConfig": "保存备份配置？",
+    "confirmSaveConfigMessage": "这将应用新的保留策略并可能删除旧备份。",
+    "table": {
+      "timestamp": "时间戳",
+      "filename": "文件名",
+      "size": "大小",
+      "deletion": "自动删除"
+    },
+    "restore": "恢复",
+    "compare": "比较",
+    "compareWithCurrent": "与当前 crontab 比较",
+    "compareTitle": "备份比较",
+    "compareSubtitle": "正在比较 {{filename}} 与当前 crontab",
+    "config": {
+      "maxBackups": "最少保留文件数",
+      "maxBackupsHelp": "要保留的最少备份文件数",
+      "maxDays": "最大保留天数",
+      "maxDaysHelp": "保留备份文件的最大天数",
+      "policy": "清理策略（AND 条件）：",
+      "policyDesc": "超过保留天数且超过最少数量的旧备份将被自动删除。"
+    }
+  },
+  "logs": {
+    "createDir": "创建日志目录",
+    "openLog": "打开日志文件",
+    "log": "日志"
+  },
+  "errors": {
+    "createDirFailed": "创建目录失败",
+    "loadJobsFailed": "加载任务失败",
+    "syncFailed": "同步失败",
+    "addJobFailed": "添加任务失败",
+    "updateJobFailed": "更新任务失败",
+    "deleteJobFailed": "删除任务失败",
+    "toggleJobFailed": "切换任务失败",
+    "runJobFailed": "运行任务失败",
+    "saveOrderFailed": "保存顺序失败",
+    "updateFailed": "更新失败",
+    "executableNotFound": "未找到可执行文件路径",
+    "openFolderFailed": "打开文件夹失败",
+    "openBackupFailed": "打开备份文件失败",
+    "loadEnvFailed": "加载环境变量失败",
+    "addEnvFailed": "添加环境变量失败",
+    "updateEnvFailed": "更新环境变量失败",
+    "deleteEnvFailed": "删除环境变量失败",
+    "loadBackupsFailed": "加载备份失败",
+    "saveConfigFailed": "保存配置失败",
+    "restoreBackupFailed": "恢复备份失败",
+    "diffFailed": "差异比较失败",
+    "enterKey": "请输入键",
+    "enterValue": "请输入值",
+    "minBackups": "最少备份数量必须至少为 1",
+    "minDays": "保留天数必须至少为 1"
+  },
+  "success": {
+    "syncCompleted": "同步完成",
+    "jobAdded": "任务添加成功",
+    "jobDeleted": "任务删除成功",
+    "orderSaved": "顺序保存成功",
+    "backupRestored": "备份恢复成功",
+    "runCompleted": "执行完成",
+    "configSaved": "配置保存成功"
+  },
+  "dialogs": {
+    "deleteEnv": "删除环境变量 \"{{key}}\"？",
+    "deleteEnvConfirm": "此操作无法撤消。",
+    "restoreBackup": "恢复此备份？",
+    "restoreBackupDetails": "文件：{{filename}}\n日期：{{date}}\n当前 crontab 将被此备份替换。",
+    "exitCode": "退出代码",
+    "stdout": "标准输出",
+    "stderr": "标准错误"
+  }
+}
