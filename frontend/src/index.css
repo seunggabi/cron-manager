@@ -46,10 +46,18 @@ code, .mono {
 }
 
 /* Layout */
-.app { max-width: 1320px; margin: 0 auto; padding: 32px 24px; }
+.app { max-width: none; margin: 0 auto; padding: 32px 24px; }
 
 @media (min-width: 768px) {
-  .app { padding: 40px 40px; }
+  .app { padding: 40px 60px; }
+}
+
+@media (min-width: 1440px) {
+  .app { padding: 40px 80px; }
+}
+
+@media (min-width: 1920px) {
+  .app { padding: 40px 120px; }
 }
 
 /* Header */
