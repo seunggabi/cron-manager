@@ -74,13 +74,20 @@ export class CrontabService {
       const backupDir = path.join(os.homedir(), '.cron-manager', 'backups');
       await fs.ensureDir(backupDir);
 
-      // Create backup file with timestamp (KST/UTC+9 in ISO 8601 format)
+      // Create backup file with timestamp in user's local timezone
       const now = new Date();
-      const kstOffset = 9 * 60; // KST is UTC+9
-      const kstDate = new Date(now.getTime() + kstOffset * 60 * 1000);
-      const isoString = kstDate.toISOString();
-      // Format: YYYY-MM-DDThh:mm:ss+09:00 (ISO 8601 with KST timezone)
-      const timestamp = isoString.slice(0, 19) + '+09:00';
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
+      const timezoneOffset = -now.getTimezoneOffset(); // Minutes from UTC
+      const offsetHours = String(Math.floor(Math.abs(timezoneOffset) / 60)).padStart(2, '0');
+      const offsetMinutes = String(Math.abs(timezoneOffset) % 60).padStart(2, '0');
+      const offsetSign = timezoneOffset >= 0 ? '+' : '-';
+      // Format: YYYY-MM-DDThh-mm-ss+hh-mm (using hyphens for filesystem compatibility)
+      const timestamp = `${year}-${month}-${day}T${hours}-${minutes}-${seconds}${offsetSign}${offsetHours}-${offsetMinutes}`;
       const backupFile = path.join(backupDir, `crontab-${timestamp}.bak`);
       await fs.writeFile(backupFile, currentCrontab);
 

@@ -92,7 +92,7 @@ export function BackupManager() {
       showAlert(t('errors.minBackups'), 'error');
       return;
     }
-    if (maxBackupDays < 1) {
+    if (maxBackupDays < 0) {
       showAlert(t('errors.minDays'), 'error');
       return;
     }
@@ -291,8 +291,8 @@ export function BackupManager() {
             <input
               type="number"
               value={maxBackupDays}
-              onChange={(e) => setMaxBackupDays(Math.max(1, parseInt(e.target.value) || 1))}
-              min="1"
+              onChange={(e) => setMaxBackupDays(Math.max(0, parseInt(e.target.value) || 0))}
+              min="0"
               style={{ width: '100%' }}
             />
             <span style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '4px', display: 'block' }}>
