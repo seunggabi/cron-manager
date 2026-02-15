@@ -6,7 +6,9 @@ export class ScheduleService {
    */
   validateSchedule(schedule: string): { valid: boolean; error?: string } {
     try {
-      new Cron(schedule);
+      // Normalize whitespace before validation
+      const normalized = schedule.trim().replace(/\s+/g, ' ');
+      new Cron(normalized);
       return { valid: true };
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Invalid schedule';
@@ -21,11 +23,14 @@ export class ScheduleService {
     try {
       const cron = new Cron(schedule);
       const runs: Date[] = [];
+      let currentDate = new Date();
 
       for (let i = 0; i < count; i++) {
-        const next = cron.nextRun();
+        const next = cron.nextRun(currentDate);
         if (next) {
-          runs.push(next);
+          runs.push(new Date(next));
+          // Move to 1ms after this run for the next iteration
+          currentDate = new Date(next.getTime() + 1);
         }
       }
 

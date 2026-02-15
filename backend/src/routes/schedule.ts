@@ -52,7 +52,7 @@ router.post('/from-natural', (req, res) => {
   try {
     const { text }: NaturalLanguageRequest = req.body;
 
-    if (!text) {
+    if (!text || !text.trim()) {
       return res.status(400).json({
         success: false,
         error: 'Text is required',
