@@ -1,6 +1,6 @@
 {
   "name": "cron-manager",
-  "version": "0.7.4",
+  "version": "0.7.5",
   "description": "Crontab Manager - Electron Desktop App",
   "main": "dist-electron/main/index.js",
   "author": {
@@ -88,6 +88,9 @@
       "dist-electron",
       "shared/dist",
       "shared/package.json"
+    ],
+    "asarUnpack": [
+      "shared/**/*"
     ],
     "mac": {
       "target": [
