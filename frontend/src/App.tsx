@@ -11,7 +11,7 @@ import { extractScriptPath } from './utils/scriptPathExtractor';
 import { useResizableColumns } from './hooks/useResizableColumns';
 import { useTranslation } from 'react-i18next';
 import * as Select from '@radix-ui/react-select';
-import logoSvg from '/logo.svg';
+import logoSvg from './assets/logo.svg';
 import packageJson from '../../package.json';
 
 // Electron IPC API
