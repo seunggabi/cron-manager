@@ -9,6 +9,29 @@ export class CrontabService {
   private static MARKER_PREFIX = '# CRON-MANAGER:';
 
   /**
+   * Check if user has permission to access crontab
+   * Attempts a dummy write to trigger macOS permission request if needed
+   */
+  async checkPermission(): Promise<{ hasPermission: boolean; error?: string }> {
+    try {
+      // Read current crontab (or empty if none exists)
+      const currentCrontab = await this.readCrontab();
+
+      // Write back the same content (dummy write to check permission)
+      // This triggers macOS permission request popup if user doesn't have Full Disk Access
+      await this.writeCrontab(currentCrontab);
+
+      return { hasPermission: true };
+    } catch (error: any) {
+      // Permission denied or other errors
+      return {
+        hasPermission: false,
+        error: error.message || 'Permission denied to access crontab'
+      };
+    }
+  }
+
+  /**
    * Read current user's crontab
    */
   async readCrontab(): Promise<string> {

@@ -16,10 +16,30 @@ vi.mock('fs-extra', () => ({
   default: {
     writeFile: vi.fn().mockResolvedValue(undefined),
     remove: vi.fn().mockResolvedValue(undefined),
+    mkdtemp: vi.fn().mockResolvedValue('/tmp/crontab-mock123'),
   },
   writeFile: vi.fn().mockResolvedValue(undefined),
   remove: vi.fn().mockResolvedValue(undefined),
+  mkdtemp: vi.fn().mockResolvedValue('/tmp/crontab-mock123'),
 }));
+
+// Mock os
+vi.mock('os', async () => {
+  const actual = await vi.importActual<typeof import('os')>('os');
+  return {
+    ...actual,
+    tmpdir: vi.fn().mockReturnValue('/tmp'),
+  };
+});
+
+// Mock path
+vi.mock('path', async () => {
+  const actual = await vi.importActual<typeof import('path')>('path');
+  return {
+    ...actual,
+    join: vi.fn((...args: string[]) => args.join('/')),
+  };
+});
 
 describe('CrontabService', () => {
   let service: CrontabService;
@@ -33,6 +53,61 @@ describe('CrontabService', () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+  });
+
+  describe('checkPermission', () => {
+    it('returns hasPermission true when write succeeds', async () => {
+      const mockCrontab = '0 * * * * /usr/bin/test.sh';
+      mockExec.mockImplementation((_cmd: any, callback: any) => {
+        callback(null, { stdout: mockCrontab, stderr: '' });
+      });
+
+      const result = await service.checkPermission();
+
+      expect(result.hasPermission).toBe(true);
+      expect(result.error).toBeUndefined();
+    });
+
+    it('returns hasPermission true when no crontab exists', async () => {
+      let callCount = 0;
+      mockExec.mockImplementation((_cmd: any, callback: any) => {
+        callCount++;
+        if (callCount === 1) {
+          // First call: readCrontab returns empty
+          const error: any = new Error('no crontab for user');
+          error.message = 'no crontab for user';
+          callback(error);
+        } else {
+          // Second call: writeCrontab succeeds
+          callback(null, { stdout: '', stderr: '' });
+        }
+      });
+
+      const result = await service.checkPermission();
+
+      expect(result.hasPermission).toBe(true);
+    });
+
+    it('returns hasPermission false when write fails with permission denied', async () => {
+      let callCount = 0;
+      mockExec.mockImplementation((_cmd: any, callback: any) => {
+        callCount++;
+        if (callCount === 1) {
+          // First call: readCrontab succeeds
+          callback(null, { stdout: '', stderr: '' });
+        } else {
+          // Second call: writeCrontab fails with permission error
+          const error: any = new Error('Permission denied');
+          error.message = 'Permission denied';
+          callback(error);
+        }
+      });
+
+      const result = await service.checkPermission();
+
+      expect(result.hasPermission).toBe(false);
+      expect(result.error).toBe('Permission denied');
+    });
   });
 
   describe('readCrontab', () => {
@@ -320,7 +395,7 @@ another invalid line`;
       const result = service.serializeCrontab([job]);
 
       expect(result).toContain('# CRON-MANAGER:ENV:{"NODE_ENV":"production","API_KEY":"secret123"}');
-      expect(result).toContain('NODE_ENV="production" API_KEY="secret123" node script.js');
+      expect(result).toContain("NODE_ENV='production' API_KEY='secret123' node script.js");
     });
 
     it('serializes job with working directory', () => {
@@ -338,7 +413,7 @@ another invalid line`;
       const result = service.serializeCrontab([job]);
 
       expect(result).toContain('# CRON-MANAGER:WORKDIR:/home/user/project');
-      expect(result).toContain('cd /home/user/project && npm run build');
+      expect(result).toContain("cd '/home/user/project' && npm run build");
     });
 
     it('serializes job with log files', () => {
@@ -358,7 +433,7 @@ another invalid line`;
 
       expect(result).toContain('# CRON-MANAGER:LOG:/var/log/job.log');
       expect(result).toContain('# CRON-MANAGER:LOGERR:/var/log/job.err');
-      expect(result).toContain('/usr/bin/task.sh >> /var/log/job.log 2>> /var/log/job.err');
+      expect(result).toContain("/usr/bin/task.sh >> '/var/log/job.log' 2>> '/var/log/job.err'");
     });
 
     it('serializes job with log file but no stderr log', () => {
@@ -375,7 +450,7 @@ another invalid line`;
 
       const result = service.serializeCrontab([job]);
 
-      expect(result).toContain('/usr/bin/task.sh >> /var/log/job.log 2>&1');
+      expect(result).toContain("/usr/bin/task.sh >> '/var/log/job.log' 2>&1");
     });
 
     it('serializes job with tags', () => {
@@ -422,7 +497,7 @@ another invalid line`;
       expect(result).toContain('# CRON-MANAGER:LOG:/var/log/app.log');
       expect(result).toContain('# CRON-MANAGER:LOGERR:/var/log/app.err');
       expect(result).toContain('# CRON-MANAGER:TAGS:test,automated');
-      expect(result).toContain('*/15 * * * * NODE_ENV="test" cd /app && node script.js >> /var/log/app.log 2>> /var/log/app.err');
+      expect(result).toContain("*/15 * * * * NODE_ENV='test' cd '/app' && node script.js >> '/var/log/app.log' 2>> '/var/log/app.err'");
     });
 
     it('serializes multiple jobs with proper spacing', () => {

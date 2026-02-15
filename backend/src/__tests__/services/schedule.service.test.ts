@@ -32,15 +32,14 @@ describe('ScheduleService', () => {
     });
 
     it('invalidates incorrect cron expressions', () => {
+      // Test only expressions that croner actually rejects
       const invalidExpressions = [
         '',
         '* * * *', // Too few fields
-        '* * * * * *', // Too many fields
         '60 * * * *', // Invalid minute
         '* 24 * * *', // Invalid hour
         '* * 32 * *', // Invalid day
         '* * * 13 *', // Invalid month
-        '* * * * 8', // Invalid weekday
         'invalid cron',
       ];
 

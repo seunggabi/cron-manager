@@ -512,8 +512,10 @@ describe('Jobs Router', () => {
 
       const { exec } = await import('child_process');
       let executedCommand = '';
+      let executedOptions: any;
       vi.mocked(exec).mockImplementation((cmd: any, options: any, callback: any) => {
         executedCommand = cmd;
+        executedOptions = options;
         callback(null, { stdout: 'test_value\n', stderr: '' });
         return {} as any;
       });
@@ -521,7 +523,8 @@ describe('Jobs Router', () => {
       const response = await request(app).post('/api/jobs/job1/run');
 
       expect(response.status).toBe(200);
-      expect(executedCommand).toContain('TEST_VAR="test_value"');
+      expect(executedCommand).toBe('echo $TEST_VAR');
+      expect(executedOptions.env.TEST_VAR).toBe('test_value');
     });
 
     it('executes job with working directory', async () => {
@@ -540,8 +543,10 @@ describe('Jobs Router', () => {
 
       const { exec } = await import('child_process');
       let executedCommand = '';
+      let executedOptions: any;
       vi.mocked(exec).mockImplementation((cmd: any, options: any, callback: any) => {
         executedCommand = cmd;
+        executedOptions = options;
         callback(null, { stdout: '/tmp\n', stderr: '' });
         return {} as any;
       });
@@ -549,7 +554,8 @@ describe('Jobs Router', () => {
       const response = await request(app).post('/api/jobs/job1/run');
 
       expect(response.status).toBe(200);
-      expect(executedCommand).toContain('cd /tmp');
+      expect(executedCommand).toBe('pwd');
+      expect(executedOptions.cwd).toBe('/tmp');
     });
 
     it('handles command execution failure', async () => {
@@ -638,7 +644,10 @@ describe('Jobs Router', () => {
 
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
-      expect(response.body.data).toEqual(mockJobs);
+      expect(response.body.data).toHaveLength(1);
+      expect(response.body.data[0].id).toBe('job1');
+      expect(response.body.data[0].name).toBe('Test Job');
+      expect(response.body.data[0].command).toBe('/usr/bin/test.sh');
       expect(response.body.message).toBe('Synced with crontab');
     });
 
