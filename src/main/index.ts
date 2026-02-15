@@ -32,9 +32,6 @@ function createWindow() {
     show: false,
   });
 
-  // Setup IPC handlers
-  setupIpcHandlers();
-
   // Create application menu
   createApplicationMenu(mainWindow);
 
@@ -64,6 +61,10 @@ function createWindow() {
 // App lifecycle
 app.whenReady().then(async () => {
   await initializeServices();
+
+  // Setup IPC handlers once when app is ready
+  setupIpcHandlers();
+
   createWindow();
 
   app.on('activate', () => {
