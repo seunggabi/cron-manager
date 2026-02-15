@@ -1,6 +1,6 @@
 {
   "name": "cron-manager",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "Crontab Manager - Electron Desktop App",
   "main": "dist-electron/main/index.js",
   "author": {
@@ -85,7 +85,9 @@
     },
     "files": [
       "dist",
-      "dist-electron"
+      "dist-electron",
+      "shared/dist",
+      "shared/package.json"
     ],
     "mac": {
       "target": [
@@ -93,7 +95,12 @@
         "zip"
       ],
       "category": "public.app-category.developer-tools",
-      "icon": "build/icon.icns"
+      "icon": "build/icon.icns",
+      "identity": null,
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false,
+      "entitlements": null,
+      "entitlementsInherit": null
     },
     "win": {
       "target": [

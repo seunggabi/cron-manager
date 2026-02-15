@@ -21,6 +21,7 @@ All releases are automatically built and published via GitHub Actions.
 ### 📝 Job Management
 - **Visual cron job management** - Create, edit, and delete cron jobs through an intuitive UI
 - **Real-time crontab synchronization** - Automatically sync with system crontab
+- **Job ID column** - Unique identifier for each job with sorting support
 - **Job reordering** - Drag and drop to reorganize jobs
 - **Enable/disable jobs** - Toggle jobs without deleting them
 - **Instant execution** - Run jobs immediately for testing
@@ -73,6 +74,7 @@ All releases are automatically built and published via GitHub Actions.
 - **Dark mode support** - Comfortable viewing in any lighting
 - **Responsive tables** - Resizable and sortable columns
 - **Search and filter** - Find jobs, variables, and backups quickly
+- **Multi-language support** - 8 languages: English, Korean, Japanese, Chinese (Simplified), German, Russian, Hindi, Portuguese (Brazil)
 - **GitHub integration** - View repository stars in-app
 - **Application menu** - Full macOS/Windows menu support
 
@@ -413,6 +415,29 @@ npm install
 npm run dev
 ```
 
+### macOS "damaged app" error
+
+If macOS shows "App is damaged and can't be opened" error, this is due to Gatekeeper security:
+
+**Option 1: Right-click to open (Recommended)**
+1. Right-click (or Control+click) on the app
+2. Select "Open" from the menu
+3. Click "Open" in the dialog
+
+**Option 2: Remove quarantine attribute**
+```bash
+# For DMG-installed app
+xattr -cr /Applications/Cron\ Manager.app
+
+# For extracted app
+xattr -cr ~/Downloads/Cron\ Manager.app
+```
+
+**Option 3: System Settings**
+1. System Settings → Privacy & Security
+2. Scroll down to find "Cron Manager was blocked"
+3. Click "Open Anyway"
+
 ### IPC communication errors
 
 Check that:
@@ -485,49 +510,6 @@ MIT License - see LICENSE file for details
 
 - GitHub: [@seunggabi](https://github.com/seunggabi)
 - Repository: [cron-manager](https://github.com/seunggabi/cron-manager)
-
-## 🌟 Changelog
-
-### Version 0.4.0 (Latest)
-
-#### Features
-- ✨ Comprehensive UI improvements and keyboard shortcuts
-- ✨ Application menu with full keyboard shortcut support
-- ✨ Backup retention settings with configurable policies
-- ✨ Global environment variable management
-- ✨ Real-time log viewer with Terminal integration
-- ✨ Job reordering with drag-and-drop
-- ✨ Backup diff viewer with syntax highlighting
-- ✨ Custom confirmation dialogs (replacing native alerts)
-- ✨ Resizable table columns with persistent state
-- ✨ Search and filter across all tables
-- ✨ Backup countdown timer showing auto-deletion time
-
-#### Security Enhancements
-- 🔒 **Fixed 8 Critical/High vulnerabilities** → 0 remaining
-- 🔒 Command injection prevention (sanitized shell execution)
-- 🔒 Path traversal protection (validated file paths)
-- 🔒 Secure temp file creation (TOCTOU fix, 0600 permissions)
-- 🔒 API timeout enforcement (5-minute limit)
-- 🔒 Environment variable sanitization
-- 🔒 Comprehensive security audit completed
-
-#### Testing & Quality
-- ✅ **238 tests added** (80% code coverage)
-- ✅ Backend tests: 81 tests (Services, Routes)
-- ✅ Frontend tests: 157 tests (Components, Hooks)
-- ✅ Code duplication eliminated (shared package)
-- ✅ Type safety: Frontend 100% TypeScript coverage
-- ✅ Error handling improved with type guards
-
-#### Technical
-- 📦 TypeScript 5.9.3
-- 📦 Electron 28.1.0
-- 📦 React 18.3.1
-- 📦 Vite 7.3.1
-- 📦 Vitest 4.0.18 (testing framework)
-- 📦 React Testing Library (component tests)
-- 📦 Workspace packages for code sharing
 
 ---
 
