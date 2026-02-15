@@ -38,9 +38,13 @@ All releases are automatically built and published via GitHub Actions.
 5. The app will launch and won't be blocked again
 
 **Method 2: Remove quarantine attribute (Terminal)**
+
+🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨
 ```bash
-🚨 sudo xattr -rd com.apple.quarantine "/Applications/Cron Manager.app"
+sudo xattr -rd com.apple.quarantine "/Applications/Cron Manager.app"
 ```
+🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨
+
 Enter your password when prompted, then launch the app normally.
 
 **Method 3: System Settings**
