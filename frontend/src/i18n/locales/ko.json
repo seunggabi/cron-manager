@@ -24,7 +24,13 @@
   },
   "languages": {
     "ko": "한국어",
-    "en": "English"
+    "en": "English",
+    "zh-CN": "简体中文",
+    "ja": "日本語",
+    "ru": "Русский",
+    "hi": "हिन्दी",
+    "de": "Deutsch",
+    "pt-BR": "Português (BR)"
   },
   "header": {
     "title": "Cron Manager",
@@ -53,6 +59,7 @@
       "schedule": "스케줄",
       "command": "명령어",
       "nextRun": "다음 실행",
+      "id": "ID",
       "executable": "실행파일",
       "openFolder": "실행 파일 폴더 열기"
     },
@@ -106,6 +113,8 @@
     "totalBackups": "총 {{count}}개의 백업 파일이 있습니다",
     "autoCreated": "백업은 작업 추가/수정/삭제 시 자동으로 생성됩니다",
     "restoreWarning": "복구 시 현재 crontab이 선택한 백업으로 대체됩니다",
+    "confirmSaveConfig": "백업 설정을 저장하시겠습니까?",
+    "confirmSaveConfigMessage": "새로운 보관 정책이 적용되며 오래된 백업이 삭제될 수 있습니다.",
     "table": {
       "timestamp": "백업 시각",
       "filename": "파일명",
@@ -164,10 +173,12 @@
     "jobDeleted": "작업이 삭제되었습니다",
     "orderSaved": "정렬 순서가 저장되었습니다",
     "backupRestored": "백업이 성공적으로 복구되었습니다",
-    "runCompleted": "실행 완료"
+    "runCompleted": "실행 완료",
+    "configSaved": "설정이 성공적으로 저장되었습니다"
   },
   "dialogs": {
     "deleteEnv": "\"{{key}}\" 환경변수를 삭제하시겠습니까?",
+    "deleteEnvConfirm": "이 작업은 되돌릴 수 없습니다.",
     "restoreBackup": "백업을 복구하시겠습니까?",
     "restoreBackupDetails": "파일: {{filename}}\n날짜: {{date}}\n현재 crontab이 이 백업으로 대체됩니다.",
     "exitCode": "Exit Code",

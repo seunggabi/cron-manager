@@ -24,7 +24,13 @@
   },
   "languages": {
     "ko": "한국어",
-    "en": "English"
+    "en": "English",
+    "zh-CN": "简体中文",
+    "ja": "日本語",
+    "ru": "Русский",
+    "hi": "हिन्दी",
+    "de": "Deutsch",
+    "pt-BR": "Português (BR)"
   },
   "header": {
     "title": "Cron Manager",
@@ -53,6 +59,7 @@
       "schedule": "Schedule",
       "command": "Command",
       "nextRun": "Next Run",
+      "id": "ID",
       "executable": "Executable",
       "openFolder": "Open executable folder"
     },
@@ -106,6 +113,8 @@
     "totalBackups": "Total {{count}} backup files",
     "autoCreated": "Backups are automatically created on job add/update/delete",
     "restoreWarning": "Restore will replace current crontab with selected backup",
+    "confirmSaveConfig": "Save backup configuration?",
+    "confirmSaveConfigMessage": "This will apply the new retention policy and may delete old backups.",
     "table": {
       "timestamp": "Timestamp",
       "filename": "Filename",
@@ -164,10 +173,12 @@
     "jobDeleted": "Job deleted successfully",
     "orderSaved": "Order saved successfully",
     "backupRestored": "Backup restored successfully",
-    "runCompleted": "Execution completed"
+    "runCompleted": "Execution completed",
+    "configSaved": "Configuration saved successfully"
   },
   "dialogs": {
     "deleteEnv": "Delete environment variable \"{{key}}\"?",
+    "deleteEnvConfirm": "This action cannot be undone.",
     "restoreBackup": "Restore this backup?",
     "restoreBackupDetails": "File: {{filename}}\nDate: {{date}}\nCurrent crontab will be replaced with this backup.",
     "exitCode": "Exit Code",

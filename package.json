@@ -22,7 +22,9 @@
     "electron:build:linux": "npm run build:dev && electron-builder --linux",
     "package": "npm run build:dev && electron-builder --dir",
     "lint": "eslint .",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "demo:scenario": "open DEMO_SCENARIO.md",
+    "demo:convert": "bash scripts/convert-to-gif.sh"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.0.5",
