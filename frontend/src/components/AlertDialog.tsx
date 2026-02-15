@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AlertCircle, CheckCircle, XCircle, Info, X } from 'lucide-react';
 import logoSvg from '/logo.svg';
@@ -163,18 +163,18 @@ export function useAlertDialog() {
     message: '',
   });
 
-  const showAlert = (message: string, type: AlertType = 'info', title?: string) => {
+  const showAlert = useCallback((message: string, type: AlertType = 'info', title?: string) => {
     setAlert({
       isOpen: true,
       type,
       title,
       message,
     });
-  };
+  }, []);
 
-  const closeAlert = () => {
+  const closeAlert = useCallback(() => {
     setAlert(prev => ({ ...prev, isOpen: false }));
-  };
+  }, []);
 
   return {
     alert,

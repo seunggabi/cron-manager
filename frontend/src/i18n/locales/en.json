@@ -20,7 +20,8 @@
     "active": "Active",
     "inactive": "Inactive",
     "latest": "Latest",
-    "language": "Language"
+    "language": "Language",
+    "saveHint": "Cmd/Ctrl+Enter to save, Esc to cancel"
   },
   "languages": {
     "ko": "한국어",
@@ -88,7 +89,10 @@
         "daily": "Daily at Midnight",
         "daily9am": "Daily at 9am",
         "weekdays9am": "Weekdays at 9am"
-      }
+      },
+      "commandPlaceholder": "/usr/local/bin/backup.sh",
+      "schedulePlaceholderExample": "* * * * *",
+      "envExample": "NODE_ENV=production\nPATH=/usr/local/bin:/usr/bin\nAPI_KEY=your-key"
     }
   },
   "env": {
@@ -99,7 +103,9 @@
     "clearSearch": "Clear Search",
     "table": {
       "key": "Key",
-      "value": "Value"
+      "value": "Value",
+      "keyPlaceholder": "KEY",
+      "valuePlaceholder": "VALUE"
     }
   },
   "backups": {
@@ -138,7 +144,8 @@
   "logs": {
     "createDir": "Create Log Directory",
     "openLog": "Open Log File",
-    "log": "Log"
+    "log": "Log",
+    "addLog": "Add Log"
   },
   "errors": {
     "crontabPermissionDenied": "Permission denied to access crontab. Please grant Full Disk Access permission in System Settings → Privacy & Security → Full Disk Access.",
@@ -175,7 +182,8 @@
     "orderSaved": "Order saved successfully",
     "backupRestored": "Backup restored successfully",
     "runCompleted": "Execution completed",
-    "configSaved": "Configuration saved successfully"
+    "configSaved": "Configuration saved successfully",
+    "logAdded": "Log file added successfully"
   },
   "dialogs": {
     "deleteEnv": "Delete environment variable \"{{key}}\"?",
@@ -185,5 +193,112 @@
     "exitCode": "Exit Code",
     "stdout": "Stdout",
     "stderr": "Stderr"
+  },
+  "schedule": {
+    "presets": {
+      "everyMinute": {
+        "name": "Every Minute",
+        "description": "Run every minute"
+      },
+      "every5Minutes": {
+        "name": "Every 5 Minutes",
+        "description": "Run every 5 minutes"
+      },
+      "every10Minutes": {
+        "name": "Every 10 Minutes",
+        "description": "Run every 10 minutes"
+      },
+      "every15Minutes": {
+        "name": "Every 15 Minutes",
+        "description": "Run every 15 minutes"
+      },
+      "every30Minutes": {
+        "name": "Every 30 Minutes",
+        "description": "Run every 30 minutes"
+      },
+      "everyHour": {
+        "name": "Every Hour",
+        "description": "Run every hour on the hour"
+      },
+      "every2Hours": {
+        "name": "Every 2 Hours",
+        "description": "Run every 2 hours"
+      },
+      "every6Hours": {
+        "name": "Every 6 Hours",
+        "description": "Run every 6 hours"
+      },
+      "dailyMidnight": {
+        "name": "Daily at Midnight",
+        "description": "Run daily at midnight"
+      },
+      "daily6am": {
+        "name": "Daily at 6 AM",
+        "description": "Run daily at 6 AM"
+      },
+      "daily9am": {
+        "name": "Daily at 9 AM",
+        "description": "Run daily at 9 AM"
+      },
+      "daily6pm": {
+        "name": "Daily at 6 PM",
+        "description": "Run daily at 6 PM"
+      },
+      "weeklySunday": {
+        "name": "Weekly on Sunday",
+        "description": "Run every Sunday at midnight"
+      },
+      "weeklyMonday": {
+        "name": "Weekly on Monday",
+        "description": "Run every Monday at midnight"
+      },
+      "monthly": {
+        "name": "Monthly on 1st",
+        "description": "Run on the 1st of every month at midnight"
+      },
+      "workday9am": {
+        "name": "Weekdays at 9 AM",
+        "description": "Run Mon-Fri at 9 AM"
+      }
+    },
+    "humanReadable": {
+      "everyMinute": "Every minute",
+      "everyHour": "Every hour",
+      "dailyMidnight": "Daily at midnight",
+      "weeklySunday": "Every Sunday at midnight",
+      "monthly": "Monthly on the 1st at midnight",
+      "invalidSchedule": "Invalid schedule",
+      "minute": "minute",
+      "everyNMinutes": "Every {{n}} minutes",
+      "hour": "hour",
+      "everyNHours": "Every {{n}} hours",
+      "day": "day",
+      "everyNDays": "Every {{n}} days",
+      "everyMinuteOf": "Every minute",
+      "months": {
+        "1": "January",
+        "2": "February",
+        "3": "March",
+        "4": "April",
+        "5": "May",
+        "6": "June",
+        "7": "July",
+        "8": "August",
+        "9": "September",
+        "10": "October",
+        "11": "November",
+        "12": "December"
+      },
+      "weekdays": {
+        "0": "Sunday",
+        "1": "Monday",
+        "2": "Tuesday",
+        "3": "Wednesday",
+        "4": "Thursday",
+        "5": "Friday",
+        "6": "Saturday"
+      },
+      "backgroundRunning": "Command is running in the background. Check the log file: {{logFile}}"
+    }
   }
 }

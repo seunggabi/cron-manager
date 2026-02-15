@@ -20,7 +20,8 @@
     "active": "有効",
     "inactive": "無効",
     "latest": "最新",
-    "language": "言語"
+    "language": "言語",
+    "saveHint": "Cmd/Ctrl+Enterで保存、Escでキャンセル"
   },
   "languages": {
     "ko": "한국어",
@@ -88,7 +89,10 @@
         "daily": "毎日深夜",
         "daily9am": "毎日午前9時",
         "weekdays9am": "平日午前9時"
-      }
+      },
+      "commandPlaceholder": "/usr/local/bin/backup.sh",
+      "schedulePlaceholderExample": "* * * * *",
+      "envExample": "NODE_ENV=production\nPATH=/usr/local/bin:/usr/bin\nAPI_KEY=your-key"
     }
   },
   "env": {
@@ -99,7 +103,9 @@
     "clearSearch": "検索をクリア",
     "table": {
       "key": "キー",
-      "value": "値"
+      "value": "値",
+      "keyPlaceholder": "KEY",
+      "valuePlaceholder": "VALUE"
     }
   },
   "backups": {
@@ -184,5 +190,112 @@
     "exitCode": "終了コード",
     "stdout": "標準出力",
     "stderr": "標準エラー"
+  },
+  "schedule": {
+    "presets": {
+      "everyMinute": {
+        "name": "毎分",
+        "description": "1分ごとに実行"
+      },
+      "every5Minutes": {
+        "name": "5分ごと",
+        "description": "5分ごとに実行"
+      },
+      "every10Minutes": {
+        "name": "10分ごと",
+        "description": "10分ごとに実行"
+      },
+      "every15Minutes": {
+        "name": "15分ごと",
+        "description": "15分ごとに実行"
+      },
+      "every30Minutes": {
+        "name": "30分ごと",
+        "description": "30分ごとに実行"
+      },
+      "everyHour": {
+        "name": "毎時",
+        "description": "毎時正時に実行"
+      },
+      "every2Hours": {
+        "name": "2時間ごと",
+        "description": "2時間ごとに実行"
+      },
+      "every6Hours": {
+        "name": "6時間ごと",
+        "description": "6時間ごとに実行"
+      },
+      "dailyMidnight": {
+        "name": "毎日深夜",
+        "description": "毎日0時に実行"
+      },
+      "daily6am": {
+        "name": "毎日午前6時",
+        "description": "毎日6時に実行"
+      },
+      "daily9am": {
+        "name": "毎日午前9時",
+        "description": "毎日9時に実行"
+      },
+      "daily6pm": {
+        "name": "毎日午後6時",
+        "description": "毎日18時に実行"
+      },
+      "weeklySunday": {
+        "name": "毎週日曜日",
+        "description": "毎週日曜日の深夜"
+      },
+      "weeklyMonday": {
+        "name": "毎週月曜日",
+        "description": "毎週月曜日の深夜"
+      },
+      "monthly": {
+        "name": "毎月1日",
+        "description": "毎月1日の深夜"
+      },
+      "workday9am": {
+        "name": "平日午前9時",
+        "description": "月～金曜日の9時"
+      }
+    },
+    "humanReadable": {
+      "everyMinute": "毎分",
+      "everyHour": "毎時",
+      "dailyMidnight": "毎日深夜",
+      "weeklySunday": "毎週日曜日の深夜",
+      "monthly": "毎月1日の深夜",
+      "invalidSchedule": "無効なスケジュール",
+      "minute": "分",
+      "everyNMinutes": "{{n}}分ごと",
+      "hour": "時",
+      "everyNHours": "{{n}}時間ごと",
+      "day": "日",
+      "everyNDays": "{{n}}日ごと",
+      "everyMinuteOf": "毎分",
+      "months": {
+        "1": "1月",
+        "2": "2月",
+        "3": "3月",
+        "4": "4月",
+        "5": "5月",
+        "6": "6月",
+        "7": "7月",
+        "8": "8月",
+        "9": "9月",
+        "10": "10月",
+        "11": "11月",
+        "12": "12月"
+      },
+      "weekdays": {
+        "0": "日曜日",
+        "1": "月曜日",
+        "2": "火曜日",
+        "3": "水曜日",
+        "4": "木曜日",
+        "5": "金曜日",
+        "6": "土曜日"
+      },
+      "backgroundRunning": "コマンドがバックグラウンドで実行中です。ログファイルを確認してください：{{logFile}}"
+    }
   }
 }

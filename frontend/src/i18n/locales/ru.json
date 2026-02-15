@@ -20,7 +20,8 @@
     "active": "Активно",
     "inactive": "Неактивно",
     "latest": "Последнее",
-    "language": "Язык"
+    "language": "Язык",
+    "saveHint": "Cmd/Ctrl+Enter для сохранения, Esc для отмены"
   },
   "languages": {
     "ko": "한국어",
@@ -88,7 +89,10 @@
         "daily": "Ежедневно в полночь",
         "daily9am": "Ежедневно в 9 утра",
         "weekdays9am": "В будни в 9 утра"
-      }
+      },
+      "commandPlaceholder": "/usr/local/bin/backup.sh",
+      "schedulePlaceholderExample": "* * * * *",
+      "envExample": "NODE_ENV=production\nPATH=/usr/local/bin:/usr/bin\nAPI_KEY=your-key"
     }
   },
   "env": {
@@ -99,7 +103,9 @@
     "clearSearch": "Очистить поиск",
     "table": {
       "key": "Ключ",
-      "value": "Значение"
+      "value": "Значение",
+      "keyPlaceholder": "KEY",
+      "valuePlaceholder": "VALUE"
     }
   },
   "backups": {
@@ -184,5 +190,112 @@
     "exitCode": "Код выхода",
     "stdout": "Стандартный вывод",
     "stderr": "Стандартный поток ошибок"
+  },
+  "schedule": {
+    "presets": {
+      "everyMinute": {
+        "name": "Каждую минуту",
+        "description": "Выполняется каждую минуту"
+      },
+      "every5Minutes": {
+        "name": "Каждые 5 минут",
+        "description": "Выполняется каждые 5 минут"
+      },
+      "every10Minutes": {
+        "name": "Каждые 10 минут",
+        "description": "Выполняется каждые 10 минут"
+      },
+      "every15Minutes": {
+        "name": "Каждые 15 минут",
+        "description": "Выполняется каждые 15 минут"
+      },
+      "every30Minutes": {
+        "name": "Каждые 30 минут",
+        "description": "Выполняется каждые 30 минут"
+      },
+      "everyHour": {
+        "name": "Каждый час",
+        "description": "Выполняется каждый час в начале часа"
+      },
+      "every2Hours": {
+        "name": "Каждые 2 часа",
+        "description": "Выполняется каждые 2 часа"
+      },
+      "every6Hours": {
+        "name": "Каждые 6 часов",
+        "description": "Выполняется каждые 6 часов"
+      },
+      "dailyMidnight": {
+        "name": "Ежедневно в полночь",
+        "description": "Выполняется ежедневно в 0:00"
+      },
+      "daily6am": {
+        "name": "Ежедневно в 6:00",
+        "description": "Выполняется ежедневно в 6:00"
+      },
+      "daily9am": {
+        "name": "Ежедневно в 9:00",
+        "description": "Выполняется ежедневно в 9:00"
+      },
+      "daily6pm": {
+        "name": "Ежедневно в 18:00",
+        "description": "Выполняется ежедневно в 18:00"
+      },
+      "weeklySunday": {
+        "name": "Каждое воскресенье",
+        "description": "Каждое воскресенье в полночь"
+      },
+      "weeklyMonday": {
+        "name": "Каждый понедельник",
+        "description": "Каждый понедельник в полночь"
+      },
+      "monthly": {
+        "name": "1-го числа каждого месяца",
+        "description": "1-го числа каждого месяца в полночь"
+      },
+      "workday9am": {
+        "name": "В будни в 9:00",
+        "description": "Пн-Пт в 9:00"
+      }
+    },
+    "humanReadable": {
+      "everyMinute": "Каждую минуту",
+      "everyHour": "Каждый час",
+      "dailyMidnight": "Ежедневно в полночь",
+      "weeklySunday": "Каждое воскресенье в полночь",
+      "monthly": "1-го числа каждого месяца в полночь",
+      "invalidSchedule": "Неверное расписание",
+      "minute": "минута",
+      "everyNMinutes": "каждые {{n}} мин",
+      "hour": "час",
+      "everyNHours": "каждые {{n}} ч",
+      "day": "день",
+      "everyNDays": "каждые {{n}} дн",
+      "everyMinuteOf": "каждую минуту",
+      "months": {
+        "1": "января",
+        "2": "февраля",
+        "3": "марта",
+        "4": "апреля",
+        "5": "мая",
+        "6": "июня",
+        "7": "июля",
+        "8": "августа",
+        "9": "сентября",
+        "10": "октября",
+        "11": "ноября",
+        "12": "декабря"
+      },
+      "weekdays": {
+        "0": "воскресенье",
+        "1": "понедельник",
+        "2": "вторник",
+        "3": "среда",
+        "4": "четверг",
+        "5": "пятница",
+        "6": "суббота"
+      },
+      "backgroundRunning": "Команда выполняется в фоновом режиме. Проверьте файл журнала: {{logFile}}"
+    }
   }
 }

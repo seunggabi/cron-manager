@@ -28,38 +28,47 @@ export function JobForm({ job, onClose, onSubmit }: JobFormProps) {
     }
   }, [command]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('JobForm: handleSubmit called');
 
-    // Parse environment variables
-    const envObj: Record<string, string> = {};
-    if (env.trim()) {
-      env.split('\n').forEach(line => {
-        const [key, ...valueParts] = line.trim().split('=');
-        if (key) {
-          envObj[key] = valueParts.join('=');
-        }
-      });
+    try {
+      // Parse environment variables
+      const envObj: Record<string, string> = {};
+      if (env.trim()) {
+        env.split('\n').forEach(line => {
+          const [key, ...valueParts] = line.trim().split('=');
+          if (key) {
+            envObj[key] = valueParts.join('=');
+          }
+        });
+      }
+
+      // Generate name from command if not provided
+      let autoName = command;
+      if (!name) {
+        // Remove >> redirect part
+        const beforeRedirect = command.split('>>')[0].trim();
+        // Extract last 2 path segments
+        const parts = beforeRedirect.split('/').filter((p: string) => p);
+        autoName = parts.slice(-2).join('/');
+      }
+
+      const submitData = {
+        name: name || autoName,
+        description: description || undefined,
+        schedule,
+        command,
+        logFile: logFile || undefined,
+        env: Object.keys(envObj).length > 0 ? envObj : undefined,
+      };
+      console.log('JobForm: submitting data:', submitData);
+
+      await onSubmit(submitData);
+      console.log('JobForm: submit completed successfully');
+    } catch (error) {
+      console.error('JobForm: Form submission error:', error);
     }
-
-    // Generate name from command if not provided
-    let autoName = command;
-    if (!name) {
-      // Remove >> redirect part
-      const beforeRedirect = command.split('>>')[0].trim();
-      // Extract last 2 path segments
-      const parts = beforeRedirect.split('/').filter((p: string) => p);
-      autoName = parts.slice(-2).join('/');
-    }
-
-    onSubmit({
-      name: name || autoName,
-      description: description || undefined,
-      schedule,
-      command,
-      logFile: logFile || undefined,
-      env: Object.keys(envObj).length > 0 ? envObj : undefined,
-    });
   };
 
   // Handle ESC key to close modal and Cmd+S to submit
@@ -115,129 +124,137 @@ export function JobForm({ job, onClose, onSubmit }: JobFormProps) {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="modal-body">
-          {/* 환경변수 */}
-          <div className="field">
-            <label className="field-label">{t('jobs.form.env')}</label>
-            <textarea
-              value={env}
-              onChange={(e) => setEnv(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="NODE_ENV=production&#10;PATH=/usr/local/bin:/usr/bin&#10;API_KEY=your-key"
-              className="mono"
-              rows={3}
-            />
-            <span className="field-hint">{t('jobs.form.envPlaceholder')}</span>
-          </div>
-
-          <div className="divider"></div>
-
-          {/* 스케줄 타임 */}
-          <div className="field">
-            <label className="field-label">
-              {t('jobs.form.schedule')} <span className="required">{t('jobs.form.required')}</span>
-            </label>
-            <input
-              type="text"
-              value={schedule}
-              onChange={(e) => setSchedule(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="* * * * *"
-              className="mono"
-              required
-              autoFocus
-            />
-            <div className="presets">
-              {presets.map((preset) => (
-                <button
-                  key={preset.value}
-                  type="button"
-                  onClick={() => setSchedule(preset.value)}
-                  className="preset"
-                >
-                  {preset.label}
-                </button>
-              ))}
+        <form onSubmit={handleSubmit}>
+          <div className="modal-body">
+            {/* 환경변수 */}
+            <div className="field">
+              <label className="field-label">{t('jobs.form.env')}</label>
+              <textarea
+                value={env}
+                onChange={(e) => setEnv(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder={t('jobs.form.envExample')}
+                className="mono"
+                rows={3}
+              />
+              <span className="field-hint">{t('jobs.form.envPlaceholder')}</span>
             </div>
-            <span className="field-hint">{t('jobs.form.schedulePlaceholder')}</span>
+
+            <div className="divider"></div>
+
+            {/* 스케줄 타임 */}
+            <div className="field">
+              <label className="field-label">
+                {t('jobs.form.schedule')} <span className="required">{t('jobs.form.required')}</span>
+              </label>
+              <input
+                type="text"
+                value={schedule}
+                onChange={(e) => setSchedule(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="* * * * *"
+                className="mono"
+                required
+                autoFocus
+              />
+              <div className="presets">
+                {presets.map((preset) => (
+                  <button
+                    key={preset.value}
+                    type="button"
+                    onClick={() => setSchedule(preset.value)}
+                    className="preset"
+                  >
+                    {preset.label}
+                  </button>
+                ))}
+              </div>
+              <span className="field-hint">{t('jobs.form.schedulePlaceholder')}</span>
+            </div>
+
+            <div className="divider"></div>
+
+            {/* 실행 명령어 */}
+            <div className="field">
+              <label className="field-label">
+                {t('jobs.form.command')} <span className="required">{t('jobs.form.required')}</span>
+              </label>
+              <input
+                type="text"
+                value={command}
+                onChange={(e) => setCommand(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder={t('jobs.form.commandPlaceholder')}
+                className="mono"
+                required
+              />
+            </div>
+
+            <div className="divider"></div>
+
+            {/* 작업 이름 */}
+            <div className="field">
+              <label className="field-label">{t('jobs.form.name')}</label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder={t('jobs.form.namePlaceholder')}
+              />
+            </div>
+
+            <div className="divider"></div>
+
+            {/* 설명 */}
+            <div className="field">
+              <label className="field-label">{t('jobs.form.description')}</label>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder={t('jobs.form.descriptionPlaceholder')}
+                rows={2}
+              />
+              <span className="field-hint">{t('jobs.form.descriptionHelp')}</span>
+            </div>
+
+            <div className="divider"></div>
+
+            {/* 로그 파일 */}
+            <div className="field">
+              <label className="field-label">{t('jobs.form.logFile')}</label>
+              <input
+                type="text"
+                value={logFile}
+                readOnly
+                placeholder={t('jobs.form.logFileInfo')}
+                className="mono"
+                style={{
+                  background: 'var(--surface)',
+                  cursor: 'not-allowed',
+                  opacity: 0.7
+                }}
+              />
+              <span className="field-hint">{t('jobs.form.logFileHelp')}</span>
+            </div>
           </div>
 
-          <div className="divider"></div>
-
-          {/* 실행 명령어 */}
-          <div className="field">
-            <label className="field-label">
-              {t('jobs.form.command')} <span className="required">{t('jobs.form.required')}</span>
-            </label>
-            <input
-              type="text"
-              value={command}
-              onChange={(e) => setCommand(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="/usr/local/bin/backup.sh"
-              className="mono"
-              required
-            />
-          </div>
-
-          <div className="divider"></div>
-
-          {/* 작업 이름 */}
-          <div className="field">
-            <label className="field-label">{t('jobs.form.name')}</label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder={t('jobs.form.namePlaceholder')}
-            />
-          </div>
-
-          <div className="divider"></div>
-
-          {/* 설명 */}
-          <div className="field">
-            <label className="field-label">{t('jobs.form.description')}</label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder={t('jobs.form.descriptionPlaceholder')}
-              rows={2}
-            />
-            <span className="field-hint">{t('jobs.form.descriptionHelp')}</span>
-          </div>
-
-          <div className="divider"></div>
-
-          {/* 로그 파일 */}
-          <div className="field">
-            <label className="field-label">{t('jobs.form.logFile')}</label>
-            <input
-              type="text"
-              value={logFile}
-              readOnly
-              placeholder={t('jobs.form.logFileInfo')}
-              className="mono"
-              style={{
-                background: 'var(--surface)',
-                cursor: 'not-allowed',
-                opacity: 0.7
+          <div className="modal-footer">
+            <button type="button" onClick={onClose} className="btn">
+              {t('common.cancel')}
+            </button>
+            <button
+              type="submit"
+              className="btn btn-primary"
+              onClick={() => {
+                console.log('Save button clicked!');
               }}
-            />
-            <span className="field-hint">{t('jobs.form.logFileHelp')}</span>
+            >
+              {job ? t('jobs.form.submitEdit') : t('jobs.form.submit')}
+            </button>
           </div>
         </form>
-
-        <div className="modal-footer">
-          <button type="button" onClick={onClose} className="btn">
-            {t('common.cancel')}
-          </button>
-          <button type="submit" onClick={handleSubmit} className="btn btn-primary">
-            {job ? t('jobs.form.submitEdit') : t('jobs.form.submit')}
-          </button>
-        </div>
       </div>
     </div>
   );

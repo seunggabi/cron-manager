@@ -28,7 +28,7 @@ export function NextRunCell({ nextRun }: NextRunCellProps) {
         setTimeLeft(format(new Date(nextRun), 'yyyy-MM-dd HH:mm:ss'));
         setUrgencyClass('');
         setUrgencyColor('');
-        return;
+        return false; // Stop interval
       }
 
       // Calculate minutes and seconds
@@ -54,13 +54,25 @@ export function NextRunCell({ nextRun }: NextRunCellProps) {
         setUrgencyClass('');
         setUrgencyColor('#f59e0b');
       }
+
+      return true; // Continue interval
     };
 
     // Initial update
-    updateCountdown();
+    const shouldContinue = updateCountdown();
+
+    // Only set interval if countdown is active (within 5 minutes)
+    if (!shouldContinue) {
+      return;
+    }
 
     // Update every second
-    const interval = setInterval(updateCountdown, 1000);
+    const interval = setInterval(() => {
+      const shouldContinue = updateCountdown();
+      if (!shouldContinue) {
+        clearInterval(interval);
+      }
+    }, 1000);
 
     return () => clearInterval(interval);
   }, [nextRun]);

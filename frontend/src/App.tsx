@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
-import { Play, Trash2, Plus, RefreshCw, FolderOpen, FileText, Edit, ChevronUp, ChevronDown, Save, ListChecks, Settings, Database, Search, X, FolderPlus, Github, Star, Languages, Check } from 'lucide-react';
+import { Play, Trash2, Plus, RefreshCw, FolderOpen, FileText, Edit, ChevronUp, ChevronDown, Save, ListChecks, Settings, Database, Search, X, FolderPlus, Github, Languages, Check } from 'lucide-react';
 import { JobForm } from './components/JobForm';
 import { GlobalEnvSettings } from './components/GlobalEnvSettings';
 import { BackupManager } from './components/BackupManager';
@@ -107,15 +107,10 @@ function App() {
   const [editingCell, setEditingCell] = useState<{ jobId: string; field: 'name' | 'command' | 'schedule' } | null>(null);
   const [editingValue, setEditingValue] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [starCount, setStarCount] = useState<number | null>(null);
   const { showAlert } = useAlertDialog();
 
   // Resizable columns for jobs table
   const { getColumnStyle, ResizeHandle } = useResizableColumns('jobs', {
-    action: 160,
-    status: 100,
-    name: 200,
-    schedule: 150,
     command: 380,
     nextRun: 180,
     id: 150,
@@ -139,23 +134,10 @@ function App() {
     }
   }, [showAlert, t]);
 
-  // Fetch GitHub stars
-  const fetchStars = useCallback(async () => {
-    try {
-      const response = await fetch('https://api.github.com/repos/seunggabi/cron-manager');
-      const data = await response.json();
-      if (data.stargazers_count !== undefined) {
-        setStarCount(data.stargazers_count);
-      }
-    } catch (error) {
-      console.error('Failed to fetch GitHub stars:', error);
-    }
-  }, []);
 
   useEffect(() => {
     checkCrontabPermission();
-    fetchStars();
-  }, [checkCrontabPermission, fetchStars]);
+  }, [checkCrontabPermission]);
 
   const fetchJobs = useCallback(async () => {
     setLoading(true);
@@ -408,6 +390,23 @@ function App() {
     setEditingValue('');
   };
 
+  const handleAddLog = async (job: CronJob) => {
+    const defaultLogPath = `~/logs/${job.name.replace(/\s+/g, '-')}.log`;
+    try {
+      const response = await api.jobs.update(job.id, {
+        logFile: defaultLogPath,
+      });
+      if (response.success) {
+        await fetchJobs();
+        showAlert(t('success.logAdded'), 'success');
+      } else {
+        showAlert(response.error || t('errors.updateFailed'), 'error');
+      }
+    } catch (error) {
+      showAlert(t('errors.updateFailed'), 'error');
+    }
+  };
+
   const handleSort = (field: SortField) => {
     if (sortField === field) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
@@ -600,13 +599,6 @@ function App() {
               >
                 <Github size={16} />
                 GitHub
-                {starCount !== null && (
-                  <>
-                    <span style={{ opacity: 0.3, margin: '0 4px' }}>|</span>
-                    <Star size={14} style={{ fill: 'currentColor' }} />
-                    {starCount}
-                  </>
-                )}
               </a>
             </div>
             <div style={{ fontSize: '11px', opacity: 0.6, marginRight: '8px' }}>
@@ -716,7 +708,11 @@ function App() {
               )}
             </div>
             <div className="action-bar-right">
-              <button onClick={handleSaveSortOrder} className="btn" title={t('jobs.saveOrder')}>
+              <button
+                onClick={handleSaveSortOrder}
+                className="btn"
+                title={t('jobs.saveOrder')}
+              >
                 <Save />
                 {t('common.save')} <span style={{ opacity: 0.6, fontSize: '11px' }}>(⌘S)</span>
               </button>
@@ -757,7 +753,7 @@ function App() {
                 <table>
                   <thead>
                     <tr>
-                      <th style={getColumnStyle('action')}>
+                      <th style={{ ...getColumnStyle('action'), textAlign: 'center' }}>
                         {t('common.actions')}
                         <ResizeHandle columnName="action" />
                       </th>
@@ -941,16 +937,16 @@ function App() {
                                 whiteSpace: 'pre-wrap',
                                 wordBreak: 'break-word',
                               }}
-                              placeholder="Cmd/Ctrl+Enter to save, Esc to cancel"
+                              placeholder={t('common.saveHint')}
                             />
                           ) : (
                             <>
                               <code
                                 className="command-text"
                                 onDoubleClick={() => handleCellDoubleClick(job, 'command')}
-                                style={{ cursor: 'pointer', display: 'block' }}
+                                style={{ cursor: 'pointer', display: 'block', whiteSpace: 'pre-wrap' }}
                               >
-                                {job.command}
+                                {job.command.replace(/ (>>|>) /g, '\n$1 ')}
                               </code>
                               <div className="command-links">
                                 <button
@@ -961,14 +957,29 @@ function App() {
                                   <FolderOpen />
                                   {t('jobs.table.executable')}
                                 </button>
-                                {extractLogFiles(job.command).map((logFile, idx) => (
-                                  <LogButton
-                                    key={idx}
-                                    logFile={logFile}
-                                    workingDir={job.workingDir}
-                                    showAlert={showAlert}
-                                  />
-                                ))}
+                                {extractLogFiles(job.command).length > 0 ? (
+                                  extractLogFiles(job.command).map((logFile, idx) => (
+                                    <LogButton
+                                      key={idx}
+                                      logFile={logFile}
+                                      workingDir={job.workingDir}
+                                      showAlert={showAlert}
+                                    />
+                                  ))
+                                ) : (
+                                  <button
+                                    onClick={() => handleAddLog(job)}
+                                    className="command-link"
+                                    style={{
+                                      color: '#6366f1',
+                                      borderColor: '#6366f1',
+                                    }}
+                                    title={t('logs.addLog')}
+                                  >
+                                    <Plus />
+                                    {t('logs.addLog')}
+                                  </button>
+                                )}
                               </div>
                             </>
                           )}

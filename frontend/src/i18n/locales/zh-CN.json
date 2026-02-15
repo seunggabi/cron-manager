@@ -20,7 +20,8 @@
     "active": "活动",
     "inactive": "非活动",
     "latest": "最新",
-    "language": "语言"
+    "language": "语言",
+    "saveHint": "Cmd/Ctrl+Enter保存，Esc取消"
   },
   "languages": {
     "ko": "한국어",
@@ -88,7 +89,10 @@
         "daily": "每天午夜",
         "daily9am": "每天上午9点",
         "weekdays9am": "工作日上午9点"
-      }
+      },
+      "commandPlaceholder": "/usr/local/bin/backup.sh",
+      "schedulePlaceholderExample": "* * * * *",
+      "envExample": "NODE_ENV=production\nPATH=/usr/local/bin:/usr/bin\nAPI_KEY=your-key"
     }
   },
   "env": {
@@ -99,7 +103,9 @@
     "clearSearch": "清除搜索",
     "table": {
       "key": "键",
-      "value": "值"
+      "value": "值",
+      "keyPlaceholder": "KEY",
+      "valuePlaceholder": "VALUE"
     }
   },
   "backups": {
@@ -184,5 +190,112 @@
     "exitCode": "退出代码",
     "stdout": "标准输出",
     "stderr": "标准错误"
+  },
+  "schedule": {
+    "presets": {
+      "everyMinute": {
+        "name": "每分钟",
+        "description": "每分钟运行一次"
+      },
+      "every5Minutes": {
+        "name": "每5分钟",
+        "description": "每5分钟运行一次"
+      },
+      "every10Minutes": {
+        "name": "每10分钟",
+        "description": "每10分钟运行一次"
+      },
+      "every15Minutes": {
+        "name": "每15分钟",
+        "description": "每15分钟运行一次"
+      },
+      "every30Minutes": {
+        "name": "每30分钟",
+        "description": "每30分钟运行一次"
+      },
+      "everyHour": {
+        "name": "每小时",
+        "description": "每小时整点运行"
+      },
+      "every2Hours": {
+        "name": "每2小时",
+        "description": "每2小时运行一次"
+      },
+      "every6Hours": {
+        "name": "每6小时",
+        "description": "每6小时运行一次"
+      },
+      "dailyMidnight": {
+        "name": "每天午夜",
+        "description": "每天午夜运行"
+      },
+      "daily6am": {
+        "name": "每天早上6点",
+        "description": "每天早上6点运行"
+      },
+      "daily9am": {
+        "name": "每天早上9点",
+        "description": "每天早上9点运行"
+      },
+      "daily6pm": {
+        "name": "每天晚上6点",
+        "description": "每天晚上6点运行"
+      },
+      "weeklySunday": {
+        "name": "每周日",
+        "description": "每周日午夜运行"
+      },
+      "weeklyMonday": {
+        "name": "每周一",
+        "description": "每周一午夜运行"
+      },
+      "monthly": {
+        "name": "每月1日",
+        "description": "每月1日午夜运行"
+      },
+      "workday9am": {
+        "name": "工作日早上9点",
+        "description": "周一至周五早上9点"
+      }
+    },
+    "humanReadable": {
+      "everyMinute": "每分钟",
+      "everyHour": "每小时",
+      "dailyMidnight": "每天午夜",
+      "weeklySunday": "每周日午夜",
+      "monthly": "每月1日午夜",
+      "invalidSchedule": "无效的计划",
+      "minute": "分钟",
+      "everyNMinutes": "每{{n}}分钟",
+      "hour": "小时",
+      "everyNHours": "每{{n}}小时",
+      "day": "天",
+      "everyNDays": "每{{n}}天",
+      "everyMinuteOf": "每分钟",
+      "months": {
+        "1": "1月",
+        "2": "2月",
+        "3": "3月",
+        "4": "4月",
+        "5": "5月",
+        "6": "6月",
+        "7": "7月",
+        "8": "8月",
+        "9": "9月",
+        "10": "10月",
+        "11": "11月",
+        "12": "12月"
+      },
+      "weekdays": {
+        "0": "周日",
+        "1": "周一",
+        "2": "周二",
+        "3": "周三",
+        "4": "周四",
+        "5": "周五",
+        "6": "周六"
+      },
+      "backgroundRunning": "命令正在后台运行。请查看日志文件：{{logFile}}"
+    }
   }
 }
