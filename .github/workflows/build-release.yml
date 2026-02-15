@@ -138,11 +138,20 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            ./release-assets/macos/*
-            ./release-assets/windows/*
-            ./release-assets/linux/*
+            ./release-assets/macos/*.dmg
+            ./release-assets/macos/*.zip
+            ./release-assets/macos/*.blockmap
+            ./release-assets/macos/latest-mac.yml
+            ./release-assets/windows/*.exe
+            ./release-assets/windows/*.zip
+            ./release-assets/windows/*.blockmap
+            ./release-assets/windows/latest.yml
+            ./release-assets/linux/*.AppImage
+            ./release-assets/linux/*.deb
+            ./release-assets/linux/latest-linux.yml
           draft: false
           prerelease: false
           generate_release_notes: true
+          fail_on_unmatched_files: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
