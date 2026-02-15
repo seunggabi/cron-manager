@@ -128,8 +128,14 @@ export class CrontabService {
     const os = await import('os');
     const path = await import('path');
 
-    // Backup current crontab before writing
-    await this.backupCrontab();
+    // Check if content has changed before creating backup
+    const currentContent = await this.readCrontab();
+    const hasChanged = currentContent.trim() !== content.trim();
+
+    // Only backup if content has actually changed
+    if (hasChanged) {
+      await this.backupCrontab();
+    }
 
     // Create secure temporary directory
     const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'crontab-'));
