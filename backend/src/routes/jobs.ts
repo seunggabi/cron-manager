@@ -202,25 +202,20 @@ router.post('/:id/run', async (req, res) => {
       } as ApiResponse);
     }
 
-    // Build command with environment variables
-    let command = job.command;
-
-    if (job.workingDir) {
-      command = `cd ${job.workingDir} && ${command}`;
-    }
-
-    if (job.env && Object.keys(job.env).length > 0) {
-      const envVars = Object.entries(job.env)
-        .map(([key, value]) => `${key}="${value}"`)
-        .join(' ');
-      command = `${envVars} ${command}`;
-    }
-
-    // Execute command
+    // Execute command safely using env and cwd options
     const startTime = Date.now();
     try {
-      const { stdout, stderr } = await execAsync(command, {
+      // Merge environment variables
+      const mergedEnv = {
+        PATH: process.env.PATH || '/usr/bin:/bin',
+        ...job.env,
+      };
+
+      const { stdout, stderr } = await execAsync(job.command, {
         timeout: 300000, // 5 minutes timeout
+        env: mergedEnv,
+        cwd: job.workingDir || undefined,
+        shell: '/bin/sh', // Explicit shell
       });
 
       const duration = Date.now() - startTime;

@@ -4,6 +4,8 @@ import { RefreshCw, RotateCcw, Database, FolderOpen, FileText, X, Search, Chevro
 import { BackupCountdown } from './BackupCountdown';
 import { useResizableColumns } from '../hooks/useResizableColumns';
 import { format } from 'date-fns';
+import { useAlertDialog } from './AlertDialog';
+import { ConfirmDialog } from './ConfirmDialog';
 
 const api = window.electronAPI;
 
@@ -25,6 +27,7 @@ type SortDirection = 'asc' | 'desc';
 
 export function BackupManager() {
   const { t } = useTranslation();
+  const { showAlert } = useAlertDialog();
   const [backups, setBackups] = useState<Backup[]>([]);
   const [loading, setLoading] = useState(false);
   const [restoring, setRestoring] = useState<string | null>(null);
@@ -35,6 +38,8 @@ export function BackupManager() {
   const [maxBackups, setMaxBackups] = useState(10);
   const [maxBackupDays, setMaxBackupDays] = useState(7);
   const [configLoading, setConfigLoading] = useState(false);
+  const [confirmRestore, setConfirmRestore] = useState<Backup | null>(null);
+  const [confirmConfigSave, setConfirmConfigSave] = useState(false);
 
   // Resizable columns for backup table
   const { getColumnStyle, ResizeHandle } = useResizableColumns('backups', {
@@ -55,11 +60,11 @@ export function BackupManager() {
         );
         setBackups(sortedBackups);
       } else {
-        alert(response.error || t('errors.loadBackupsFailed'));
+        showAlert(response.error || t('errors.loadBackupsFailed'), 'error');
       }
     } catch (error) {
       console.error('Failed to fetch backups:', error);
-      alert(t('errors.loadBackupsFailed'));
+      showAlert(t('errors.loadBackupsFailed'), 'error');
     } finally {
       setLoading(false);
     }
@@ -82,28 +87,30 @@ export function BackupManager() {
     fetchBackupConfig();
   }, []);
 
-  const handleSaveConfig = async () => {
+  const handleSaveConfigConfirm = async () => {
     if (maxBackups < 1) {
-      alert(t('errors.minBackups'));
+      showAlert(t('errors.minBackups'), 'error');
       return;
     }
     if (maxBackupDays < 1) {
-      alert(t('errors.minDays'));
+      showAlert(t('errors.minDays'), 'error');
       return;
     }
 
     setConfigLoading(true);
+    setConfirmConfigSave(false);
     try {
       const response = await api.config.updateBackupConfig(maxBackups, maxBackupDays);
       if (!response.success) {
-        alert(response.error || t('errors.saveConfigFailed'));
+        showAlert(response.error || t('errors.saveConfigFailed'), 'error');
       } else {
         // Success: refresh backup list to show cleaned up backups
         await fetchBackups();
+        showAlert(t('success.configSaved'), 'success');
       }
     } catch (error) {
       console.error('Failed to save config:', error);
-      alert(t('errors.saveConfigFailed'));
+      showAlert(t('errors.saveConfigFailed'), 'error');
     } finally {
       setConfigLoading(false);
     }
@@ -114,32 +121,25 @@ export function BackupManager() {
       await api.files.open(backupPath);
     } catch (error) {
       console.error('Failed to open backup file:', error);
-      alert(t('errors.openBackupFailed'));
+      showAlert(t('errors.openBackupFailed'), 'error');
     }
   };
 
-  const handleRestore = async (backup: Backup) => {
-    if (!confirm(
-      t('dialogs.restoreBackup') + '\n\n' +
-      t('dialogs.restoreBackupDetails', {
-        filename: backup.filename,
-        date: format(new Date(backup.timestamp), 'yyyy-MM-dd HH:mm:ss')
-      })
-    )) {
-      return;
-    }
+  const handleRestoreConfirm = async () => {
+    if (!confirmRestore) return;
 
-    setRestoring(backup.path);
+    setRestoring(confirmRestore.path);
+    setConfirmRestore(null);
     try {
-      const response = await api.backups.restore(backup.path);
+      const response = await api.backups.restore(confirmRestore.path);
       if (response.success) {
-        alert(t('success.backupRestored'));
+        showAlert(t('success.backupRestored'), 'success');
       } else {
-        alert(response.error || t('errors.restoreBackupFailed'));
+        showAlert(response.error || t('errors.restoreBackupFailed'), 'error');
       }
     } catch (error) {
       console.error('Failed to restore backup:', error);
-      alert(t('errors.restoreBackupFailed'));
+      showAlert(t('errors.restoreBackupFailed'), 'error');
     } finally {
       setRestoring(null);
     }
@@ -151,11 +151,11 @@ export function BackupManager() {
       if (response.success && response.data) {
         setDiffData({ backup, diff: response.data.diff });
       } else {
-        alert(response.error || t('errors.diffFailed'));
+        showAlert(response.error || t('errors.diffFailed'), 'error');
       }
     } catch (error) {
       console.error('Failed to diff backup:', error);
-      alert(t('errors.diffFailed'));
+      showAlert(t('errors.diffFailed'), 'error');
     }
   };
 
@@ -251,7 +251,7 @@ export function BackupManager() {
             {t('backups.configTitle')}
           </h3>
           <button
-            onClick={handleSaveConfig}
+            onClick={() => setConfirmConfigSave(true)}
             disabled={configLoading}
             className="btn btn-primary"
           >
@@ -443,7 +443,7 @@ export function BackupManager() {
                             {t('common.open')}
                           </button>
                           <button
-                            onClick={() => handleRestore(backup)}
+                            onClick={() => setConfirmRestore(backup)}
                             disabled={restoring !== null}
                             className="btn btn-primary"
                             style={{ padding: '6px 12px', fontSize: '12px' }}
@@ -558,6 +558,31 @@ export function BackupManager() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Confirm Config Save Dialog */}
+      {confirmConfigSave && (
+        <ConfirmDialog
+          isOpen={true}
+          title={t('backups.confirmSaveConfig')}
+          message={t('backups.confirmSaveConfigMessage')}
+          onConfirm={handleSaveConfigConfirm}
+          onCancel={() => setConfirmConfigSave(false)}
+        />
+      )}
+
+      {/* Confirm Restore Dialog */}
+      {confirmRestore && (
+        <ConfirmDialog
+          isOpen={true}
+          title={t('dialogs.restoreBackup')}
+          message={t('dialogs.restoreBackupDetails', {
+            filename: confirmRestore.filename,
+            date: format(new Date(confirmRestore.timestamp), 'yyyy-MM-dd HH:mm:ss'),
+          })}
+          onConfirm={handleRestoreConfirm}
+          onCancel={() => setConfirmRestore(null)}
+        />
       )}
     </div>
   );

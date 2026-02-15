@@ -12,8 +12,9 @@
   "scripts": {
     "dev": "tsx scripts/dev-runner.ts",
     "restart": "bash scripts/restart.sh",
-    "build": "tsc && vite build && electron-builder",
-    "build:dev": "tsc && vite build",
+    "build": "npm run build:shared && tsc && vite build && electron-builder",
+    "build:dev": "npm run build:shared && tsc && vite build",
+    "build:shared": "cd shared && npm run build",
     "preview": "vite preview",
     "electron:build": "npm run build:dev && electron-builder",
     "electron:build:mac": "npm run build:dev && electron-builder --mac",
@@ -51,10 +52,13 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
     "@types/fs-extra": "^11.0.4",
-    "@types/node": "^20.10.6",
+    "@types/node": "^20.19.33",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
+    "@types/supertest": "^6.0.3",
     "@vitejs/plugin-react": "^5.1.1",
     "electron": "^28.1.0",
     "electron-builder": "^24.9.1",
@@ -62,12 +66,14 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
     "globals": "^16.5.0",
+    "supertest": "^7.2.2",
     "tsx": "^4.7.0",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.48.0",
     "vite": "^7.3.1",
     "vite-plugin-electron": "^0.28.0",
-    "vite-plugin-electron-renderer": "^0.14.5"
+    "vite-plugin-electron-renderer": "^0.14.5",
+    "vitest": "^4.0.18"
   },
   "build": {
     "appId": "com.seunggabi.cron-manager",

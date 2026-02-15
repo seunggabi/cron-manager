@@ -215,13 +215,11 @@ export function setupIpcHandlers() {
     }
   });
 
-  // Logs handler
-  ipcMain.handle('logs:open', async (_, logPath?: string, workingDir?: string) => {
+  /**
+   * Validate log path to prevent directory traversal
+   */
+  function validateLogPath(logPath: string, workingDir?: string): { valid: boolean; expandedPath?: string; error?: string } {
     try {
-      if (!logPath) {
-        return { success: false, error: 'Log path is required' };
-      }
-
       // Expand ~ to home directory
       let expandedPath = logPath;
       if (logPath.startsWith('~')) {
@@ -235,6 +233,47 @@ export function setupIpcHandlers() {
         // If still relative, resolve from home directory
         expandedPath = path.resolve(os.homedir(), expandedPath);
       }
+
+      // Normalize path to resolve .. and .
+      expandedPath = path.normalize(expandedPath);
+
+      // Prevent access to system directories
+      const forbiddenPaths = ['/System', '/etc', '/var', '/usr', '/bin', '/sbin'];
+      for (const forbidden of forbiddenPaths) {
+        if (expandedPath.startsWith(forbidden + '/') || expandedPath === forbidden) {
+          return { valid: false, error: 'Access to system directories is forbidden' };
+        }
+      }
+
+      // Ensure path is within allowed directories (home or workingDir)
+      const homeDir = os.homedir();
+      const isInHome = expandedPath.startsWith(homeDir + '/') || expandedPath === homeDir;
+      const isInWorkingDir = workingDir && (expandedPath.startsWith(path.resolve(workingDir) + '/') || expandedPath === path.resolve(workingDir));
+
+      if (!isInHome && !isInWorkingDir) {
+        return { valid: false, error: 'Path must be within home directory or working directory' };
+      }
+
+      return { valid: true, expandedPath };
+    } catch (error: any) {
+      return { valid: false, error: error.message };
+    }
+  }
+
+  // Logs handler
+  ipcMain.handle('logs:open', async (_, logPath?: string, workingDir?: string) => {
+    try {
+      if (!logPath) {
+        return { success: false, error: 'Log path is required' };
+      }
+
+      // Validate log path
+      const validation = validateLogPath(logPath, workingDir);
+      if (!validation.valid) {
+        return { success: false, error: validation.error };
+      }
+
+      const expandedPath = validation.expandedPath!;
 
       // Use Terminal with tail -f for real-time log viewing
       const { exec } = await import('child_process');
@@ -274,18 +313,13 @@ export function setupIpcHandlers() {
         return { success: false, error: 'Log path is required' };
       }
 
-      // Expand ~ to home directory
-      let expandedPath = logPath;
-      if (logPath.startsWith('~')) {
-        expandedPath = logPath.replace('~', os.homedir());
+      // Validate log path
+      const validation = validateLogPath(logPath, workingDir);
+      if (!validation.valid) {
+        return { success: false, error: validation.error };
       }
 
-      // If path is relative and workingDir is provided, resolve it
-      if (!path.isAbsolute(expandedPath) && workingDir) {
-        expandedPath = path.resolve(workingDir, expandedPath);
-      } else if (!path.isAbsolute(expandedPath)) {
-        expandedPath = path.resolve(os.homedir(), expandedPath);
-      }
+      const expandedPath = validation.expandedPath!;
 
       const fs = await import('fs-extra');
       const logDir = path.dirname(expandedPath);
@@ -304,18 +338,13 @@ export function setupIpcHandlers() {
         return { success: false, error: 'Log path is required' };
       }
 
-      // Expand ~ to home directory
-      let expandedPath = logPath;
-      if (logPath.startsWith('~')) {
-        expandedPath = logPath.replace('~', os.homedir());
+      // Validate log path
+      const validation = validateLogPath(logPath, workingDir);
+      if (!validation.valid) {
+        return { success: false, error: validation.error };
       }
 
-      // If path is relative and workingDir is provided, resolve it
-      if (!path.isAbsolute(expandedPath) && workingDir) {
-        expandedPath = path.resolve(workingDir, expandedPath);
-      } else if (!path.isAbsolute(expandedPath)) {
-        expandedPath = path.resolve(os.homedir(), expandedPath);
-      }
+      const expandedPath = validation.expandedPath!;
 
       const fs = await import('fs-extra');
       const logDir = path.dirname(expandedPath);
@@ -337,18 +366,14 @@ export function setupIpcHandlers() {
       }
 
       // Validate log path
-      const expandedLogPath = logPath.startsWith('~') ? logPath.replace('~', os.homedir()) : logPath;
-      if (!path.isAbsolute(expandedLogPath) || expandedLogPath.startsWith('/System') || expandedLogPath.startsWith('/etc')) {
-        return { success: false, error: 'Invalid log path' };
+      const validation = validateLogPath(logPath);
+      if (!validation.valid) {
+        return { success: false, error: validation.error };
       }
+
+      const expandedPath = validation.expandedPath!;
 
       const fs = await import('fs-extra');
-
-      // Expand ~ to home directory
-      let expandedPath = logPath;
-      if (logPath.startsWith('~')) {
-        expandedPath = logPath.replace('~', os.homedir());
-      }
 
       // Ensure directory exists
       const logDir = path.dirname(expandedPath);

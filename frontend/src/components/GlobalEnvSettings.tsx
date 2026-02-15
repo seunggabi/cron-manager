@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Plus, Trash2, Edit, X, Check, Search, ChevronUp, ChevronDown } from 'lucide-react';
+import { useAlertDialog } from './AlertDialog';
+import { ConfirmDialog } from './ConfirmDialog';
 
 const api = window.electronAPI;
 
@@ -14,6 +16,7 @@ type SortDirection = 'asc' | 'desc';
 
 export function GlobalEnvSettings() {
   const { t } = useTranslation();
+  const { showAlert } = useAlertDialog();
   const [envVars, setEnvVars] = useState<EnvVar[]>([]);
   const [loading, setLoading] = useState(false);
   const [newKey, setNewKey] = useState('');
@@ -23,6 +26,7 @@ export function GlobalEnvSettings() {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortField, setSortField] = useState<SortField>('key');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [confirmDelete, setConfirmDelete] = useState<{ key: string } | null>(null);
 
   const fetchGlobalEnv = async () => {
     setLoading(true);
@@ -36,10 +40,10 @@ export function GlobalEnvSettings() {
         }));
         setEnvVars(vars);
       } else {
-        alert(response.error || t('errors.loadEnvFailed'));
+        showAlert(response.error || t('errors.loadEnvFailed'), 'error');
       }
     } catch (error) {
-      alert(t('errors.loadEnvFailed'));
+      showAlert(t('errors.loadEnvFailed'), 'error');
     } finally {
       setLoading(false);
     }
@@ -51,7 +55,7 @@ export function GlobalEnvSettings() {
 
   const handleAdd = async () => {
     if (!newKey.trim()) {
-      alert(t('errors.enterKey'));
+      showAlert(t('errors.enterKey'), 'error');
       return;
     }
 
@@ -62,10 +66,10 @@ export function GlobalEnvSettings() {
         setNewValue('');
         await fetchGlobalEnv();
       } else {
-        alert(response.error || t('errors.addEnvFailed'));
+        showAlert(response.error || t('errors.addEnvFailed'), 'error');
       }
     } catch (error) {
-      alert(t('errors.addEnvFailed'));
+      showAlert(t('errors.addEnvFailed'), 'error');
     }
   };
 
@@ -77,25 +81,27 @@ export function GlobalEnvSettings() {
         setEditValue('');
         await fetchGlobalEnv();
       } else {
-        alert(response.error || t('errors.updateEnvFailed'));
+        showAlert(response.error || t('errors.updateEnvFailed'), 'error');
       }
     } catch (error) {
-      alert(t('errors.updateEnvFailed'));
+      showAlert(t('errors.updateEnvFailed'), 'error');
     }
   };
 
-  const handleDelete = async (key: string) => {
-    if (!confirm(t('dialogs.deleteEnv', { key }))) return;
+  const handleDeleteConfirm = async () => {
+    if (!confirmDelete) return;
 
     try {
-      const response = await api.env.deleteGlobalVar(key);
+      const response = await api.env.deleteGlobalVar(confirmDelete.key);
       if (response.success) {
         await fetchGlobalEnv();
       } else {
-        alert(response.error || t('errors.deleteEnvFailed'));
+        showAlert(response.error || t('errors.deleteEnvFailed'), 'error');
       }
     } catch (error) {
-      alert(t('errors.deleteEnvFailed'));
+      showAlert(t('errors.deleteEnvFailed'), 'error');
+    } finally {
+      setConfirmDelete(null);
     }
   };
 
@@ -278,7 +284,7 @@ export function GlobalEnvSettings() {
                               <Edit />
                             </button>
                             <button
-                              onClick={() => handleDelete(envVar.key)}
+                              onClick={() => setConfirmDelete({ key: envVar.key })}
                               className="icon-btn delete"
                               title={t('common.delete')}
                               data-tooltip={t('common.delete')}
@@ -321,6 +327,17 @@ export function GlobalEnvSettings() {
           </div>
         )}
       </div>
+
+      {/* Confirm Delete Dialog */}
+      {confirmDelete && (
+        <ConfirmDialog
+          isOpen={true}
+          title={t('dialogs.deleteEnv', { key: confirmDelete.key })}
+          message={t('dialogs.deleteEnvConfirm')}
+          onConfirm={handleDeleteConfirm}
+          onCancel={() => setConfirmDelete(null)}
+        />
+      )}
     </div>
   );
 }
