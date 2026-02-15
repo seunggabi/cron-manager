@@ -13,10 +13,15 @@ export default defineConfig({
         // Main process entry
         entry: '../src/main/index.ts',
         vite: {
+          resolve: {
+            alias: {
+              '@cron-manager/shared': resolve(__dirname, './shared/dist'),
+            },
+          },
           build: {
             outDir: '../dist-electron/main',
             rollupOptions: {
-              external: ['electron', /^@cron-manager\/shared/],
+              external: ['electron'],
             },
           },
         },
@@ -29,10 +34,15 @@ export default defineConfig({
           options.reload();
         },
         vite: {
+          resolve: {
+            alias: {
+              '@cron-manager/shared': resolve(__dirname, './shared/dist'),
+            },
+          },
           build: {
             outDir: '../dist-electron/preload',
             rollupOptions: {
-              external: ['electron', /^@cron-manager\/shared/],
+              external: ['electron'],
             },
           },
         },
