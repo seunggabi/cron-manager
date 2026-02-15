@@ -168,7 +168,7 @@ export function GlobalEnvSettings() {
             type="text"
             value={newKey}
             onChange={(e) => setNewKey(e.target.value)}
-            placeholder="KEY"
+            placeholder={t('env.table.keyPlaceholder')}
             className="mono"
             style={{ flex: 1 }}
             onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
@@ -177,7 +177,7 @@ export function GlobalEnvSettings() {
             type="text"
             value={newValue}
             onChange={(e) => setNewValue(e.target.value)}
-            placeholder="VALUE"
+            placeholder={t('env.table.valuePlaceholder')}
             className="mono"
             style={{ flex: 2 }}
             onKeyDown={(e) => e.key === 'Enter' && handleAdd()}

@@ -20,7 +20,8 @@
     "active": "Ativo",
     "inactive": "Inativo",
     "latest": "Mais Recente",
-    "language": "Idioma"
+    "language": "Idioma",
+    "saveHint": "Cmd/Ctrl+Enter para salvar, Esc para cancelar"
   },
   "languages": {
     "ko": "한국어",
@@ -88,7 +89,10 @@
         "daily": "Diariamente à Meia-Noite",
         "daily9am": "Diariamente às 9h",
         "weekdays9am": "Dias Úteis às 9h"
-      }
+      },
+      "commandPlaceholder": "/usr/local/bin/backup.sh",
+      "schedulePlaceholderExample": "* * * * *",
+      "envExample": "NODE_ENV=production\nPATH=/usr/local/bin:/usr/bin\nAPI_KEY=your-key"
     }
   },
   "env": {
@@ -99,7 +103,9 @@
     "clearSearch": "Limpar Pesquisa",
     "table": {
       "key": "Chave",
-      "value": "Valor"
+      "value": "Valor",
+      "keyPlaceholder": "KEY",
+      "valuePlaceholder": "VALUE"
     }
   },
   "backups": {
@@ -184,5 +190,111 @@
     "exitCode": "Código de Saída",
     "stdout": "Stdout",
     "stderr": "Stderr"
+  },
+  "schedule": {
+    "presets": {
+      "everyMinute": {
+        "name": "A cada minuto",
+        "description": "Executa a cada minuto"
+      },
+      "every5Minutes": {
+        "name": "A cada 5 minutos",
+        "description": "Executa a cada 5 minutos"
+      },
+      "every10Minutes": {
+        "name": "A cada 10 minutos",
+        "description": "Executa a cada 10 minutos"
+      },
+      "every15Minutes": {
+        "name": "A cada 15 minutos",
+        "description": "Executa a cada 15 minutos"
+      },
+      "every30Minutes": {
+        "name": "A cada 30 minutos",
+        "description": "Executa a cada 30 minutos"
+      },
+      "everyHour": {
+        "name": "A cada hora",
+        "description": "Executa a cada hora no início da hora"
+      },
+      "every2Hours": {
+        "name": "A cada 2 horas",
+        "description": "Executa a cada 2 horas"
+      },
+      "every6Hours": {
+        "name": "A cada 6 horas",
+        "description": "Executa a cada 6 horas"
+      },
+      "dailyMidnight": {
+        "name": "Diariamente à meia-noite",
+        "description": "Executa diariamente às 0:00"
+      },
+      "daily6am": {
+        "name": "Diariamente às 6h",
+        "description": "Executa diariamente às 6:00"
+      },
+      "daily9am": {
+        "name": "Diariamente às 9h",
+        "description": "Executa diariamente às 9:00"
+      },
+      "daily6pm": {
+        "name": "Diariamente às 18h",
+        "description": "Executa diariamente às 18:00"
+      },
+      "weeklySunday": {
+        "name": "Todo domingo",
+        "description": "Todo domingo à meia-noite"
+      },
+      "weeklyMonday": {
+        "name": "Toda segunda-feira",
+        "description": "Toda segunda-feira à meia-noite"
+      },
+      "monthly": {
+        "name": "Todo dia 1º do mês",
+        "description": "Todo dia 1º do mês à meia-noite"
+      },
+      "workday9am": {
+        "name": "Dias úteis às 9h",
+        "description": "Seg-Sex às 9:00"
+      }
+    },
+    "humanReadable": {
+      "everyMinute": "A cada minuto",
+      "everyHour": "A cada hora",
+      "dailyMidnight": "Diariamente à meia-noite",
+      "weeklySunday": "Todo domingo à meia-noite",
+      "monthly": "Todo dia 1º do mês à meia-noite",
+      "invalidSchedule": "Agendamento inválido",
+      "minute": "minuto",
+      "everyNMinutes": "a cada {{n}} min",
+      "hour": "hora",
+      "everyNHours": "a cada {{n}} h",
+      "day": "dia",
+      "everyNDays": "a cada {{n}} dias",
+      "everyMinuteOf": "a cada minuto",
+      "months": {
+        "1": "janeiro",
+        "2": "fevereiro",
+        "3": "março",
+        "4": "abril",
+        "5": "maio",
+        "6": "junho",
+        "7": "julho",
+        "8": "agosto",
+        "9": "setembro",
+        "10": "outubro",
+        "11": "novembro",
+        "12": "dezembro"
+      },
+      "weekdays": {
+        "0": "domingo",
+        "1": "segunda-feira",
+        "2": "terça-feira",
+        "3": "quarta-feira",
+        "4": "quinta-feira",
+        "5": "sexta-feira",
+        "6": "sábado"
+      }
+    }
   }
 }

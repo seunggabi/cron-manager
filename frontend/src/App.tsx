@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
-import { Play, Trash2, Plus, RefreshCw, FolderOpen, FileText, Edit, ChevronUp, ChevronDown, Save, ListChecks, Settings, Database, Search, X, FolderPlus, Github, Star, Languages, Check } from 'lucide-react';
+import { Play, Trash2, Plus, RefreshCw, FolderOpen, FileText, Edit, ChevronUp, ChevronDown, Save, ListChecks, Settings, Database, Search, X, FolderPlus, Github, Languages, Check } from 'lucide-react';
 import { JobForm } from './components/JobForm';
 import { GlobalEnvSettings } from './components/GlobalEnvSettings';
 import { BackupManager } from './components/BackupManager';
@@ -107,7 +107,6 @@ function App() {
   const [editingCell, setEditingCell] = useState<{ jobId: string; field: 'name' | 'command' | 'schedule' } | null>(null);
   const [editingValue, setEditingValue] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [starCount, setStarCount] = useState<number | null>(null);
   const { showAlert } = useAlertDialog();
 
   // Resizable columns for jobs table
@@ -139,23 +138,10 @@ function App() {
     }
   }, [showAlert, t]);
 
-  // Fetch GitHub stars
-  const fetchStars = useCallback(async () => {
-    try {
-      const response = await fetch('https://api.github.com/repos/seunggabi/cron-manager');
-      const data = await response.json();
-      if (data.stargazers_count !== undefined) {
-        setStarCount(data.stargazers_count);
-      }
-    } catch (error) {
-      console.error('Failed to fetch GitHub stars:', error);
-    }
-  }, []);
 
   useEffect(() => {
     checkCrontabPermission();
-    fetchStars();
-  }, [checkCrontabPermission, fetchStars]);
+  }, [checkCrontabPermission]);
 
   const fetchJobs = useCallback(async () => {
     setLoading(true);
@@ -600,13 +586,6 @@ function App() {
               >
                 <Github size={16} />
                 GitHub
-                {starCount !== null && (
-                  <>
-                    <span style={{ opacity: 0.3, margin: '0 4px' }}>|</span>
-                    <Star size={14} style={{ fill: 'currentColor' }} />
-                    {starCount}
-                  </>
-                )}
               </a>
             </div>
             <div style={{ fontSize: '11px', opacity: 0.6, marginRight: '8px' }}>
@@ -941,7 +920,7 @@ function App() {
                                 whiteSpace: 'pre-wrap',
                                 wordBreak: 'break-word',
                               }}
-                              placeholder="Cmd/Ctrl+Enter to save, Esc to cancel"
+                              placeholder={t('common.saveHint')}
                             />
                           ) : (
                             <>

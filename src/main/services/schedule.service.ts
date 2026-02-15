@@ -54,26 +54,26 @@ export class ScheduleService {
     const parts = schedule.trim().split(/\s+/);
 
     if (parts.length < 5) {
-      return 'Invalid schedule';
+      return 'schedule.humanReadable.invalidSchedule';
     }
 
     const [minute, hour, dayOfMonth, month, dayOfWeek] = parts;
 
-    // Simple cases
+    // Simple cases - return translation keys
     if (schedule === '* * * * *') {
-      return '매분마다';
+      return 'schedule.humanReadable.everyMinute';
     }
     if (schedule === '0 * * * *') {
-      return '매시간마다';
+      return 'schedule.humanReadable.everyHour';
     }
     if (schedule === '0 0 * * *') {
-      return '매일 자정';
+      return 'schedule.humanReadable.dailyMidnight';
     }
     if (schedule === '0 0 * * 0') {
-      return '매주 일요일 자정';
+      return 'schedule.humanReadable.weeklySunday';
     }
     if (schedule === '0 0 1 * *') {
-      return '매월 1일 자정';
+      return 'schedule.humanReadable.monthly';
     }
 
     const result: string[] = [];
@@ -142,22 +142,134 @@ export class ScheduleService {
    */
   getPresets() {
     return [
-      { id: 'every-minute', name: '매분마다', description: '1분마다 실행', schedule: '* * * * *' },
-      { id: 'every-5-minutes', name: '5분마다', description: '5분마다 실행', schedule: '*/5 * * * *' },
-      { id: 'every-10-minutes', name: '10분마다', description: '10분마다 실행', schedule: '*/10 * * * *' },
-      { id: 'every-15-minutes', name: '15분마다', description: '15분마다 실행', schedule: '*/15 * * * *' },
-      { id: 'every-30-minutes', name: '30분마다', description: '30분마다 실행', schedule: '*/30 * * * *' },
-      { id: 'every-hour', name: '매시간', description: '매시간 정각에 실행', schedule: '0 * * * *' },
-      { id: 'every-2-hours', name: '2시간마다', description: '2시간마다 실행', schedule: '0 */2 * * *' },
-      { id: 'every-6-hours', name: '6시간마다', description: '6시간마다 실행', schedule: '0 */6 * * *' },
-      { id: 'daily-midnight', name: '매일 자정', description: '매일 0시에 실행', schedule: '0 0 * * *' },
-      { id: 'daily-6am', name: '매일 오전 6시', description: '매일 6시에 실행', schedule: '0 6 * * *' },
-      { id: 'daily-9am', name: '매일 오전 9시', description: '매일 9시에 실행', schedule: '0 9 * * *' },
-      { id: 'daily-6pm', name: '매일 오후 6시', description: '매일 18시에 실행', schedule: '0 18 * * *' },
-      { id: 'weekly-sunday', name: '매주 일요일', description: '매주 일요일 자정', schedule: '0 0 * * 0' },
-      { id: 'weekly-monday', name: '매주 월요일', description: '매주 월요일 자정', schedule: '0 0 * * 1' },
-      { id: 'monthly', name: '매월 1일', description: '매월 1일 자정', schedule: '0 0 1 * *' },
-      { id: 'workday-9am', name: '평일 오전 9시', description: '월~금 9시', schedule: '0 9 * * 1-5' },
+      {
+        id: 'every-minute',
+        name: '매분마다',
+        description: '1분마다 실행',
+        nameKey: 'schedule.presets.everyMinute.name',
+        descriptionKey: 'schedule.presets.everyMinute.description',
+        schedule: '* * * * *'
+      },
+      {
+        id: 'every-5-minutes',
+        name: '5분마다',
+        description: '5분마다 실행',
+        nameKey: 'schedule.presets.every5Minutes.name',
+        descriptionKey: 'schedule.presets.every5Minutes.description',
+        schedule: '*/5 * * * *'
+      },
+      {
+        id: 'every-10-minutes',
+        name: '10분마다',
+        description: '10분마다 실행',
+        nameKey: 'schedule.presets.every10Minutes.name',
+        descriptionKey: 'schedule.presets.every10Minutes.description',
+        schedule: '*/10 * * * *'
+      },
+      {
+        id: 'every-15-minutes',
+        name: '15분마다',
+        description: '15분마다 실행',
+        nameKey: 'schedule.presets.every15Minutes.name',
+        descriptionKey: 'schedule.presets.every15Minutes.description',
+        schedule: '*/15 * * * *'
+      },
+      {
+        id: 'every-30-minutes',
+        name: '30분마다',
+        description: '30분마다 실행',
+        nameKey: 'schedule.presets.every30Minutes.name',
+        descriptionKey: 'schedule.presets.every30Minutes.description',
+        schedule: '*/30 * * * *'
+      },
+      {
+        id: 'every-hour',
+        name: '매시간',
+        description: '매시간 정각에 실행',
+        nameKey: 'schedule.presets.everyHour.name',
+        descriptionKey: 'schedule.presets.everyHour.description',
+        schedule: '0 * * * *'
+      },
+      {
+        id: 'every-2-hours',
+        name: '2시간마다',
+        description: '2시간마다 실행',
+        nameKey: 'schedule.presets.every2Hours.name',
+        descriptionKey: 'schedule.presets.every2Hours.description',
+        schedule: '0 */2 * * *'
+      },
+      {
+        id: 'every-6-hours',
+        name: '6시간마다',
+        description: '6시간마다 실행',
+        nameKey: 'schedule.presets.every6Hours.name',
+        descriptionKey: 'schedule.presets.every6Hours.description',
+        schedule: '0 */6 * * *'
+      },
+      {
+        id: 'daily-midnight',
+        name: '매일 자정',
+        description: '매일 0시에 실행',
+        nameKey: 'schedule.presets.dailyMidnight.name',
+        descriptionKey: 'schedule.presets.dailyMidnight.description',
+        schedule: '0 0 * * *'
+      },
+      {
+        id: 'daily-6am',
+        name: '매일 오전 6시',
+        description: '매일 6시에 실행',
+        nameKey: 'schedule.presets.daily6am.name',
+        descriptionKey: 'schedule.presets.daily6am.description',
+        schedule: '0 6 * * *'
+      },
+      {
+        id: 'daily-9am',
+        name: '매일 오전 9시',
+        description: '매일 9시에 실행',
+        nameKey: 'schedule.presets.daily9am.name',
+        descriptionKey: 'schedule.presets.daily9am.description',
+        schedule: '0 9 * * *'
+      },
+      {
+        id: 'daily-6pm',
+        name: '매일 오후 6시',
+        description: '매일 18시에 실행',
+        nameKey: 'schedule.presets.daily6pm.name',
+        descriptionKey: 'schedule.presets.daily6pm.description',
+        schedule: '0 18 * * *'
+      },
+      {
+        id: 'weekly-sunday',
+        name: '매주 일요일',
+        description: '매주 일요일 자정',
+        nameKey: 'schedule.presets.weeklySunday.name',
+        descriptionKey: 'schedule.presets.weeklySunday.description',
+        schedule: '0 0 * * 0'
+      },
+      {
+        id: 'weekly-monday',
+        name: '매주 월요일',
+        description: '매주 월요일 자정',
+        nameKey: 'schedule.presets.weeklyMonday.name',
+        descriptionKey: 'schedule.presets.weeklyMonday.description',
+        schedule: '0 0 * * 1'
+      },
+      {
+        id: 'monthly',
+        name: '매월 1일',
+        description: '매월 1일 자정',
+        nameKey: 'schedule.presets.monthly.name',
+        descriptionKey: 'schedule.presets.monthly.description',
+        schedule: '0 0 1 * *'
+      },
+      {
+        id: 'workday-9am',
+        name: '평일 오전 9시',
+        description: '월~금 9시',
+        nameKey: 'schedule.presets.workday9am.name',
+        descriptionKey: 'schedule.presets.workday9am.description',
+        schedule: '0 9 * * 1-5'
+      },
     ];
   }
 }

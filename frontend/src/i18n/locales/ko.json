@@ -20,7 +20,8 @@
     "active": "활성",
     "inactive": "비활성",
     "latest": "최신",
-    "language": "언어"
+    "language": "언어",
+    "saveHint": "Cmd/Ctrl+Enter로 저장, Esc로 취소"
   },
   "languages": {
     "ko": "한국어",
@@ -88,7 +89,10 @@
         "daily": "매일 0시",
         "daily9am": "매일 9시",
         "weekdays9am": "평일 9시"
-      }
+      },
+      "commandPlaceholder": "/usr/local/bin/backup.sh",
+      "schedulePlaceholderExample": "* * * * *",
+      "envExample": "NODE_ENV=production\nPATH=/usr/local/bin:/usr/bin\nAPI_KEY=your-key"
     }
   },
   "env": {
@@ -99,7 +103,9 @@
     "clearSearch": "검색 초기화",
     "table": {
       "key": "Key",
-      "value": "Value"
+      "value": "Value",
+      "keyPlaceholder": "KEY",
+      "valuePlaceholder": "VALUE"
     }
   },
   "backups": {
@@ -185,5 +191,111 @@
     "exitCode": "Exit Code",
     "stdout": "Stdout",
     "stderr": "Stderr"
+  },
+  "schedule": {
+    "presets": {
+      "everyMinute": {
+        "name": "매분마다",
+        "description": "1분마다 실행"
+      },
+      "every5Minutes": {
+        "name": "5분마다",
+        "description": "5분마다 실행"
+      },
+      "every10Minutes": {
+        "name": "10분마다",
+        "description": "10분마다 실행"
+      },
+      "every15Minutes": {
+        "name": "15분마다",
+        "description": "15분마다 실행"
+      },
+      "every30Minutes": {
+        "name": "30분마다",
+        "description": "30분마다 실행"
+      },
+      "everyHour": {
+        "name": "매시간",
+        "description": "매시간 정각에 실행"
+      },
+      "every2Hours": {
+        "name": "2시간마다",
+        "description": "2시간마다 실행"
+      },
+      "every6Hours": {
+        "name": "6시간마다",
+        "description": "6시간마다 실행"
+      },
+      "dailyMidnight": {
+        "name": "매일 자정",
+        "description": "매일 0시에 실행"
+      },
+      "daily6am": {
+        "name": "매일 오전 6시",
+        "description": "매일 6시에 실행"
+      },
+      "daily9am": {
+        "name": "매일 오전 9시",
+        "description": "매일 9시에 실행"
+      },
+      "daily6pm": {
+        "name": "매일 오후 6시",
+        "description": "매일 18시에 실행"
+      },
+      "weeklySunday": {
+        "name": "매주 일요일",
+        "description": "매주 일요일 자정"
+      },
+      "weeklyMonday": {
+        "name": "매주 월요일",
+        "description": "매주 월요일 자정"
+      },
+      "monthly": {
+        "name": "매월 1일",
+        "description": "매월 1일 자정"
+      },
+      "workday9am": {
+        "name": "평일 오전 9시",
+        "description": "월~금 9시"
+      }
+    },
+    "humanReadable": {
+      "everyMinute": "매분마다",
+      "everyHour": "매시간마다",
+      "dailyMidnight": "매일 자정",
+      "weeklySunday": "매주 일요일 자정",
+      "monthly": "매월 1일 자정",
+      "invalidSchedule": "잘못된 스케줄",
+      "minute": "분",
+      "everyNMinutes": "{{n}}분마다",
+      "hour": "시",
+      "everyNHours": "{{n}}시간마다",
+      "day": "일",
+      "everyNDays": "{{n}}일마다",
+      "everyMinuteOf": "매분",
+      "months": {
+        "1": "1월",
+        "2": "2월",
+        "3": "3월",
+        "4": "4월",
+        "5": "5월",
+        "6": "6월",
+        "7": "7월",
+        "8": "8월",
+        "9": "9월",
+        "10": "10월",
+        "11": "11월",
+        "12": "12월"
+      },
+      "weekdays": {
+        "0": "일요일",
+        "1": "월요일",
+        "2": "화요일",
+        "3": "수요일",
+        "4": "목요일",
+        "5": "금요일",
+        "6": "토요일"
+      }
+    }
   }
 }

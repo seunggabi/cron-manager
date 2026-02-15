@@ -20,7 +20,8 @@
     "active": "सक्रिय",
     "inactive": "निष्क्रिय",
     "latest": "नवीनतम",
-    "language": "भाषा"
+    "language": "भाषा",
+    "saveHint": "Cmd/Ctrl+Enter से सहेजें, Esc से रद्द करें"
   },
   "languages": {
     "ko": "한국어",
@@ -88,7 +89,10 @@
         "daily": "रोज़ आधी रात",
         "daily9am": "रोज़ सुबह 9 बजे",
         "weekdays9am": "सप्ताहांत सुबह 9 बजे"
-      }
+      },
+      "commandPlaceholder": "/usr/local/bin/backup.sh",
+      "schedulePlaceholderExample": "* * * * *",
+      "envExample": "NODE_ENV=production\nPATH=/usr/local/bin:/usr/bin\nAPI_KEY=your-key"
     }
   },
   "env": {
@@ -99,7 +103,9 @@
     "clearSearch": "खोज साफ़ करें",
     "table": {
       "key": "कुंजी",
-      "value": "मान"
+      "value": "मान",
+      "keyPlaceholder": "KEY",
+      "valuePlaceholder": "VALUE"
     }
   },
   "backups": {
@@ -184,5 +190,111 @@
     "exitCode": "निकास कोड",
     "stdout": "मानक आउटपुट",
     "stderr": "मानक त्रुटि"
+  },
+  "schedule": {
+    "presets": {
+      "everyMinute": {
+        "name": "हर मिनट",
+        "description": "हर मिनट चलाएं"
+      },
+      "every5Minutes": {
+        "name": "हर 5 मिनट",
+        "description": "हर 5 मिनट में चलाएं"
+      },
+      "every10Minutes": {
+        "name": "हर 10 मिनट",
+        "description": "हर 10 मिनट में चलाएं"
+      },
+      "every15Minutes": {
+        "name": "हर 15 मिनट",
+        "description": "हर 15 मिनट में चलाएं"
+      },
+      "every30Minutes": {
+        "name": "हर 30 मिनट",
+        "description": "हर 30 मिनट में चलाएं"
+      },
+      "everyHour": {
+        "name": "हर घंटे",
+        "description": "हर घंटे की शुरुआत में चलाएं"
+      },
+      "every2Hours": {
+        "name": "हर 2 घंटे",
+        "description": "हर 2 घंटे में चलाएं"
+      },
+      "every6Hours": {
+        "name": "हर 6 घंटे",
+        "description": "हर 6 घंटे में चलाएं"
+      },
+      "dailyMidnight": {
+        "name": "रोज़ आधी रात",
+        "description": "रोज़ 0:00 बजे चलाएं"
+      },
+      "daily6am": {
+        "name": "रोज़ सुबह 6 बजे",
+        "description": "रोज़ 6:00 बजे चलाएं"
+      },
+      "daily9am": {
+        "name": "रोज़ सुबह 9 बजे",
+        "description": "रोज़ 9:00 बजे चलाएं"
+      },
+      "daily6pm": {
+        "name": "रोज़ शाम 6 बजे",
+        "description": "रोज़ 18:00 बजे चलाएं"
+      },
+      "weeklySunday": {
+        "name": "हर रविवार",
+        "description": "हर रविवार आधी रात"
+      },
+      "weeklyMonday": {
+        "name": "हर सोमवार",
+        "description": "हर सोमवार आधी रात"
+      },
+      "monthly": {
+        "name": "हर महीने की 1 तारीख",
+        "description": "हर महीने की 1 तारीख को आधी रात"
+      },
+      "workday9am": {
+        "name": "सप्ताहांत सुबह 9 बजे",
+        "description": "सोम-शुक्र 9:00 बजे"
+      }
+    },
+    "humanReadable": {
+      "everyMinute": "हर मिनट",
+      "everyHour": "हर घंटे",
+      "dailyMidnight": "रोज़ आधी रात",
+      "weeklySunday": "हर रविवार आधी रात",
+      "monthly": "हर महीने की 1 तारीख को आधी रात",
+      "invalidSchedule": "अमान्य शेड्यूल",
+      "minute": "मिनट",
+      "everyNMinutes": "हर {{n}} मिनट",
+      "hour": "घंटा",
+      "everyNHours": "हर {{n}} घंटे",
+      "day": "दिन",
+      "everyNDays": "हर {{n}} दिन",
+      "everyMinuteOf": "हर मिनट",
+      "months": {
+        "1": "जनवरी",
+        "2": "फरवरी",
+        "3": "मार्च",
+        "4": "अप्रैल",
+        "5": "मई",
+        "6": "जून",
+        "7": "जुलाई",
+        "8": "अगस्त",
+        "9": "सितंबर",
+        "10": "अक्टूबर",
+        "11": "नवंबर",
+        "12": "दिसंबर"
+      },
+      "weekdays": {
+        "0": "रविवार",
+        "1": "सोमवार",
+        "2": "मंगलवार",
+        "3": "बुधवार",
+        "4": "गुरुवार",
+        "5": "शुक्रवार",
+        "6": "शनिवार"
+      }
+    }
   }
 }
