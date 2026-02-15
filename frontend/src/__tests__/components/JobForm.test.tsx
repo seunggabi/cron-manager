@@ -26,9 +26,9 @@ describe('JobForm', () => {
     it('renders all form fields', () => {
       render(<JobForm {...defaultProps} />);
 
-      expect(screen.getByPlaceholderText('NODE_ENV=production&#10;PATH=/usr/local/bin:/usr/bin&#10;API_KEY=your-key')).toBeInTheDocument();
+      expect(screen.getByPlaceholderText('jobs.form.envExample')).toBeInTheDocument();
       expect(screen.getByPlaceholderText('* * * * *')).toBeInTheDocument();
-      expect(screen.getByPlaceholderText('/usr/local/bin/backup.sh')).toBeInTheDocument();
+      expect(screen.getByPlaceholderText('jobs.form.commandPlaceholder')).toBeInTheDocument();
       expect(screen.getByPlaceholderText('jobs.form.namePlaceholder')).toBeInTheDocument();
       expect(screen.getByPlaceholderText('jobs.form.descriptionPlaceholder')).toBeInTheDocument();
     });
@@ -37,7 +37,7 @@ describe('JobForm', () => {
       render(<JobForm {...defaultProps} />);
 
       const scheduleInput = screen.getByPlaceholderText('* * * * *');
-      const commandInput = screen.getByPlaceholderText('/usr/local/bin/backup.sh');
+      const commandInput = screen.getByPlaceholderText('jobs.form.commandPlaceholder');
 
       await userEvent.type(scheduleInput, '0 * * * *');
       await userEvent.type(commandInput, '/usr/bin/backup.sh');
@@ -57,9 +57,9 @@ describe('JobForm', () => {
     it('parses environment variables correctly', async () => {
       render(<JobForm {...defaultProps} />);
 
-      const envInput = screen.getByPlaceholderText('NODE_ENV=production&#10;PATH=/usr/local/bin:/usr/bin&#10;API_KEY=your-key');
+      const envInput = screen.getByPlaceholderText('jobs.form.envExample');
       const scheduleInput = screen.getByPlaceholderText('* * * * *');
-      const commandInput = screen.getByPlaceholderText('/usr/local/bin/backup.sh');
+      const commandInput = screen.getByPlaceholderText('jobs.form.commandPlaceholder');
 
       await userEvent.type(envInput, 'NODE_ENV=production\nPATH=/usr/bin\nAPI_KEY=secret123');
       await userEvent.type(scheduleInput, '0 * * * *');
@@ -84,9 +84,9 @@ describe('JobForm', () => {
     it('handles environment variables with = in value', async () => {
       render(<JobForm {...defaultProps} />);
 
-      const envInput = screen.getByPlaceholderText('NODE_ENV=production&#10;PATH=/usr/local/bin:/usr/bin&#10;API_KEY=your-key');
+      const envInput = screen.getByPlaceholderText('jobs.form.envExample');
       const scheduleInput = screen.getByPlaceholderText('* * * * *');
-      const commandInput = screen.getByPlaceholderText('/usr/local/bin/backup.sh');
+      const commandInput = screen.getByPlaceholderText('jobs.form.commandPlaceholder');
 
       await userEvent.type(envInput, 'CONNECTION_STRING=user=admin;password=test123');
       await userEvent.type(scheduleInput, '0 * * * *');
@@ -110,7 +110,7 @@ describe('JobForm', () => {
       render(<JobForm {...defaultProps} />);
 
       const scheduleInput = screen.getByPlaceholderText('* * * * *');
-      const commandInput = screen.getByPlaceholderText('/usr/local/bin/backup.sh');
+      const commandInput = screen.getByPlaceholderText('jobs.form.commandPlaceholder');
 
       await userEvent.type(scheduleInput, '0 * * * *');
       await userEvent.type(commandInput, '/usr/local/bin/scripts/backup.sh');
@@ -131,7 +131,7 @@ describe('JobForm', () => {
       render(<JobForm {...defaultProps} />);
 
       const scheduleInput = screen.getByPlaceholderText('* * * * *');
-      const commandInput = screen.getByPlaceholderText('/usr/local/bin/backup.sh');
+      const commandInput = screen.getByPlaceholderText('jobs.form.commandPlaceholder');
       const nameInput = screen.getByPlaceholderText('jobs.form.namePlaceholder');
 
       await userEvent.type(scheduleInput, '0 * * * *');
@@ -153,7 +153,7 @@ describe('JobForm', () => {
     it('auto-extracts log file from >> redirection', async () => {
       render(<JobForm {...defaultProps} />);
 
-      const commandInput = screen.getByPlaceholderText('/usr/local/bin/backup.sh');
+      const commandInput = screen.getByPlaceholderText('jobs.form.commandPlaceholder');
       await userEvent.type(commandInput, '/usr/bin/script.sh >> /var/log/output.log');
 
       await waitFor(() => {
@@ -212,7 +212,7 @@ describe('JobForm', () => {
       render(<JobForm {...defaultProps} job={existingJob} />);
 
       expect((screen.getByPlaceholderText('* * * * *') as HTMLInputElement).value).toBe('0 0 * * *');
-      expect((screen.getByPlaceholderText('/usr/local/bin/backup.sh') as HTMLInputElement).value).toBe('/usr/bin/backup.sh');
+      expect((screen.getByPlaceholderText('jobs.form.commandPlaceholder') as HTMLInputElement).value).toBe('/usr/bin/backup.sh');
       expect((screen.getByPlaceholderText('jobs.form.namePlaceholder') as HTMLInputElement).value).toBe('Existing Job');
       expect((screen.getByPlaceholderText('jobs.form.descriptionPlaceholder') as HTMLTextAreaElement).value).toBe('Test description');
       expect((screen.getByPlaceholderText('jobs.form.logFileInfo') as HTMLInputElement).value).toBe('/var/log/backup.log');
@@ -221,7 +221,7 @@ describe('JobForm', () => {
     it('pre-fills environment variables in correct format', () => {
       render(<JobForm {...defaultProps} job={existingJob} />);
 
-      const envInput = screen.getByPlaceholderText('NODE_ENV=production&#10;PATH=/usr/local/bin:/usr/bin&#10;API_KEY=your-key') as HTMLTextAreaElement;
+      const envInput = screen.getByPlaceholderText('jobs.form.envExample') as HTMLTextAreaElement;
       expect(envInput.value).toBe('NODE_ENV=production\nDEBUG=true');
     });
 
@@ -244,7 +244,7 @@ describe('JobForm', () => {
       render(<JobForm {...defaultProps} />);
 
       const scheduleInput = screen.getByPlaceholderText('* * * * *');
-      const commandInput = screen.getByPlaceholderText('/usr/local/bin/backup.sh');
+      const commandInput = screen.getByPlaceholderText('jobs.form.commandPlaceholder');
       const descriptionInput = screen.getByPlaceholderText('jobs.form.descriptionPlaceholder');
 
       await userEvent.type(scheduleInput, '0 * * * *');
@@ -261,7 +261,7 @@ describe('JobForm', () => {
       render(<JobForm {...defaultProps} />);
 
       const scheduleInput = screen.getByPlaceholderText('* * * * *');
-      const commandInput = screen.getByPlaceholderText('/usr/local/bin/backup.sh');
+      const commandInput = screen.getByPlaceholderText('jobs.form.commandPlaceholder');
 
       await userEvent.type(scheduleInput, '0 * * * *');
       await userEvent.type(commandInput, '/usr/bin/test.sh');
@@ -323,7 +323,7 @@ describe('JobForm', () => {
     it('marks command field as required', () => {
       render(<JobForm {...defaultProps} />);
 
-      const commandInput = screen.getByPlaceholderText('/usr/local/bin/backup.sh');
+      const commandInput = screen.getByPlaceholderText('jobs.form.commandPlaceholder');
       expect(commandInput).toHaveAttribute('required');
     });
 
@@ -340,7 +340,7 @@ describe('JobForm', () => {
       render(<JobForm {...defaultProps} />);
 
       const scheduleInput = screen.getByPlaceholderText('* * * * *');
-      const commandInput = screen.getByPlaceholderText('/usr/local/bin/backup.sh');
+      const commandInput = screen.getByPlaceholderText('jobs.form.commandPlaceholder');
 
       await userEvent.type(scheduleInput, '0 * * * *');
       await userEvent.type(commandInput, '/usr/bin/test.sh');
@@ -360,9 +360,9 @@ describe('JobForm', () => {
     it('ignores empty lines in environment variables', async () => {
       render(<JobForm {...defaultProps} />);
 
-      const envInput = screen.getByPlaceholderText('NODE_ENV=production&#10;PATH=/usr/local/bin:/usr/bin&#10;API_KEY=your-key');
+      const envInput = screen.getByPlaceholderText('jobs.form.envExample');
       const scheduleInput = screen.getByPlaceholderText('* * * * *');
-      const commandInput = screen.getByPlaceholderText('/usr/local/bin/backup.sh');
+      const commandInput = screen.getByPlaceholderText('jobs.form.commandPlaceholder');
 
       await userEvent.type(envInput, 'NODE_ENV=prod\n\n\nDEBUG=true');
       await userEvent.type(scheduleInput, '0 * * * *');
