@@ -17,6 +17,26 @@ export class CrontabService {
   }
 
   /**
+   * Check if user has permission to access crontab
+   */
+  async checkPermission(): Promise<{ hasPermission: boolean; error?: string }> {
+    try {
+      await execAsync('crontab -l');
+      return { hasPermission: true };
+    } catch (error: any) {
+      // No crontab exists is OK - user still has permission
+      if (error.message.includes('no crontab')) {
+        return { hasPermission: true };
+      }
+      // Permission denied or other errors
+      return {
+        hasPermission: false,
+        error: error.message || 'Permission denied to access crontab'
+      };
+    }
+  }
+
+  /**
    * Read current user's crontab
    */
   async readCrontab(): Promise<string> {

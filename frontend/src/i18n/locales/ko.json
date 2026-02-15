@@ -141,6 +141,7 @@
     "log": "로그"
   },
   "errors": {
+    "crontabPermissionDenied": "crontab 접근 권한이 거부되었습니다. 시스템 설정 → 개인 정보 보호 및 보안 → 전체 디스크 접근 권한에서 권한을 부여해주세요.",
     "createDirFailed": "디렉토리 생성에 실패했습니다",
     "loadJobsFailed": "작업 목록을 불러오는데 실패했습니다",
     "syncFailed": "동기화에 실패했습니다",

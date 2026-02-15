@@ -8,6 +8,15 @@ import os from 'os';
 
 export function setupIpcHandlers() {
   // Jobs handlers
+  ipcMain.handle('jobs:checkPermission', async () => {
+    try {
+      const result = await crontabService.checkPermission();
+      return { success: true, data: result };
+    } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  });
+
   ipcMain.handle('jobs:getAll', async () => {
     try {
       const jobs = await crontabService.getAllJobs();

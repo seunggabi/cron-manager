@@ -141,6 +141,7 @@
     "log": "Log"
   },
   "errors": {
+    "crontabPermissionDenied": "Permission denied to access crontab. Please grant Full Disk Access permission in System Settings → Privacy & Security → Full Disk Access.",
     "createDirFailed": "Failed to create directory",
     "loadJobsFailed": "Failed to load jobs",
     "syncFailed": "Sync failed",

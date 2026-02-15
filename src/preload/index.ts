@@ -18,6 +18,9 @@ export interface IpcResponse<T = any> {
 const api = {
   // Jobs API
   jobs: {
+    checkPermission: (): Promise<IpcResponse<{ hasPermission: boolean; error?: string }>> =>
+      ipcRenderer.invoke('jobs:checkPermission'),
+
     getAll: (): Promise<IpcResponse<CronJob[]>> =>
       ipcRenderer.invoke('jobs:getAll'),
 

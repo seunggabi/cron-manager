@@ -121,6 +121,24 @@ function App() {
     id: 150,
   });
 
+  // Check crontab permission on app start
+  const checkCrontabPermission = useCallback(async () => {
+    try {
+      const response = await api.jobs.checkPermission();
+      if (response.success && response.data) {
+        if (!response.data.hasPermission) {
+          showAlert(
+            t('errors.crontabPermissionDenied') ||
+            'Permission denied to access crontab. Please grant Full Disk Access permission in System Settings.',
+            'error'
+          );
+        }
+      }
+    } catch (error) {
+      console.error('Failed to check crontab permission:', error);
+    }
+  }, [showAlert, t]);
+
   // Fetch GitHub stars
   const fetchStars = useCallback(async () => {
     try {
@@ -135,8 +153,9 @@ function App() {
   }, []);
 
   useEffect(() => {
+    checkCrontabPermission();
     fetchStars();
-  }, [fetchStars]);
+  }, [checkCrontabPermission, fetchStars]);
 
   const fetchJobs = useCallback(async () => {
     setLoading(true);
