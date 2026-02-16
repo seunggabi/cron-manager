@@ -1,4 +1,4 @@
-# Cron Manager - Electron Desktop App
+# Cron Manager
 
 [![Build and Release](https://github.com/seunggabi/cron-manager/actions/workflows/build-release.yml/badge.svg)](https://github.com/seunggabi/cron-manager/actions/workflows/build-release.yml)
 [![Latest Release](https://img.shields.io/github/v/release/seunggabi/cron-manager?color=blue)](https://github.com/seunggabi/cron-manager/releases/latest)
