@@ -21,7 +21,9 @@
     "inactive": "Inactive",
     "latest": "Latest",
     "language": "Language",
-    "saveHint": "Cmd/Ctrl+Enter to save, Esc to cancel"
+    "saveHint": "Cmd/Ctrl+Enter to save, Esc to cancel",
+    "moveUp": "Move Up",
+    "moveDown": "Move Down"
   },
   "languages": {
     "ko": "한국어",

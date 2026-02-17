@@ -21,7 +21,9 @@
     "inactive": "Inaktiv",
     "latest": "Neueste",
     "language": "Sprache",
-    "saveHint": "Cmd/Ctrl+Enter zum Speichern, Esc zum Abbrechen"
+    "saveHint": "Cmd/Ctrl+Enter zum Speichern, Esc zum Abbrechen",
+    "moveUp": "Nach oben",
+    "moveDown": "Nach unten"
   },
   "languages": {
     "ko": "한국어",

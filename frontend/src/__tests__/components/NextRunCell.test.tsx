@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, act } from '@testing-library/react';
 import { NextRunCell } from '../../components/NextRunCell';
 
 describe('NextRunCell', () => {
@@ -67,7 +67,7 @@ describe('NextRunCell', () => {
     expect(element).toHaveStyle({ color: '#ef4444' });
   });
 
-  it('updates countdown every second', async () => {
+  it('updates countdown every second', () => {
     const futureDate = new Date(Date.now() + 65 * 1000); // 1:05 remaining
     render(<NextRunCell nextRun={futureDate.toISOString()} />);
 
@@ -75,11 +75,11 @@ describe('NextRunCell', () => {
     expect(screen.getByText('01:05')).toBeInTheDocument();
 
     // Advance 1 second
-    vi.advanceTimersByTime(1000);
-
-    await waitFor(() => {
-      expect(screen.getByText('01:04')).toBeInTheDocument();
+    act(() => {
+      vi.advanceTimersByTime(1000);
     });
+
+    expect(screen.getByText('01:04')).toBeInTheDocument();
   });
 
   it('formats countdown with leading zeros', () => {
@@ -89,27 +89,26 @@ describe('NextRunCell', () => {
     expect(screen.getByText('02:05')).toBeInTheDocument();
   });
 
-  it('handles countdown reaching zero gracefully', async () => {
+  it('handles countdown reaching zero gracefully', () => {
     const futureDate = new Date(Date.now() + 2000); // 2 seconds
     render(<NextRunCell nextRun={futureDate.toISOString()} />);
 
     expect(screen.getByText('00:02')).toBeInTheDocument();
 
     // Advance past the target time
-    vi.advanceTimersByTime(3000);
-
-    await waitFor(() => {
-      // Should switch to date format when time passes
-      const element = screen.getByText(/\d{4}-\d{2}-\d{2}/);
-      expect(element).toBeInTheDocument();
+    act(() => {
+      vi.advanceTimersByTime(3000);
     });
+
+    // Should switch to date format when time passes
+    const element = screen.getByText(/\d{4}-\d{2}-\d{2}/);
+    expect(element).toBeInTheDocument();
   });
 
   it('cleans up interval on unmount', () => {
     const futureDate = new Date(Date.now() + 3 * 60 * 1000);
     const { unmount } = render(<NextRunCell nextRun={futureDate.toISOString()} />);
 
-    const intervalCount = vi.getTimerCount();
     unmount();
 
     // Interval should be cleared

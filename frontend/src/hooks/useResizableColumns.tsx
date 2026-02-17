@@ -57,20 +57,10 @@ export function useResizableColumns(
       resizingRef.current = null;
       document.body.style.cursor = '';
       document.body.style.userSelect = '';
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
     }
-  }, []);
-
-  useEffect(() => {
-    if (resizingRef.current) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-
-      return () => {
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
-      };
-    }
-  }, [handleMouseMove, handleMouseUp]);
+  }, [handleMouseMove]);
 
   const handleMouseDown = useCallback(
     (columnName: string) => (e: React.MouseEvent) => {
@@ -85,8 +75,11 @@ export function useResizableColumns(
 
       document.body.style.cursor = 'col-resize';
       document.body.style.userSelect = 'none';
+
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
     },
-    [columnWidths, defaultWidths]
+    [columnWidths, defaultWidths, handleMouseMove, handleMouseUp]
   );
 
   const getColumnStyle = useCallback(

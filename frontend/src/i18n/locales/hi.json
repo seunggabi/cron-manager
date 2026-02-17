@@ -21,7 +21,9 @@
     "inactive": "निष्क्रिय",
     "latest": "नवीनतम",
     "language": "भाषा",
-    "saveHint": "Cmd/Ctrl+Enter से सहेजें, Esc से रद्द करें"
+    "saveHint": "Cmd/Ctrl+Enter से सहेजें, Esc से रद्द करें",
+    "moveUp": "ऊपर ले जाएँ",
+    "moveDown": "नीचे ले जाएँ"
   },
   "languages": {
     "ko": "한국어",

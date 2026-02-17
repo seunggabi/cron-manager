@@ -285,14 +285,14 @@ tbody tr:last-child { border-bottom: none; }
 tbody tr:hover { background: var(--surface-hover); }
 
 td { padding: 14px 16px; vertical-align: top; text-align: left; }
-td:first-child,
-td:nth-child(2) { text-align: center; } /* Action and Status columns center aligned */
+td:first-child { text-align: center; padding: 2px 0; width: 24px; }
+td:nth-child(2),
+td:nth-child(3) { text-align: center; } /* Action and Status columns center aligned */
 
 /* Column widths */
 th:first-child,
 td:first-child {
-  width: 160px;
-  min-width: 160px;
+  text-align: center;
 }
 
 th:nth-child(2),
@@ -301,17 +301,26 @@ td:nth-child(2) {
   min-width: 100px;
 }
 
-/* Environment variables table - narrower action column */
+/* Environment variables table - reorder column */
 .env-table th:first-child,
 .env-table td:first-child {
+  width: 24px;
+  min-width: 24px;
+  text-align: center;
+  padding: 0;
+}
+
+/* Environment variables table - narrower action column */
+.env-table th:nth-child(2),
+.env-table td:nth-child(2) {
   width: 110px;
   min-width: 110px;
   text-align: left;
 }
 
 /* Environment variables table - value column left aligned */
-.env-table th:nth-child(3),
-.env-table td:nth-child(3) {
+.env-table th:nth-child(4),
+.env-table td:nth-child(4) {
   text-align: left;
 }
 

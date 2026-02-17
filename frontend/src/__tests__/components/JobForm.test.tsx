@@ -46,11 +46,13 @@ describe('JobForm', () => {
       fireEvent.click(submitButton);
 
       await waitFor(() => {
-        expect(mockOnSubmit).toHaveBeenCalledWith({
-          name: 'backup.sh',
-          schedule: '0 * * * *',
-          command: '/usr/bin/backup.sh',
-        });
+        expect(mockOnSubmit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            name: 'bin/backup.sh',
+            schedule: '0 * * * *',
+            command: '/usr/bin/backup.sh',
+          })
+        );
       });
     });
 

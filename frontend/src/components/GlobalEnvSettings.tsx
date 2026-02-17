@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Plus, Trash2, Edit, X, Check, Search, ChevronUp, ChevronDown } from 'lucide-react';
+import { Plus, Trash2, Edit, X, Check, Search, ChevronUp, ChevronDown, GripVertical } from 'lucide-react';
 import { useAlertDialog } from './AlertDialog';
 import { ConfirmDialog } from './ConfirmDialog';
 
@@ -21,12 +21,14 @@ export function GlobalEnvSettings() {
   const [loading, setLoading] = useState(false);
   const [newKey, setNewKey] = useState('');
   const [newValue, setNewValue] = useState('');
-  const [editingKey, setEditingKey] = useState<string | null>(null);
+  const [editing, setEditing] = useState<{ key: string; field: 'key' | 'value' } | null>(null);
   const [editValue, setEditValue] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortField, setSortField] = useState<SortField>('key');
+  const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [confirmDelete, setConfirmDelete] = useState<{ key: string } | null>(null);
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   const fetchGlobalEnv = async () => {
     setLoading(true);
@@ -73,18 +75,72 @@ export function GlobalEnvSettings() {
     }
   };
 
-  const handleUpdate = async (key: string) => {
-    try {
-      const response = await api.env.updateGlobalVar(key, editValue);
-      if (response.success) {
-        setEditingKey(null);
+  const handleSave = async () => {
+    if (!editing) return;
+    const { key: originalKey, field } = editing;
+    const trimmedValue = editValue.trim();
+
+    if (!trimmedValue) {
+      showAlert(field === 'key' ? t('errors.enterKey') : t('errors.enterValue'), 'error');
+      return;
+    }
+
+    const envVar = envVars.find(v => v.key === originalKey);
+    if (!envVar) return;
+
+    if (field === 'value') {
+      if (trimmedValue === envVar.value) {
+        setEditing(null);
         setEditValue('');
-        await fetchGlobalEnv();
-      } else {
-        showAlert(response.error || t('errors.updateEnvFailed'), 'error');
+        return;
       }
-    } catch (error) {
-      showAlert(t('errors.updateEnvFailed'), 'error');
+      try {
+        const response = await api.env.updateGlobalVar(originalKey, trimmedValue);
+        if (response.success) {
+          setEditing(null);
+          setEditValue('');
+          await fetchGlobalEnv();
+        } else {
+          showAlert(response.error || t('errors.updateEnvFailed'), 'error');
+        }
+      } catch (error) {
+        showAlert(t('errors.updateEnvFailed'), 'error');
+      }
+    } else {
+      // Renaming key
+      if (trimmedValue === originalKey) {
+        setEditing(null);
+        setEditValue('');
+        return;
+      }
+      if (!/^[A-Z_][A-Z0-9_]*$/i.test(trimmedValue)) {
+        showAlert('Invalid key format (A-Z, 0-9, _)', 'error');
+        return;
+      }
+      if (envVars.some(v => v.key === trimmedValue && v.key !== originalKey)) {
+        showAlert('Key already exists', 'error');
+        return;
+      }
+      try {
+        const envObj: Record<string, string> = {};
+        envVars.forEach(v => {
+          if (v.key === originalKey) {
+            envObj[trimmedValue] = v.value;
+          } else {
+            envObj[v.key] = v.value;
+          }
+        });
+        const response = await api.env.setGlobal(envObj);
+        if (response.success) {
+          setEditing(null);
+          setEditValue('');
+          await fetchGlobalEnv();
+        } else {
+          showAlert(response.error || t('errors.updateEnvFailed'), 'error');
+        }
+      } catch (error) {
+        showAlert(t('errors.updateEnvFailed'), 'error');
+      }
     }
   };
 
@@ -105,13 +161,15 @@ export function GlobalEnvSettings() {
     }
   };
 
-  const startEdit = (key: string, value: string) => {
-    setEditingKey(key);
-    setEditValue(value);
+  const startEdit = (key: string, field: 'key' | 'value') => {
+    const envVar = envVars.find(v => v.key === key);
+    if (!envVar) return;
+    setEditing({ key, field });
+    setEditValue(field === 'key' ? envVar.key : envVar.value);
   };
 
   const cancelEdit = () => {
-    setEditingKey(null);
+    setEditing(null);
     setEditValue('');
   };
 
@@ -124,10 +182,76 @@ export function GlobalEnvSettings() {
     }
   };
 
+  // Reorder helpers
+  const saveEnvOrder = async (newEnvVars: EnvVar[]) => {
+    try {
+      const envObj: Record<string, string> = {};
+      newEnvVars.forEach(v => { envObj[v.key] = v.value; });
+      const response = await api.env.setGlobal(envObj);
+      if (response.success) {
+        setEnvVars(newEnvVars);
+        setSortField(null);
+      } else {
+        showAlert(response.error || t('errors.updateEnvFailed'), 'error');
+      }
+    } catch (error) {
+      showAlert(t('errors.updateEnvFailed'), 'error');
+    }
+  };
+
+  const handleMoveUp = (displayIndex: number) => {
+    if (displayIndex <= 0) return;
+    const currentList = [...filteredAndSortedEnvVars];
+    [currentList[displayIndex - 1], currentList[displayIndex]] =
+      [currentList[displayIndex], currentList[displayIndex - 1]];
+    saveEnvOrder(currentList);
+  };
+
+  const handleMoveDown = (displayIndex: number) => {
+    if (displayIndex >= filteredAndSortedEnvVars.length - 1) return;
+    const currentList = [...filteredAndSortedEnvVars];
+    [currentList[displayIndex], currentList[displayIndex + 1]] =
+      [currentList[displayIndex + 1], currentList[displayIndex]];
+    saveEnvOrder(currentList);
+  };
+
+  // Drag and drop
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDragIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDragOverIndex(index);
+  };
+
+  const handleDrop = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (dragIndex === null || dragIndex === index) {
+      setDragIndex(null);
+      setDragOverIndex(null);
+      return;
+    }
+    const currentList = [...filteredAndSortedEnvVars];
+    const [removed] = currentList.splice(dragIndex, 1);
+    currentList.splice(index, 0, removed);
+    setDragIndex(null);
+    setDragOverIndex(null);
+    saveEnvOrder(currentList);
+  };
+
+  const handleDragEnd = () => {
+    setDragIndex(null);
+    setDragOverIndex(null);
+  };
+
+  const isSearchActive = searchQuery.trim().length > 0;
+
   const filteredAndSortedEnvVars = useMemo(() => {
     let filtered = envVars;
 
-    // Filter by search query
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = envVars.filter(
@@ -137,15 +261,17 @@ export function GlobalEnvSettings() {
       );
     }
 
-    // Sort
-    const sorted = [...filtered].sort((a, b) => {
-      const aValue = a[sortField].toLowerCase();
-      const bValue = b[sortField].toLowerCase();
-      const comparison = aValue.localeCompare(bValue);
-      return sortDirection === 'asc' ? comparison : -comparison;
-    });
+    if (sortField) {
+      const sorted = [...filtered].sort((a, b) => {
+        const aValue = a[sortField].toLowerCase();
+        const bValue = b[sortField].toLowerCase();
+        const comparison = aValue.localeCompare(bValue);
+        return sortDirection === 'asc' ? comparison : -comparison;
+      });
+      return sorted;
+    }
 
-    return sorted;
+    return filtered;
   }, [envVars, searchQuery, sortField, sortDirection]);
 
   if (loading && envVars.length === 0) {
@@ -230,7 +356,8 @@ export function GlobalEnvSettings() {
             <table className="env-table">
               <thead>
                 <tr>
-                  <th>{t('common.actions')}</th>
+                  <th style={{ width: '24px', minWidth: '24px', textAlign: 'center', padding: '0' }}></th>
+                  <th style={{ textAlign: 'center' }}>{t('common.actions')}</th>
                   <th onClick={() => handleSort('key')} style={{ cursor: 'pointer' }}>
                     {t('env.table.key')}
                     {sortField === 'key' && (
@@ -250,14 +377,53 @@ export function GlobalEnvSettings() {
                 </tr>
               </thead>
               <tbody>
-                {filteredAndSortedEnvVars.map((envVar) => (
-                  <tr key={envVar.key}>
+                {filteredAndSortedEnvVars.map((envVar, index) => (
+                  <tr
+                    key={envVar.key}
+                    draggable={!isSearchActive}
+                    onDragStart={(e) => handleDragStart(e, index)}
+                    onDragOver={(e) => handleDragOver(e, index)}
+                    onDrop={(e) => handleDrop(e, index)}
+                    onDragEnd={handleDragEnd}
+                    style={{
+                      opacity: dragIndex === index ? 0.4 : 1,
+                      borderTop: dragOverIndex === index && dragIndex !== null && dragIndex > index
+                        ? '2px solid var(--accent)' : undefined,
+                      borderBottom: dragOverIndex === index && dragIndex !== null && dragIndex < index
+                        ? '2px solid var(--accent)' : undefined,
+                    }}
+                  >
+                    <td style={{ textAlign: 'center', padding: '4px' }}>
+                      {!isSearchActive && (
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0px' }}>
+                          <button
+                            onClick={() => handleMoveUp(index)}
+                            className="icon-btn"
+                            style={{ width: '16px', height: '14px', padding: '0', opacity: index === 0 ? 0.3 : 1 }}
+                            disabled={index === 0}
+                            title={t('common.moveUp')}
+                          >
+                            <ChevronUp size={12} />
+                          </button>
+                          <GripVertical size={12} className="drag-handle" style={{ cursor: 'grab' }} />
+                          <button
+                            onClick={() => handleMoveDown(index)}
+                            className="icon-btn"
+                            style={{ width: '16px', height: '14px', padding: '0', opacity: index === filteredAndSortedEnvVars.length - 1 ? 0.3 : 1 }}
+                            disabled={index === filteredAndSortedEnvVars.length - 1}
+                            title={t('common.moveDown')}
+                          >
+                            <ChevronDown size={12} />
+                          </button>
+                        </div>
+                      )}
+                    </td>
                     <td>
                       <div className="actions">
-                        {editingKey === envVar.key ? (
+                        {editing?.key === envVar.key ? (
                           <>
                             <button
-                              onClick={() => handleUpdate(envVar.key)}
+                              onClick={handleSave}
                               className="icon-btn play"
                               title={t('common.save')}
                               data-tooltip={t('common.save')}
@@ -276,7 +442,7 @@ export function GlobalEnvSettings() {
                         ) : (
                           <>
                             <button
-                              onClick={() => startEdit(envVar.key, envVar.value)}
+                              onClick={() => startEdit(envVar.key, 'value')}
                               className="icon-btn edit"
                               title={t('common.edit')}
                               data-tooltip={t('common.edit')}
@@ -296,12 +462,42 @@ export function GlobalEnvSettings() {
                       </div>
                     </td>
                     <td>
-                      <code className="schedule-code" style={{ background: 'var(--accent-light)', color: 'var(--accent)', borderColor: 'var(--accent)' }}>
-                        {envVar.key}
-                      </code>
+                      {editing?.key === envVar.key && editing?.field === 'key' ? (
+                        <input
+                          type="text"
+                          value={editValue}
+                          onChange={(e) => setEditValue(e.target.value)}
+                          className="mono"
+                          style={{
+                            width: '100%',
+                            padding: '4px 8px',
+                            border: '1.5px solid var(--accent)',
+                            borderRadius: 'var(--radius)',
+                            fontSize: '12px',
+                          }}
+                          autoFocus
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleSave();
+                            if (e.key === 'Escape') cancelEdit();
+                          }}
+                        />
+                      ) : (
+                        <code
+                          className="schedule-code"
+                          style={{
+                            background: 'var(--accent-light)',
+                            color: 'var(--accent)',
+                            borderColor: 'var(--accent)',
+                            cursor: 'pointer',
+                          }}
+                          onDoubleClick={() => startEdit(envVar.key, 'key')}
+                        >
+                          {envVar.key}
+                        </code>
+                      )}
                     </td>
                     <td>
-                      {editingKey === envVar.key ? (
+                      {editing?.key === envVar.key && editing?.field === 'value' ? (
                         <input
                           type="text"
                           value={editValue}
@@ -310,18 +506,23 @@ export function GlobalEnvSettings() {
                           style={{ width: '100%' }}
                           autoFocus
                           onKeyDown={(e) => {
-                            if (e.key === 'Enter') handleUpdate(envVar.key);
+                            if (e.key === 'Enter') handleSave();
                             if (e.key === 'Escape') cancelEdit();
                           }}
                         />
                       ) : (
-                        <code className="mono" style={{
-                          fontSize: '12px',
-                          color: 'var(--text-secondary)',
-                          wordBreak: 'break-all',
-                          whiteSpace: 'pre-wrap',
-                          overflowWrap: 'anywhere'
-                        }}>
+                        <code
+                          className="mono"
+                          style={{
+                            fontSize: '12px',
+                            color: 'var(--text-secondary)',
+                            wordBreak: 'break-all',
+                            whiteSpace: 'pre-wrap',
+                            overflowWrap: 'anywhere',
+                            cursor: 'pointer',
+                          }}
+                          onDoubleClick={() => startEdit(envVar.key, 'value')}
+                        >
                           {envVar.value}
                         </code>
                       )}

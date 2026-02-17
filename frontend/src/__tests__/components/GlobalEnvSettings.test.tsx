@@ -3,11 +3,21 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { GlobalEnvSettings } from '../../components/GlobalEnvSettings';
 
+const mockShowAlert = vi.fn();
+vi.mock('../../components/AlertDialog', () => ({
+  useAlertDialog: () => ({
+    showAlert: mockShowAlert,
+    alert: { isOpen: false, type: 'info', message: '' },
+    closeAlert: vi.fn(),
+  }),
+}));
+
 const mockApi = window.electronAPI;
 
 describe('GlobalEnvSettings', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockShowAlert.mockClear();
   });
 
   it('fetches and displays environment variables on mount', async () => {
@@ -72,11 +82,11 @@ describe('GlobalEnvSettings', () => {
       render(<GlobalEnvSettings />);
 
       await waitFor(() => {
-        expect(screen.getByPlaceholderText('KEY')).toBeInTheDocument();
+        expect(screen.getByPlaceholderText('env.table.keyPlaceholder')).toBeInTheDocument();
       });
 
-      const keyInput = screen.getByPlaceholderText('KEY');
-      const valueInput = screen.getByPlaceholderText('VALUE');
+      const keyInput = screen.getByPlaceholderText('env.table.keyPlaceholder');
+      const valueInput = screen.getByPlaceholderText('env.table.valuePlaceholder');
       const addButton = screen.getByText('common.add');
 
       await userEvent.type(keyInput, 'NEW_VAR');
@@ -97,11 +107,11 @@ describe('GlobalEnvSettings', () => {
       render(<GlobalEnvSettings />);
 
       await waitFor(() => {
-        expect(screen.getByPlaceholderText('KEY')).toBeInTheDocument();
+        expect(screen.getByPlaceholderText('env.table.keyPlaceholder')).toBeInTheDocument();
       });
 
-      const keyInput = screen.getByPlaceholderText('KEY') as HTMLInputElement;
-      const valueInput = screen.getByPlaceholderText('VALUE') as HTMLInputElement;
+      const keyInput = screen.getByPlaceholderText('env.table.keyPlaceholder');
+      const valueInput = screen.getByPlaceholderText('env.table.valuePlaceholder');
       const addButton = screen.getByText('common.add');
 
       await userEvent.type(keyInput, 'TEST_KEY');
@@ -109,25 +119,28 @@ describe('GlobalEnvSettings', () => {
       fireEvent.click(addButton);
 
       await waitFor(() => {
-        expect(keyInput.value).toBe('');
-        expect(valueInput.value).toBe('');
+        expect(mockApi.env.updateGlobalVar).toHaveBeenCalled();
+      });
+
+      await waitFor(() => {
+        const updatedKeyInput = screen.getByPlaceholderText('env.table.keyPlaceholder') as HTMLInputElement;
+        const updatedValueInput = screen.getByPlaceholderText('env.table.valuePlaceholder') as HTMLInputElement;
+        expect(updatedKeyInput.value).toBe('');
+        expect(updatedValueInput.value).toBe('');
       });
     });
 
     it('shows alert when key is empty', async () => {
-      const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
-
       render(<GlobalEnvSettings />);
 
       await waitFor(() => {
-        expect(screen.getByPlaceholderText('KEY')).toBeInTheDocument();
+        expect(screen.getByPlaceholderText('env.table.keyPlaceholder')).toBeInTheDocument();
       });
 
       const addButton = screen.getByText('common.add');
       fireEvent.click(addButton);
 
-      expect(alertSpy).toHaveBeenCalledWith('errors.enterKey');
-      alertSpy.mockRestore();
+      expect(mockShowAlert).toHaveBeenCalledWith('errors.enterKey', 'error');
     });
 
     it('allows adding variable with Enter key', async () => {
@@ -139,11 +152,11 @@ describe('GlobalEnvSettings', () => {
       render(<GlobalEnvSettings />);
 
       await waitFor(() => {
-        expect(screen.getByPlaceholderText('VALUE')).toBeInTheDocument();
+        expect(screen.getByPlaceholderText('env.table.valuePlaceholder')).toBeInTheDocument();
       });
 
-      const keyInput = screen.getByPlaceholderText('KEY');
-      const valueInput = screen.getByPlaceholderText('VALUE');
+      const keyInput = screen.getByPlaceholderText('env.table.keyPlaceholder');
+      const valueInput = screen.getByPlaceholderText('env.table.valuePlaceholder');
 
       await userEvent.type(keyInput, 'TEST');
       await userEvent.type(valueInput, 'value');
@@ -217,10 +230,12 @@ describe('GlobalEnvSettings', () => {
       fireEvent.click(editButton);
 
       const editInput = screen.getByDisplayValue('old_value');
+      await userEvent.clear(editInput);
+      await userEvent.type(editInput, 'new_value');
       fireEvent.keyDown(editInput, { key: 'Enter' });
 
       await waitFor(() => {
-        expect(mockApi.env.updateGlobalVar).toHaveBeenCalled();
+        expect(mockApi.env.updateGlobalVar).toHaveBeenCalledWith('EXISTING_KEY', 'new_value');
       });
     });
 
@@ -273,7 +288,6 @@ describe('GlobalEnvSettings', () => {
     });
 
     it('deletes variable after confirmation', async () => {
-      const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
       mockApi.env.deleteGlobalVar = vi.fn().mockResolvedValue({ success: true });
 
       render(<GlobalEnvSettings />);
@@ -285,16 +299,20 @@ describe('GlobalEnvSettings', () => {
       const deleteButton = screen.getByTitle('common.delete');
       fireEvent.click(deleteButton);
 
-      expect(confirmSpy).toHaveBeenCalled();
+      // Click the confirm button in the dialog
+      await waitFor(() => {
+        expect(screen.getByText('common.confirm')).toBeInTheDocument();
+      });
+
+      const confirmButton = screen.getByText('common.confirm');
+      fireEvent.click(confirmButton);
+
       await waitFor(() => {
         expect(mockApi.env.deleteGlobalVar).toHaveBeenCalledWith('TO_DELETE');
       });
-
-      confirmSpy.mockRestore();
     });
 
     it('does not delete when confirmation cancelled', async () => {
-      const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
       mockApi.env.deleteGlobalVar = vi.fn();
 
       render(<GlobalEnvSettings />);
@@ -306,8 +324,15 @@ describe('GlobalEnvSettings', () => {
       const deleteButton = screen.getByTitle('common.delete');
       fireEvent.click(deleteButton);
 
+      // Click the cancel button in the dialog
+      await waitFor(() => {
+        expect(screen.getByText('common.cancel')).toBeInTheDocument();
+      });
+
+      const cancelButton = screen.getByText('common.cancel');
+      fireEvent.click(cancelButton);
+
       expect(mockApi.env.deleteGlobalVar).not.toHaveBeenCalled();
-      confirmSpy.mockRestore();
     });
   });
 
@@ -395,20 +420,21 @@ describe('GlobalEnvSettings', () => {
       });
     });
 
-    it('sorts by key in ascending order by default', async () => {
+    it('shows natural order by default (no sort)', async () => {
       render(<GlobalEnvSettings />);
 
       await waitFor(() => {
         expect(screen.getByText('ALPHA')).toBeInTheDocument();
       });
 
+      // Natural order: ZEBRA, ALPHA, BETA (insertion order from API)
       const rows = screen.getAllByText(/ALPHA|BETA|ZEBRA/);
-      expect(rows[0].textContent).toBe('ALPHA');
-      expect(rows[1].textContent).toBe('BETA');
-      expect(rows[2].textContent).toBe('ZEBRA');
+      expect(rows[0].textContent).toBe('ZEBRA');
+      expect(rows[1].textContent).toBe('ALPHA');
+      expect(rows[2].textContent).toBe('BETA');
     });
 
-    it('toggles sort direction when clicking same column header', async () => {
+    it('sorts by key ascending when clicking key column header', async () => {
       render(<GlobalEnvSettings />);
 
       await waitFor(() => {
@@ -418,10 +444,12 @@ describe('GlobalEnvSettings', () => {
       const keyHeader = screen.getByText('env.table.key');
       fireEvent.click(keyHeader);
 
-      // Should be descending now
+      // Should be ascending
       await waitFor(() => {
         const rows = screen.getAllByText(/ALPHA|BETA|ZEBRA/);
-        expect(rows[0].textContent).toBe('ZEBRA');
+        expect(rows[0].textContent).toBe('ALPHA');
+        expect(rows[1].textContent).toBe('BETA');
+        expect(rows[2].textContent).toBe('ZEBRA');
       });
     });
 
@@ -446,7 +474,6 @@ describe('GlobalEnvSettings', () => {
 
   describe('Error handling', () => {
     it('shows error alert when loading fails', async () => {
-      const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
       mockApi.env.getGlobal = vi.fn().mockResolvedValue({
         success: false,
         error: 'Failed to load',
@@ -455,14 +482,11 @@ describe('GlobalEnvSettings', () => {
       render(<GlobalEnvSettings />);
 
       await waitFor(() => {
-        expect(alertSpy).toHaveBeenCalledWith('Failed to load');
+        expect(mockShowAlert).toHaveBeenCalledWith('Failed to load', 'error');
       });
-
-      alertSpy.mockRestore();
     });
 
     it('shows error when add fails', async () => {
-      const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
       mockApi.env.getGlobal = vi.fn().mockResolvedValue({ success: true, data: {} });
       mockApi.env.updateGlobalVar = vi.fn().mockResolvedValue({
         success: false,
@@ -472,20 +496,18 @@ describe('GlobalEnvSettings', () => {
       render(<GlobalEnvSettings />);
 
       await waitFor(() => {
-        expect(screen.getByPlaceholderText('KEY')).toBeInTheDocument();
+        expect(screen.getByPlaceholderText('env.table.keyPlaceholder')).toBeInTheDocument();
       });
 
-      const keyInput = screen.getByPlaceholderText('KEY');
+      const keyInput = screen.getByPlaceholderText('env.table.keyPlaceholder');
       const addButton = screen.getByText('common.add');
 
       await userEvent.type(keyInput, 'TEST');
       fireEvent.click(addButton);
 
       await waitFor(() => {
-        expect(alertSpy).toHaveBeenCalledWith('Add failed');
+        expect(mockShowAlert).toHaveBeenCalledWith('Add failed', 'error');
       });
-
-      alertSpy.mockRestore();
     });
   });
 });
