@@ -20,7 +20,6 @@ const api = window.electronAPI;
 type SortField = 'name' | 'schedule' | 'command' | 'enabled' | 'nextRun' | 'id';
 type SortDirection = 'asc' | 'desc';
 type TabType = 'jobs' | 'env' | 'backups';
-type DragState = { index: number } | null;
 
 // LogButton component - checks if directory exists and shows appropriate button
 function LogButton({ logFile, workingDir, showAlert }: { logFile: string; workingDir?: string; showAlert: (message: string, type: 'info' | 'success' | 'error' | 'warning') => void }) {
