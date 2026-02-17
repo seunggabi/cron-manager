@@ -73,7 +73,7 @@ describe('useResizableColumns', () => {
     });
   });
 
-  it('saves column widths to localStorage when changed', () => {
+  it('saves column widths to localStorage when changed', async () => {
     const { result } = renderHook(() =>
       useResizableColumns('test-table', defaultWidths)
     );
@@ -95,6 +95,9 @@ describe('useResizableColumns', () => {
       const mouseUpEvent = new MouseEvent('mouseup');
       document.dispatchEvent(mouseUpEvent);
     });
+
+    // Wait for useEffect to save to localStorage
+    await new Promise(resolve => setTimeout(resolve, 0));
 
     const saved = localStorage.getItem('table-widths-test-table');
     expect(saved).toBeTruthy();
@@ -201,7 +204,7 @@ describe('useResizableColumns', () => {
     expect(localStorage.getItem('table-widths-table-2')).toBeTruthy();
   });
 
-  it('handles localStorage.setItem errors gracefully', () => {
+  it('handles localStorage.setItem errors gracefully', async () => {
     const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     // Mock setItem to throw
@@ -227,6 +230,9 @@ describe('useResizableColumns', () => {
       const mouseUpEvent = new MouseEvent('mouseup');
       document.dispatchEvent(mouseUpEvent);
     });
+
+    // Wait for useEffect to attempt localStorage save
+    await new Promise(resolve => setTimeout(resolve, 0));
 
     expect(consoleErrorSpy).toHaveBeenCalled();
     consoleErrorSpy.mockRestore();

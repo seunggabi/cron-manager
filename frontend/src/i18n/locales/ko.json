@@ -21,7 +21,9 @@
     "inactive": "비활성",
     "latest": "최신",
     "language": "언어",
-    "saveHint": "Cmd/Ctrl+Enter로 저장, Esc로 취소"
+    "saveHint": "Cmd/Ctrl+Enter로 저장, Esc로 취소",
+    "moveUp": "위로 이동",
+    "moveDown": "아래로 이동"
   },
   "languages": {
     "ko": "한국어",

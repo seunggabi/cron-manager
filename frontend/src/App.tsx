@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
-import { Play, Trash2, Plus, RefreshCw, FolderOpen, FileText, Edit, ChevronUp, ChevronDown, Save, ListChecks, Settings, Database, Search, X, FolderPlus, Github, Languages, Check } from 'lucide-react';
+import { Play, Trash2, Plus, RefreshCw, FolderOpen, FileText, Edit, ChevronUp, ChevronDown, Save, ListChecks, Settings, Database, Search, X, FolderPlus, Github, Languages, Check, GripVertical } from 'lucide-react';
 import { JobForm } from './components/JobForm';
 import { GlobalEnvSettings } from './components/GlobalEnvSettings';
 import { BackupManager } from './components/BackupManager';
@@ -20,6 +20,7 @@ const api = window.electronAPI;
 type SortField = 'name' | 'schedule' | 'command' | 'enabled' | 'nextRun' | 'id';
 type SortDirection = 'asc' | 'desc';
 type TabType = 'jobs' | 'env' | 'backups';
+type DragState = { index: number } | null;
 
 // LogButton component - checks if directory exists and shows appropriate button
 function LogButton({ logFile, workingDir, showAlert }: { logFile: string; workingDir?: string; showAlert: (message: string, type: 'info' | 'success' | 'error' | 'warning') => void }) {
@@ -102,11 +103,13 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingJob, setEditingJob] = useState<CronJob | null>(null);
-  const [sortField, setSortField] = useState<SortField>('name');
+  const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [editingCell, setEditingCell] = useState<{ jobId: string; field: 'name' | 'command' | 'schedule' } | null>(null);
   const [editingValue, setEditingValue] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [jobDragIndex, setJobDragIndex] = useState<number | null>(null);
+  const [jobDragOverIndex, setJobDragOverIndex] = useState<number | null>(null);
   const { showAlert } = useAlertDialog();
 
   // Resizable columns for jobs table
@@ -431,6 +434,88 @@ function App() {
     }
   };
 
+  const isJobSearchActive = searchQuery.trim().length > 0;
+
+  const handleJobMoveUp = async (displayIndex: number) => {
+    if (displayIndex <= 0) return;
+    const currentList = [...filteredAndSortedJobs];
+    [currentList[displayIndex - 1], currentList[displayIndex]] =
+      [currentList[displayIndex], currentList[displayIndex - 1]];
+    const jobIds = currentList.map(job => job.id);
+    setSortField(null);
+    try {
+      const response = await api.jobs.reorder(jobIds);
+      if (response.success) {
+        await fetchJobs();
+      } else {
+        showAlert(response.error || t('errors.saveOrderFailed'), 'error');
+      }
+    } catch (error) {
+      showAlert(t('errors.saveOrderFailed'), 'error');
+    }
+  };
+
+  const handleJobMoveDown = async (displayIndex: number) => {
+    if (displayIndex >= filteredAndSortedJobs.length - 1) return;
+    const currentList = [...filteredAndSortedJobs];
+    [currentList[displayIndex], currentList[displayIndex + 1]] =
+      [currentList[displayIndex + 1], currentList[displayIndex]];
+    const jobIds = currentList.map(job => job.id);
+    setSortField(null);
+    try {
+      const response = await api.jobs.reorder(jobIds);
+      if (response.success) {
+        await fetchJobs();
+      } else {
+        showAlert(response.error || t('errors.saveOrderFailed'), 'error');
+      }
+    } catch (error) {
+      showAlert(t('errors.saveOrderFailed'), 'error');
+    }
+  };
+
+  const handleJobDragStart = (e: React.DragEvent, index: number) => {
+    setJobDragIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleJobDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setJobDragOverIndex(index);
+  };
+
+  const handleJobDrop = async (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (jobDragIndex === null || jobDragIndex === index) {
+      setJobDragIndex(null);
+      setJobDragOverIndex(null);
+      return;
+    }
+    const currentList = [...filteredAndSortedJobs];
+    const [removed] = currentList.splice(jobDragIndex, 1);
+    currentList.splice(index, 0, removed);
+    setJobDragIndex(null);
+    setJobDragOverIndex(null);
+    setSortField(null);
+    const jobIds = currentList.map(job => job.id);
+    try {
+      const response = await api.jobs.reorder(jobIds);
+      if (response.success) {
+        await fetchJobs();
+      } else {
+        showAlert(response.error || t('errors.saveOrderFailed'), 'error');
+      }
+    } catch (error) {
+      showAlert(t('errors.saveOrderFailed'), 'error');
+    }
+  };
+
+  const handleJobDragEnd = () => {
+    setJobDragIndex(null);
+    setJobDragOverIndex(null);
+  };
+
   const filteredAndSortedJobs = useMemo(() => {
     // Filter jobs by search query
     let filtered = jobs;
@@ -443,6 +528,9 @@ function App() {
         (job.description && job.description.toLowerCase().includes(query))
       );
     }
+
+    // No sort field = natural order
+    if (!sortField) return filtered;
 
     // Sort filtered jobs
     return [...filtered].sort((a, b) => {
@@ -753,6 +841,7 @@ function App() {
                 <table>
                   <thead>
                     <tr>
+                      <th style={{ textAlign: 'center', padding: '0' }}></th>
                       <th style={{ ...getColumnStyle('action'), textAlign: 'center' }}>
                         {t('common.actions')}
                         <ResizeHandle columnName="action" />
@@ -816,15 +905,54 @@ function App() {
                   <tbody>
                     {filteredAndSortedJobs.length === 0 ? (
                       <tr>
-                        <td colSpan={7} style={{ textAlign: 'center', padding: '40px' }}>
+                        <td colSpan={8} style={{ textAlign: 'center', padding: '40px' }}>
                           <div style={{ color: 'var(--text-tertiary)', fontSize: '14px' }}>
                             {t('jobs.noSearchResults', { query: searchQuery })}
                           </div>
                         </td>
                       </tr>
                     ) : (
-                      filteredAndSortedJobs.map((job) => (
-                      <tr key={job.id}>
+                      filteredAndSortedJobs.map((job, index) => (
+                      <tr
+                        key={job.id}
+                        draggable={!isJobSearchActive}
+                        onDragStart={(e) => handleJobDragStart(e, index)}
+                        onDragOver={(e) => handleJobDragOver(e, index)}
+                        onDrop={(e) => handleJobDrop(e, index)}
+                        onDragEnd={handleJobDragEnd}
+                        style={{
+                          opacity: jobDragIndex === index ? 0.4 : 1,
+                          borderTop: jobDragOverIndex === index && jobDragIndex !== null && jobDragIndex > index
+                            ? '2px solid var(--accent)' : undefined,
+                          borderBottom: jobDragOverIndex === index && jobDragIndex !== null && jobDragIndex < index
+                            ? '2px solid var(--accent)' : undefined,
+                        }}
+                      >
+                        <td style={{ textAlign: 'center', padding: '4px' }}>
+                          {!isJobSearchActive && (
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0px' }}>
+                              <button
+                                onClick={() => handleJobMoveUp(index)}
+                                className="icon-btn"
+                                style={{ width: '16px', height: '14px', padding: '0', opacity: index === 0 ? 0.3 : 1 }}
+                                disabled={index === 0}
+                                title={t('common.moveUp')}
+                              >
+                                <ChevronUp size={12} />
+                              </button>
+                              <GripVertical size={12} className="drag-handle" style={{ cursor: 'grab' }} />
+                              <button
+                                onClick={() => handleJobMoveDown(index)}
+                                className="icon-btn"
+                                style={{ width: '16px', height: '14px', padding: '0', opacity: index === filteredAndSortedJobs.length - 1 ? 0.3 : 1 }}
+                                disabled={index === filteredAndSortedJobs.length - 1}
+                                title={t('common.moveDown')}
+                              >
+                                <ChevronDown size={12} />
+                              </button>
+                            </div>
+                          )}
+                        </td>
                         <td>
                           <div className="actions">
                             <button

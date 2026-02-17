@@ -405,7 +405,7 @@ export function BackupManager() {
                       style={isScheduled ? { background: '#fef2f2' } : undefined}
                     >
                       <td>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div style={{ alignItems: 'center', gap: '8px' }}>
                           {index === 0 && (
                             <span className="badge badge-active" style={{ fontSize: '10px' }}>{t('common.latest')}</span>
                           )}

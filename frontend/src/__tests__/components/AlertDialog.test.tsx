@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { renderHook, act } from '@testing-library/react';
-import { AlertDialog, useAlertDialog, AlertType } from '../../components/AlertDialog';
+import { AlertDialog, useAlertDialog } from '../../components/AlertDialog';
 
 describe('AlertDialog', () => {
   const defaultProps = {
@@ -127,9 +127,11 @@ describe('AlertDialog', () => {
 
   it('handles multiline messages with pre-wrap', () => {
     const multilineMessage = 'Line 1\nLine 2\nLine 3';
-    render(<AlertDialog {...defaultProps} message={multilineMessage} />);
+    const { container } = render(<AlertDialog {...defaultProps} message={multilineMessage} />);
 
-    expect(screen.getByText(multilineMessage)).toBeInTheDocument();
+    // Check the content using container query since RTL normalizes whitespace by default
+    const messageElement = container.querySelector('div[style*="white-space: pre-wrap"]');
+    expect(messageElement?.textContent).toBe(multilineMessage);
   });
 
   it('has scrollable content area for long messages', () => {

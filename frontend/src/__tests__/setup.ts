@@ -17,9 +17,17 @@ global.window.electronAPI = {
     toggle: vi.fn(),
     run: vi.fn(),
     sync: vi.fn(),
+    reorder: vi.fn(),
+    checkPermission: vi.fn().mockResolvedValue({ success: true, data: { hasPermission: true } }),
+    testIn1Minute: vi.fn(),
+  },
+  schedule: {
+    parse: vi.fn(),
+    getPresets: vi.fn(),
   },
   env: {
     getGlobal: vi.fn(),
+    setGlobal: vi.fn(),
     updateGlobalVar: vi.fn(),
     deleteGlobalVar: vi.fn(),
   },
@@ -31,6 +39,12 @@ global.window.electronAPI = {
   config: {
     getBackupConfig: vi.fn(),
     updateBackupConfig: vi.fn(),
+  },
+  logs: {
+    open: vi.fn(),
+    checkDir: vi.fn(),
+    createDir: vi.fn(),
+    create: vi.fn(),
   },
   files: {
     open: vi.fn(),

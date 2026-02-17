@@ -5,6 +5,16 @@ import { BackupManager } from '../../components/BackupManager';
 
 const mockApi = window.electronAPI;
 
+// Mock useAlertDialog
+const mockShowAlert = vi.fn();
+vi.mock('../../components/AlertDialog', () => ({
+  useAlertDialog: () => ({
+    showAlert: mockShowAlert,
+    alert: { isOpen: false, type: 'info', message: '' },
+    closeAlert: vi.fn(),
+  }),
+}));
+
 describe('BackupManager', () => {
   const mockBackups = [
     {
@@ -23,6 +33,7 @@ describe('BackupManager', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockShowAlert.mockClear();
     mockApi.backups.list = vi.fn().mockResolvedValue({
       success: true,
       data: mockBackups,
@@ -101,11 +112,18 @@ describe('BackupManager', () => {
       });
 
       const maxBackupsInput = screen.getByDisplayValue('10');
-      await userEvent.clear(maxBackupsInput);
-      await userEvent.type(maxBackupsInput, '20');
+      fireEvent.change(maxBackupsInput, { target: { value: '20' } });
 
       const saveButton = screen.getByText('common.save');
       fireEvent.click(saveButton);
+
+      // Wait for ConfirmDialog to appear and click confirm
+      await waitFor(() => {
+        expect(screen.getByText('common.confirm')).toBeInTheDocument();
+      });
+
+      const confirmButton = screen.getByText('common.confirm');
+      fireEvent.click(confirmButton);
 
       await waitFor(() => {
         expect(mockApi.config.updateBackupConfig).toHaveBeenCalledWith(20, 7);
@@ -129,27 +147,32 @@ describe('BackupManager', () => {
     });
 
     it('shows alert when trying to save invalid config', async () => {
-      const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+      // Mock getBackupConfig to return an invalid initial state
+      mockApi.config.getBackupConfig = vi.fn().mockResolvedValue({
+        success: true,
+        data: { maxBackups: 0, maxBackupDays: 7 },
+      });
 
       render(<BackupManager />);
 
       await waitFor(() => {
-        expect(screen.getByDisplayValue('10')).toBeInTheDocument();
+        expect(screen.getByDisplayValue('0')).toBeInTheDocument();
       });
-
-      const maxBackupsInput = screen.getByDisplayValue('10') as HTMLInputElement;
-
-      // Manually set to invalid value (bypassing input validation)
-      Object.defineProperty(maxBackupsInput, 'value', { value: '0', writable: true });
 
       const saveButton = screen.getByText('common.save');
       fireEvent.click(saveButton);
 
+      // Wait for ConfirmDialog to appear and click confirm
       await waitFor(() => {
-        expect(alertSpy).toHaveBeenCalledWith('errors.minBackups');
+        expect(screen.getByText('common.confirm')).toBeInTheDocument();
       });
 
-      alertSpy.mockRestore();
+      const confirmButton = screen.getByText('common.confirm');
+      fireEvent.click(confirmButton);
+
+      await waitFor(() => {
+        expect(mockShowAlert).toHaveBeenCalledWith('errors.minBackups', 'error');
+      });
     });
   });
 
@@ -172,8 +195,6 @@ describe('BackupManager', () => {
     });
 
     it('restores backup after confirmation', async () => {
-      const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
-      const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
       mockApi.backups.restore = vi.fn().mockResolvedValue({ success: true });
 
       render(<BackupManager />);
@@ -185,18 +206,21 @@ describe('BackupManager', () => {
       const restoreButton = screen.getAllByText('backups.restore')[0];
       fireEvent.click(restoreButton);
 
-      expect(confirmSpy).toHaveBeenCalled();
+      // Wait for ConfirmDialog to appear and click confirm
       await waitFor(() => {
-        expect(mockApi.backups.restore).toHaveBeenCalledWith('/backups/backup-2024-01-15.json');
-        expect(alertSpy).toHaveBeenCalledWith('success.backupRestored');
+        expect(screen.getByText('common.confirm')).toBeInTheDocument();
       });
 
-      confirmSpy.mockRestore();
-      alertSpy.mockRestore();
+      const confirmButton = screen.getByText('common.confirm');
+      fireEvent.click(confirmButton);
+
+      await waitFor(() => {
+        expect(mockApi.backups.restore).toHaveBeenCalledWith('/backups/backup-2024-01-15.json');
+        expect(mockShowAlert).toHaveBeenCalledWith('success.backupRestored', 'success');
+      });
     });
 
     it('does not restore when confirmation cancelled', async () => {
-      const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
       mockApi.backups.restore = vi.fn();
 
       render(<BackupManager />);
@@ -208,8 +232,15 @@ describe('BackupManager', () => {
       const restoreButton = screen.getAllByText('backups.restore')[0];
       fireEvent.click(restoreButton);
 
+      // Wait for ConfirmDialog to appear and click cancel
+      await waitFor(() => {
+        expect(screen.getByText('common.cancel')).toBeInTheDocument();
+      });
+
+      const cancelButton = screen.getByText('common.cancel');
+      fireEvent.click(cancelButton);
+
       expect(mockApi.backups.restore).not.toHaveBeenCalled();
-      confirmSpy.mockRestore();
     });
 
     it('shows diff when compare button clicked', async () => {
@@ -337,7 +368,6 @@ describe('BackupManager', () => {
 
   describe('Error handling', () => {
     it('shows error alert when loading backups fails', async () => {
-      const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
       mockApi.backups.list = vi.fn().mockResolvedValue({
         success: false,
         error: 'Load failed',
@@ -346,15 +376,11 @@ describe('BackupManager', () => {
       render(<BackupManager />);
 
       await waitFor(() => {
-        expect(alertSpy).toHaveBeenCalledWith('Load failed');
+        expect(mockShowAlert).toHaveBeenCalledWith('Load failed', 'error');
       });
-
-      alertSpy.mockRestore();
     });
 
     it('shows error when restore fails', async () => {
-      const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
-      const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
       mockApi.backups.restore = vi.fn().mockResolvedValue({
         success: false,
         error: 'Restore failed',
@@ -369,12 +395,17 @@ describe('BackupManager', () => {
       const restoreButton = screen.getAllByText('backups.restore')[0];
       fireEvent.click(restoreButton);
 
+      // Wait for ConfirmDialog to appear and click confirm
       await waitFor(() => {
-        expect(alertSpy).toHaveBeenCalledWith('Restore failed');
+        expect(screen.getByText('common.confirm')).toBeInTheDocument();
       });
 
-      confirmSpy.mockRestore();
-      alertSpy.mockRestore();
+      const confirmButton = screen.getByText('common.confirm');
+      fireEvent.click(confirmButton);
+
+      await waitFor(() => {
+        expect(mockShowAlert).toHaveBeenCalledWith('Restore failed', 'error');
+      });
     });
   });
 });

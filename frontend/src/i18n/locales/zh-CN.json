@@ -21,7 +21,9 @@
     "inactive": "非活动",
     "latest": "最新",
     "language": "语言",
-    "saveHint": "Cmd/Ctrl+Enter保存，Esc取消"
+    "saveHint": "Cmd/Ctrl+Enter保存，Esc取消",
+    "moveUp": "上移",
+    "moveDown": "下移"
   },
   "languages": {
     "ko": "한국어",

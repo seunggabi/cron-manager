@@ -21,7 +21,9 @@
     "inactive": "Неактивно",
     "latest": "Последнее",
     "language": "Язык",
-    "saveHint": "Cmd/Ctrl+Enter для сохранения, Esc для отмены"
+    "saveHint": "Cmd/Ctrl+Enter для сохранения, Esc для отмены",
+    "moveUp": "Вверх",
+    "moveDown": "Вниз"
   },
   "languages": {
     "ko": "한국어",
