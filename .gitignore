@@ -22,3 +22,7 @@ build/
 
 # Test files
 test-*.js
+
+.idea/
+.claude/
+.omc/
