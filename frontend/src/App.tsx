@@ -147,6 +147,7 @@ function App() {
       const response = await api.jobs.getAll();
       if (response.success && response.data) {
         setJobs(response.data);
+        return response.data;
       } else {
         showAlert(response.error || t('errors.loadJobsFailed'), 'error');
       }
@@ -155,12 +156,17 @@ function App() {
     } finally {
       setLoading(false);
     }
+    return null;
   }, [showAlert, t]);
 
   const handleSync = useCallback(async (showSuccessAlert: boolean = true) => {
     try {
       await api.jobs.sync();
-      await fetchJobs();
+      const fetchedJobs = await fetchJobs();
+      if (fetchedJobs) {
+        const jobIds = fetchedJobs.map((job: CronJob) => job.id);
+        await api.jobs.reorder(jobIds);
+      }
       if (showSuccessAlert) {
         showAlert(t('success.syncCompleted'), 'success');
       }
