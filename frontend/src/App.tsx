@@ -3,11 +3,13 @@ import { Play, Trash2, Plus, RefreshCw, FolderOpen, FileText, Edit, ChevronUp, C
 import { JobForm } from './components/JobForm';
 import { GlobalEnvSettings } from './components/GlobalEnvSettings';
 import { BackupManager } from './components/BackupManager';
+import { LogViewer } from './components/LogViewer';
 import { useAlertDialog } from './components/AlertDialog';
 import { NextRunCell } from './components/NextRunCell';
 import type { CronJob, CreateJobRequest, UpdateJobRequest } from '@cron-manager/shared';
 import { extractLogFiles } from './utils/logFileExtractor';
 import { extractScriptPath } from './utils/scriptPathExtractor';
+import { modKey } from './utils/platform';
 import { useResizableColumns } from './hooks/useResizableColumns';
 import { useTranslation } from 'react-i18next';
 import * as Select from '@radix-ui/react-select';
@@ -22,7 +24,12 @@ type SortDirection = 'asc' | 'desc';
 type TabType = 'jobs' | 'env' | 'backups';
 
 // LogButton component - checks if directory exists and shows appropriate button
-function LogButton({ logFile, workingDir, showAlert }: { logFile: string; workingDir?: string; showAlert: (message: string, type: 'info' | 'success' | 'error' | 'warning') => void }) {
+function LogButton({ logFile, workingDir, showAlert, onOpenLog }: {
+  logFile: string;
+  workingDir?: string;
+  showAlert: (message: string, type: 'info' | 'success' | 'error' | 'warning') => void;
+  onOpenLog: (logPath: string, workingDir?: string) => void;
+}) {
   const { t } = useTranslation();
   const [dirExists, setDirExists] = useState<boolean | null>(null);
 
@@ -54,12 +61,8 @@ function LogButton({ logFile, workingDir, showAlert }: { logFile: string; workin
     }
   };
 
-  const handleOpenLog = async () => {
-    try {
-      await api.logs.open(logFile, workingDir);
-    } catch (error) {
-      console.error('Failed to open log:', error);
-    }
+  const handleOpenLog = () => {
+    onOpenLog(logFile, workingDir);
   };
 
   if (dirExists === null) {
@@ -111,6 +114,7 @@ function App() {
   const [jobDragOverIndex, setJobDragOverIndex] = useState<number | null>(null);
   const [wslCronRunning, setWslCronRunning] = useState<boolean | null>(null);
   const [startingWslCron, setStartingWslCron] = useState(false);
+  const [logViewer, setLogViewer] = useState<{ logPath: string; workingDir?: string } | null>(null);
   const { showAlert } = useAlertDialog();
 
   // Resizable columns for jobs table
@@ -608,15 +612,24 @@ function App() {
   }
 
   const tabs = [
-    { id: 'jobs' as TabType, label: t('tabs.jobs'), shortcut: '⌘1', icon: ListChecks },
-    { id: 'env' as TabType, label: t('tabs.env'), shortcut: '⌘2', icon: Settings },
-    { id: 'backups' as TabType, label: t('tabs.backups'), shortcut: '⌘3', icon: Database },
+    { id: 'jobs' as TabType, label: t('tabs.jobs'), shortcut: `${modKey}1`, icon: ListChecks },
+    { id: 'env' as TabType, label: t('tabs.env'), shortcut: `${modKey}2`, icon: Settings },
+    { id: 'backups' as TabType, label: t('tabs.backups'), shortcut: `${modKey}3`, icon: Database },
   ];
 
   const activeJobsCount = jobs.filter(j => j.enabled).length;
 
   return (
     <div className="app">
+      {/* In-app log viewer */}
+      {logViewer && (
+        <LogViewer
+          logPath={logViewer.logPath}
+          workingDir={logViewer.workingDir}
+          onClose={() => setLogViewer(null)}
+        />
+      )}
+
       {/* WSL cron warning banner */}
       {wslCronRunning === false && (
         <div style={{
@@ -863,11 +876,11 @@ function App() {
                 title={t('jobs.saveOrder')}
               >
                 <Save />
-                {t('common.save')} <span style={{ opacity: 0.6, fontSize: '11px' }}>(⌘S)</span>
+                {t('common.save')} <span style={{ opacity: 0.6, fontSize: '11px' }}>({modKey}S)</span>
               </button>
               <button onClick={() => handleSync()} className="btn">
                 <RefreshCw />
-                {t('common.sync')} <span style={{ opacity: 0.6, fontSize: '11px' }}>(⌘R)</span>
+                {t('common.sync')} <span style={{ opacity: 0.6, fontSize: '11px' }}>({modKey}R)</span>
               </button>
               <button
                 onClick={() => {
@@ -877,7 +890,7 @@ function App() {
                 className="btn btn-primary"
               >
                 <Plus />
-                {t('jobs.newJob')} <span style={{ opacity: 0.6, fontSize: '11px' }}>(⌘N)</span>
+                {t('jobs.newJob')} <span style={{ opacity: 0.6, fontSize: '11px' }}>({modKey}N)</span>
               </button>
             </div>
           </div>
@@ -1153,6 +1166,7 @@ function App() {
                                       logFile={logFile}
                                       workingDir={job.workingDir}
                                       showAlert={showAlert}
+                                      onOpenLog={(logPath, wd) => setLogViewer({ logPath, workingDir: wd })}
                                     />
                                   ))
                                 ) : (

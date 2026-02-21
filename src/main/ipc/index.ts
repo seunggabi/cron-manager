@@ -1,10 +1,14 @@
 import { ipcMain, shell } from 'electron';
+import { spawn } from 'child_process';
+import type { ChildProcess } from 'child_process';
 import { crontabService } from '../services/crontab.service';
 import { scheduleService } from '../services/schedule.service';
 import { configService } from '../services/config.service';
 import type { CronJob, CreateJobRequest, UpdateJobRequest } from '../../../shared/types';
 import path from 'path';
 import os from 'os';
+
+const activeTailProcesses = new Map<number, ChildProcess>();
 
 export function setupIpcHandlers() {
   // Jobs handlers
@@ -243,39 +247,49 @@ export function setupIpcHandlers() {
   });
 
   /**
-   * Validate log path to prevent directory traversal
+   * Validate log path to prevent directory traversal.
+   * On Windows, Linux-style paths (starting with ~ or /) are WSL paths — pass through as-is.
    */
-  function validateLogPath(logPath: string, workingDir?: string): { valid: boolean; expandedPath?: string; error?: string } {
+  function validateLogPath(logPath: string, workingDir?: string): {
+    valid: boolean; expandedPath?: string; isWslPath?: boolean; error?: string;
+  } {
     try {
-      // Expand ~ to home directory
+      const isWin = process.platform === 'win32';
+
+      // On Windows, Linux-style paths are WSL paths — skip Windows path resolution
+      if (isWin && (logPath.startsWith('~') || logPath.startsWith('/'))) {
+        return { valid: true, expandedPath: logPath, isWslPath: true };
+      }
+
       let expandedPath = logPath;
       if (logPath.startsWith('~')) {
         expandedPath = logPath.replace('~', os.homedir());
       }
 
-      // If path is relative and workingDir is provided, resolve it
       if (!path.isAbsolute(expandedPath) && workingDir) {
         expandedPath = path.resolve(workingDir, expandedPath);
       } else if (!path.isAbsolute(expandedPath)) {
-        // If still relative, resolve from home directory
         expandedPath = path.resolve(os.homedir(), expandedPath);
       }
 
-      // Normalize path to resolve .. and .
       expandedPath = path.normalize(expandedPath);
 
-      // Prevent access to system directories
-      const forbiddenPaths = ['/System', '/etc', '/var', '/usr', '/bin', '/sbin'];
+      const forbiddenPaths = isWin
+        ? ['C:\\Windows', 'C:\\Program Files', 'C:\\Program Files (x86)']
+        : ['/System', '/etc', '/var', '/usr', '/bin', '/sbin'];
+
       for (const forbidden of forbiddenPaths) {
-        if (expandedPath.startsWith(forbidden + '/') || expandedPath === forbidden) {
+        if (expandedPath.startsWith(forbidden + path.sep) || expandedPath === forbidden) {
           return { valid: false, error: 'Access to system directories is forbidden' };
         }
       }
 
-      // Ensure path is within allowed directories (home or workingDir)
       const homeDir = os.homedir();
-      const isInHome = expandedPath.startsWith(homeDir + '/') || expandedPath === homeDir;
-      const isInWorkingDir = workingDir && (expandedPath.startsWith(path.resolve(workingDir) + '/') || expandedPath === path.resolve(workingDir));
+      const isInHome = expandedPath.startsWith(homeDir + path.sep) || expandedPath === homeDir;
+      const isInWorkingDir = workingDir && (
+        expandedPath.startsWith(path.resolve(workingDir) + path.sep) ||
+        expandedPath === path.resolve(workingDir)
+      );
 
       if (!isInHome && !isInWorkingDir) {
         return { valid: false, error: 'Path must be within home directory or working directory' };
@@ -287,50 +301,79 @@ export function setupIpcHandlers() {
     }
   }
 
-  // Logs handler
-  ipcMain.handle('logs:open', async (_, logPath?: string, workingDir?: string) => {
+  // Start real-time log stream (replaces external terminal approach)
+  ipcMain.handle('logs:startStream', async (event, logPath?: string, workingDir?: string) => {
     try {
       if (!logPath) {
         return { success: false, error: 'Log path is required' };
       }
 
-      // Validate log path
       const validation = validateLogPath(logPath, workingDir);
       if (!validation.valid) {
         return { success: false, error: validation.error };
       }
 
-      const expandedPath = validation.expandedPath!;
+      const { expandedPath, isWslPath } = validation;
+      const webContentsId = event.sender.id;
 
-      // Use Terminal with tail -f for real-time log viewing
-      const { exec } = await import('child_process');
-      const { promisify } = await import('util');
-      const execAsync = promisify(exec);
-      const fs = await import('fs-extra');
-
-      // Check if file exists
-      const fileExists = await fs.pathExists(expandedPath);
-
-      if (!fileExists) {
-        // If file doesn't exist, create directory and empty file
-        const logDir = path.dirname(expandedPath);
-
-        // Create directory if it doesn't exist
-        await fs.ensureDir(logDir);
-
-        // Create empty file
-        await fs.writeFile(expandedPath, '');
+      // Kill existing stream for this window
+      const existing = activeTailProcesses.get(webContentsId);
+      if (existing) {
+        existing.kill();
+        activeTailProcesses.delete(webContentsId);
       }
 
-      // Open Terminal and run tail -f on the log file
-      const safePath = expandedPath.replace(/'/g, "'\\''");
-      await execAsync(`osascript -e "tell application \\"Terminal\\" to do script \\"tail -f '${safePath}'\\""`);
+      // Create file if it doesn't exist (Unix only — WSL handles its own filesystem)
+      if (!isWslPath) {
+        const fs = await import('fs-extra');
+        const fileExists = await fs.pathExists(expandedPath!);
+        if (!fileExists) {
+          await fs.ensureDir(path.dirname(expandedPath!));
+          await fs.writeFile(expandedPath!, '');
+        }
+      }
 
+      // Start tail -f process
+      const tailArgs = ['-f', '-n', '200', expandedPath!];
+      const tailProcess = isWslPath || process.platform === 'win32'
+        ? spawn('wsl', ['tail', ...tailArgs])
+        : spawn('tail', tailArgs);
+
+      activeTailProcesses.set(webContentsId, tailProcess);
+
+      tailProcess.stdout?.on('data', (chunk: Buffer) => {
+        if (!event.sender.isDestroyed()) {
+          event.sender.send('logs:data', chunk.toString());
+        }
+      });
+
+      tailProcess.stderr?.on('data', (chunk: Buffer) => {
+        if (!event.sender.isDestroyed()) {
+          event.sender.send('logs:error', chunk.toString());
+        }
+      });
+
+      tailProcess.on('close', () => {
+        activeTailProcesses.delete(webContentsId);
+        if (!event.sender.isDestroyed()) {
+          event.sender.send('logs:closed');
+        }
+      });
 
       return { success: true };
     } catch (error: any) {
       return { success: false, error: error.message };
     }
+  });
+
+  // Stop log stream
+  ipcMain.handle('logs:stopStream', async (event) => {
+    const proc = activeTailProcesses.get(event.sender.id);
+    if (proc) {
+      proc.kill();
+      activeTailProcesses.delete(event.sender.id);
+    }
+    return { success: true };
   });
 
   // Check if log directory exists

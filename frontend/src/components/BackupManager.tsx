@@ -6,6 +6,7 @@ import { useResizableColumns } from '../hooks/useResizableColumns';
 import { format } from 'date-fns';
 import { useAlertDialog } from './AlertDialog';
 import { ConfirmDialog } from './ConfirmDialog';
+import { modKey } from '../utils/platform';
 
 const api = window.electronAPI;
 
@@ -263,7 +264,7 @@ export function BackupManager() {
             ) : (
               <>
                 <Save size={16} />
-                {t('common.save')} <span style={{ opacity: 0.6, fontSize: '11px' }}>(⌘S)</span>
+                {t('common.save')} <span style={{ opacity: 0.6, fontSize: '11px' }}>({modKey}S)</span>
               </>
             )}
           </button>
