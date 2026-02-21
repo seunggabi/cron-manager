@@ -150,6 +150,10 @@
     "copyWslCmd": "Copiar comando WSL",
     "copied": "Copiado!"
   },
+  "updates": {
+    "available": "Nova versão {{version}} disponível!",
+    "download": "Baixar"
+  },
   "errors": {
     "createDirFailed": "Falha ao criar diretório",
     "loadJobsFailed": "Falha ao carregar tarefas",

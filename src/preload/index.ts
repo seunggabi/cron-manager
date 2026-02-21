@@ -158,6 +158,12 @@ const api = {
     updateBackupConfig: (maxBackups: number, maxBackupDays: number): Promise<IpcResponse<void>> =>
       ipcRenderer.invoke('config:updateBackupConfig', maxBackups, maxBackupDays),
   },
+
+  // Updates API
+  updates: {
+    check: (): Promise<IpcResponse<{ latestVersion: string; releaseUrl: string }>> =>
+      ipcRenderer.invoke('updates:check'),
+  },
 };
 
 // Expose the API to the renderer process

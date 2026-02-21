@@ -150,6 +150,10 @@
     "copyWslCmd": "WSL कमांड कॉपी करें",
     "copied": "कॉपी किया!"
   },
+  "updates": {
+    "available": "नया संस्करण {{version}} उपलब्ध है!",
+    "download": "डाउनलोड"
+  },
   "errors": {
     "createDirFailed": "निर्देशिका बनाने में विफल",
     "loadJobsFailed": "कार्य लोड करने में विफल",

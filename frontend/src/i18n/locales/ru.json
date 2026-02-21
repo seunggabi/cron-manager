@@ -150,6 +150,10 @@
     "copyWslCmd": "Скопировать команду WSL",
     "copied": "Скопировано!"
   },
+  "updates": {
+    "available": "Доступна новая версия {{version}}!",
+    "download": "Скачать"
+  },
   "errors": {
     "createDirFailed": "Не удалось создать директорию",
     "loadJobsFailed": "Не удалось загрузить задачи",

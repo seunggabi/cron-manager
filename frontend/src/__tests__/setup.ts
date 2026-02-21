@@ -56,6 +56,9 @@ global.window.electronAPI = {
   files: {
     open: vi.fn(),
   },
+  updates: {
+    check: vi.fn().mockResolvedValue({ success: true, data: { latestVersion: 'v0.15.1', releaseUrl: 'https://github.com/seunggabi/cron-manager/releases/tag/v0.15.1' } }),
+  },
 };
 
 // Mock localStorage with actual in-memory implementation

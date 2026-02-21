@@ -150,6 +150,10 @@
     "copyWslCmd": "WSL-Befehl kopieren",
     "copied": "Kopiert!"
   },
+  "updates": {
+    "available": "Neue Version {{version}} verfügbar!",
+    "download": "Herunterladen"
+  },
   "errors": {
     "createDirFailed": "Verzeichnis erstellen fehlgeschlagen",
     "loadJobsFailed": "Jobs laden fehlgeschlagen",
