@@ -395,14 +395,48 @@ export function setupIpcHandlers(config?: { htmlPath?: string }) {
         }
       }
 
-      // Start tail -f process
-      // On WSL/Windows, use stdbuf -oL to force line-buffered output.
-      // Without stdbuf, the WSL→Windows pipe uses full buffering and data
-      // never reaches Node.js until the buffer fills up.
+      // For WSL paths: WSL→Windows pipe uses full buffering (~4KB) which
+      // prevents real-time output regardless of stdbuf or tail flags.
+      // Use execAsync polling instead — reads new lines every second via
+      // 'wsl tail -n +N' which returns immediately with no buffering.
+      if (isWslPath) {
+        let currentLineCount = 0;
+        try {
+          const { stdout: wcOut } = await execAsync(`wsl wc -l '${tailPath}'`);
+          currentLineCount = parseInt(wcOut.trim().split(/\s+/)[0], 10) || 0;
+          const startLine = Math.max(1, currentLineCount - 199);
+          const { stdout: initContent } = await execAsync(`wsl tail -n +${startLine} '${tailPath}'`);
+          if (initContent && !event.sender.isDestroyed()) {
+            event.sender.send('logs:data', initContent);
+          }
+        } catch {
+          // File empty or not yet readable — start from line 0
+        }
+
+        const intervalId = setInterval(async () => {
+          if (event.sender.isDestroyed()) {
+            clearInterval(intervalId);
+            activeTailProcesses.delete(webContentsId);
+            return;
+          }
+          try {
+            const { stdout } = await execAsync(`wsl tail -n +${currentLineCount + 1} '${tailPath}'`);
+            if (stdout) {
+              currentLineCount += stdout.split('\n').filter(l => l !== '').length;
+              event.sender.send('logs:data', stdout);
+            }
+          } catch {
+            // Ignore transient read errors
+          }
+        }, 1000);
+
+        activeTailProcesses.set(webContentsId, { kill: () => clearInterval(intervalId) } as any);
+        return { success: true };
+      }
+
+      // For non-WSL paths: use native tail -f process
       const tailArgs = ['-f', '-n', '200', tailPath];
-      const tailProcess = isWslPath || process.platform === 'win32'
-        ? spawn('wsl', ['stdbuf', '-oL', 'tail', ...tailArgs])
-        : spawn('tail', tailArgs);
+      const tailProcess = spawn('tail', tailArgs);
 
       activeTailProcesses.set(webContentsId, tailProcess);
 
