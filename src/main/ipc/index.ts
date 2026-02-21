@@ -2,6 +2,7 @@ import { ipcMain, shell, BrowserWindow } from 'electron';
 import { spawn, exec } from 'child_process';
 import { promisify } from 'util';
 import type { ChildProcess } from 'child_process';
+import https from 'https';
 import { crontabService } from '../services/crontab.service';
 import { scheduleService } from '../services/schedule.service';
 import { configService } from '../services/config.service';
@@ -698,6 +699,30 @@ export function setupIpcHandlers(config?: { htmlPath?: string }) {
     try {
       const env = await crontabService.deleteGlobalEnvVar(key);
       return { success: true, data: env };
+    } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  });
+
+  // Updates handler - check latest version from GitHub Releases
+  ipcMain.handle('updates:check', async () => {
+    try {
+      const data = await new Promise<any>((resolve, reject) => {
+        const req = https.get(
+          'https://api.github.com/repos/seunggabi/cron-manager/releases/latest',
+          { headers: { 'User-Agent': 'cron-manager-app' } },
+          (res) => {
+            let body = '';
+            res.on('data', (chunk: Buffer) => { body += chunk.toString(); });
+            res.on('end', () => {
+              try { resolve(JSON.parse(body)); } catch (e) { reject(e); }
+            });
+          }
+        );
+        req.on('error', reject);
+        req.setTimeout(5000, () => { req.destroy(); reject(new Error('Request timeout')); });
+      });
+      return { success: true, data: { latestVersion: data.tag_name as string, releaseUrl: data.html_url as string } };
     } catch (error: any) {
       return { success: false, error: error.message };
     }

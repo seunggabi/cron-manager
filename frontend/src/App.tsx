@@ -41,6 +41,8 @@ function App() {
   const [wslCronRunning, setWslCronRunning] = useState<boolean | null>(null);
   const [wslUser, setWslUser] = useState<string | null>(null);
   const [startingWslCron, setStartingWslCron] = useState(false);
+  const [updateInfo, setUpdateInfo] = useState<{ latestVersion: string; releaseUrl: string } | null>(null);
+  const [updateDismissed, setUpdateDismissed] = useState(false);
   const { showAlert } = useAlertDialog();
 
   // Resizable columns for jobs table
@@ -97,6 +99,24 @@ function App() {
   useEffect(() => {
     checkCrontabPermission();
   }, [checkCrontabPermission]);
+
+  // Check for updates on app start
+  useEffect(() => {
+    const checkUpdate = async () => {
+      try {
+        const response = await api.updates.check();
+        if (response.success && response.data?.latestVersion) {
+          const latest = response.data.latestVersion.replace(/^v/, '');
+          if (latest !== packageJson.version) {
+            setUpdateInfo(response.data);
+          }
+        }
+      } catch {
+        // Silently ignore update check failures
+      }
+    };
+    checkUpdate();
+  }, []);
 
   // Silently refresh nextRun times without showing loading spinner
   const silentRefreshNextRuns = useCallback(async () => {
@@ -571,6 +591,51 @@ function App() {
 
   return (
     <div className="app">
+      {/* Update notice banner */}
+      {updateInfo && !updateDismissed && (
+        <div style={{
+          background: '#0ea5e9',
+          color: '#fff',
+          padding: '6px 16px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          fontSize: '13px',
+          gap: '8px',
+        }}>
+          <span>
+            🚀 {t('updates.available', { version: updateInfo.latestVersion })}
+          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <a
+              href={updateInfo.releaseUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                background: '#fff',
+                color: '#0ea5e9',
+                border: 'none',
+                borderRadius: '4px',
+                padding: '4px 12px',
+                fontWeight: 600,
+                fontSize: '12px',
+                textDecoration: 'none',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {t('updates.download')}
+            </a>
+            <button
+              onClick={() => setUpdateDismissed(true)}
+              style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', padding: '2px', display: 'flex', opacity: 0.8 }}
+              title={t('common.close')}
+            >
+              <X size={16} />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* WSL cron warning banner */}
       {wslCronRunning !== null && (
         <div style={{

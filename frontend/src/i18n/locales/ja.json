@@ -150,6 +150,10 @@
     "copyWslCmd": "WSLコマンドをコピー",
     "copied": "コピー済み!"
   },
+  "updates": {
+    "available": "新しいバージョン {{version}} が利用可能です！",
+    "download": "ダウンロード"
+  },
   "errors": {
     "createDirFailed": "ディレクトリの作成に失敗しました",
     "loadJobsFailed": "ジョブの読み込みに失敗しました",
