@@ -396,9 +396,12 @@ export function setupIpcHandlers(config?: { htmlPath?: string }) {
       }
 
       // Start tail -f process
+      // On WSL/Windows, use stdbuf -oL to force line-buffered output.
+      // Without stdbuf, the WSL→Windows pipe uses full buffering and data
+      // never reaches Node.js until the buffer fills up.
       const tailArgs = ['-f', '-n', '200', tailPath];
       const tailProcess = isWslPath || process.platform === 'win32'
-        ? spawn('wsl', ['tail', ...tailArgs])
+        ? spawn('wsl', ['stdbuf', '-oL', 'tail', ...tailArgs])
         : spawn('tail', tailArgs);
 
       activeTailProcesses.set(webContentsId, tailProcess);
@@ -554,11 +557,16 @@ export function setupIpcHandlers(config?: { htmlPath?: string }) {
         return { success: false, error: 'File path must be absolute' };
       }
 
-      // On Windows, WSL paths (~/... or /...) must be converted via wslpath
+      // On Windows, WSL paths (~/... or /...) must be converted via wslpath.
+      // shell.openPath is unreliable with \\wsl.localhost\ UNC paths, so we
+      // spawn explorer.exe directly with the converted Windows path.
       if (process.platform === 'win32' && (filePath.startsWith('~') || filePath.startsWith('/'))) {
         try {
-          const { stdout } = await execAsync(`wsl bash -c "wslpath -w $(dirname ${filePath})"`);
-          await shell.openPath(stdout.trim());
+          const lastSlash = filePath.lastIndexOf('/');
+          const dirPath = lastSlash > 0 ? filePath.substring(0, lastSlash) : filePath;
+          const { stdout } = await execAsync(`wsl wslpath -w "${dirPath}"`);
+          const winDir = stdout.trim();
+          spawn('explorer.exe', [winDir], { detached: true }).unref();
         } catch {
           return { success: false, error: 'Cannot open WSL path in Windows Explorer' };
         }
