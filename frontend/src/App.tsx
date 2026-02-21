@@ -167,6 +167,24 @@ function App() {
     checkCrontabPermission();
   }, [checkCrontabPermission]);
 
+  // Silently refresh nextRun times without showing loading spinner
+  const silentRefreshNextRuns = useCallback(async () => {
+    try {
+      const response = await api.jobs.getAll();
+      if (response.success && response.data) {
+        setJobs(response.data);
+      }
+    } catch {
+      // Silently ignore errors in background refresh
+    }
+  }, []);
+
+  // Refresh nextRun every 10 seconds so scheduled times stay current
+  useEffect(() => {
+    const interval = setInterval(silentRefreshNextRuns, 10_000);
+    return () => clearInterval(interval);
+  }, [silentRefreshNextRuns]);
+
   const fetchJobs = useCallback(async () => {
     setLoading(true);
     try {
@@ -1188,7 +1206,7 @@ function App() {
                           )}
                         </td>
                         <td>
-                          <NextRunCell nextRun={job.nextRun ? job.nextRun.toISOString() : null} />
+                          <NextRunCell nextRun={job.nextRun ? job.nextRun.toISOString() : null} onExpired={silentRefreshNextRuns} />
                         </td>
                         <td>
                           <code className="mono" style={{ fontSize: '12px', opacity: 0.7 }}>
