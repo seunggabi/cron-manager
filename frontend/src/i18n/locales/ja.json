@@ -146,10 +146,7 @@
   "logs": {
     "createDir": "ログディレクトリを作成",
     "openLog": "ログファイルを開く",
-    "log": "ログ",
-    "copyWslCmd": "WSLコマンドをコピー",
-    "copied": "コピー済み!",
-    "openTerminal": "ターミナルを開く"
+    "log": "ログ"
   },
   "updates": {
     "available": "新しいバージョン {{version}} が利用可能です！",

@@ -146,10 +146,7 @@
   "logs": {
     "createDir": "Criar Diretório de Log",
     "openLog": "Abrir Arquivo de Log",
-    "log": "Log",
-    "copyWslCmd": "Copiar comando WSL",
-    "copied": "Copiado!",
-    "openTerminal": "Abrir Terminal"
+    "log": "Log"
   },
   "updates": {
     "available": "Nova versão {{version}} disponível!",
