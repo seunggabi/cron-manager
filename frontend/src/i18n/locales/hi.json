@@ -146,7 +146,9 @@
   "logs": {
     "createDir": "लॉग निर्देशिका बनाएं",
     "openLog": "लॉग फ़ाइल खोलें",
-    "log": "लॉग"
+    "log": "लॉग",
+    "copyWslCmd": "WSL कमांड कॉपी करें",
+    "copied": "कॉपी किया!"
   },
   "errors": {
     "createDirFailed": "निर्देशिका बनाने में विफल",

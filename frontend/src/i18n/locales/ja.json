@@ -146,7 +146,9 @@
   "logs": {
     "createDir": "ログディレクトリを作成",
     "openLog": "ログファイルを開く",
-    "log": "ログ"
+    "log": "ログ",
+    "copyWslCmd": "WSLコマンドをコピー",
+    "copied": "コピー済み!"
   },
   "errors": {
     "createDirFailed": "ディレクトリの作成に失敗しました",

@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
-import { Play, Trash2, Plus, RefreshCw, FolderOpen, FileText, Edit, ChevronUp, ChevronDown, Save, ListChecks, Settings, Database, Search, X, FolderPlus, Github, Languages, Check, GripVertical } from 'lucide-react';
+import { Play, Trash2, Plus, RefreshCw, FolderOpen, Edit, ChevronUp, ChevronDown, Save, ListChecks, Settings, Database, Search, X, FolderPlus, Github, Languages, Check, GripVertical } from 'lucide-react';
 import { JobForm } from './components/JobForm';
+import { LogButton } from './components/LogButton';
 import { GlobalEnvSettings } from './components/GlobalEnvSettings';
 import { BackupManager } from './components/BackupManager';
 import { useAlertDialog } from './components/AlertDialog';
@@ -22,80 +23,6 @@ type SortField = 'name' | 'schedule' | 'command' | 'enabled' | 'nextRun' | 'id';
 type SortDirection = 'asc' | 'desc';
 type TabType = 'jobs' | 'env' | 'backups';
 
-// LogButton component - checks if directory exists and shows appropriate button
-function LogButton({ logFile, workingDir, showAlert, onOpenLog }: {
-  logFile: string;
-  workingDir?: string;
-  showAlert: (message: string, type: 'info' | 'success' | 'error' | 'warning') => void;
-  onOpenLog: (logPath: string, workingDir?: string) => void;
-}) {
-  const { t } = useTranslation();
-  const [dirExists, setDirExists] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    const checkDir = async () => {
-      try {
-        const response = await api.logs.checkDir(logFile, workingDir);
-        if (response.success && response.data) {
-          setDirExists(response.data.exists);
-        }
-      } catch (error) {
-        console.error('Failed to check directory:', error);
-      }
-    };
-
-    checkDir();
-  }, [logFile, workingDir]);
-
-  const handleCreateDir = async () => {
-    try {
-      const response = await api.logs.createDir(logFile, workingDir);
-      if (response.success) {
-        setDirExists(true);
-      } else {
-        showAlert(response.error || t('errors.createDirFailed'), 'error');
-      }
-    } catch (error) {
-      showAlert(t('errors.createDirFailed'), 'error');
-    }
-  };
-
-  const handleOpenLog = () => {
-    onOpenLog(logFile, workingDir);
-  };
-
-  if (dirExists === null) {
-    return null; // Loading
-  }
-
-  if (!dirExists) {
-    return (
-      <button
-        onClick={handleCreateDir}
-        className="command-link"
-        style={{
-          color: '#ef4444',
-          borderColor: '#ef4444',
-        }}
-        title={`${t('logs.createDir')}: ${logFile}`}
-      >
-        <FolderPlus />
-        {t('logs.createDir')}
-      </button>
-    );
-  }
-
-  return (
-    <button
-      onClick={handleOpenLog}
-      className="command-link"
-      title={`${t('logs.openLog')}: ${logFile}`}
-    >
-      <FileText />
-      {t('logs.log')}
-    </button>
-  );
-}
 
 function App() {
   const { t, i18n } = useTranslation();
@@ -639,6 +566,7 @@ function App() {
     { id: 'backups' as TabType, label: t('tabs.backups'), shortcut: `${modKey}3`, icon: Database },
   ];
 
+  const isWsl = wslCronRunning !== null;
   const activeJobsCount = jobs.filter(j => j.enabled).length;
 
   return (
@@ -1170,14 +1098,16 @@ function App() {
                                 {job.command.replace(/ (>>|>) /g, '\n$1 ')}
                               </code>
                               <div className="command-links">
-                                <button
-                                  onClick={() => handleOpenScriptFolder(job.command)}
-                                  className="command-link"
-                                  title={t('jobs.table.openFolder')}
-                                >
-                                  <FolderOpen />
-                                  {t('jobs.table.executable')}
-                                </button>
+                                {!isWsl && (
+                                  <button
+                                    onClick={() => handleOpenScriptFolder(job.command)}
+                                    className="command-link"
+                                    title={t('jobs.table.openFolder')}
+                                  >
+                                    <FolderOpen />
+                                    {t('jobs.table.executable')}
+                                  </button>
+                                )}
                                 {extractLogFiles(job.command).length > 0 ? (
                                   extractLogFiles(job.command).map((logFile, idx) => (
                                     <LogButton
@@ -1186,6 +1116,7 @@ function App() {
                                       workingDir={job.workingDir}
                                       showAlert={showAlert}
                                       onOpenLog={(logPath, wd) => { api.logs.openWindow(logPath, wd); }}
+                                      isWsl={isWsl}
                                     />
                                   ))
                                 ) : (

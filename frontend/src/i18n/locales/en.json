@@ -147,7 +147,9 @@
     "createDir": "Create Log Directory",
     "openLog": "Open Log File",
     "log": "Log",
-    "addLog": "Add Log"
+    "addLog": "Add Log",
+    "copyWslCmd": "Copy WSL Command",
+    "copied": "Copied!"
   },
   "errors": {
     "crontabPermissionDenied": "Permission denied to access crontab. Please grant Full Disk Access permission in System Settings → Privacy & Security → Full Disk Access.",
