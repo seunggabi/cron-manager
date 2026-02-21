@@ -21,8 +21,6 @@ export function LogViewer({ logPath, workingDir, onClose, fullScreen }: LogViewe
     setLines([]);
     setError(null);
 
-    api.logs.startStream(logPath, workingDir);
-
     const offData = api.logs.onData((chunk: string) => {
       const newLines = chunk.split('\n').filter((l: string) => l !== '');
       setLines((prev) => [...prev, ...newLines]);
@@ -34,6 +32,14 @@ export function LogViewer({ logPath, workingDir, onClose, fullScreen }: LogViewe
 
     const offClose = api.logs.onClose(() => {
       setError('Stream closed.');
+    });
+
+    api.logs.startStream(logPath, workingDir).then((res: any) => {
+      if (res && !res.success) {
+        setError(res.error || 'Failed to start log stream');
+      }
+    }).catch((err: any) => {
+      setError(err?.message || 'Failed to start log stream');
     });
 
     return () => {
