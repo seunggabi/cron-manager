@@ -97,5 +97,24 @@ describe('logFileExtractor', () => {
       const result = extractLogFiles('');
       expect(result).toEqual([]);
     });
+
+    it('unescapes shell-quoted tilde paths (shellEscapeForPath output)', () => {
+      // shellEscapeForPath("~/logs/test.log") produces ~/'logs/test.log'
+      const command = "/usr/bin/test.sh >> ~/'logs/test.log' 2>&1";
+      const result = extractLogFiles(command);
+      expect(result).toEqual(['~/logs/test.log']);
+    });
+
+    it('unescapes fully single-quoted paths', () => {
+      const command = "/usr/bin/test.sh >> '/var/log/app.log'";
+      const result = extractLogFiles(command);
+      expect(result).toEqual(['/var/log/app.log']);
+    });
+
+    it('unescapes shell-quoted stderr path', () => {
+      const command = "/bin/job.sh >> ~/'logs/out.log' 2>> ~/'logs/err.log'";
+      const result = extractLogFiles(command);
+      expect(result).toEqual(['~/logs/out.log', '~/logs/err.log']);
+    });
   });
 });
