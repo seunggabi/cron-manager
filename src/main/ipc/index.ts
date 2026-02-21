@@ -1,5 +1,6 @@
 import { ipcMain, shell, BrowserWindow } from 'electron';
-import { spawn } from 'child_process';
+import { spawn, exec } from 'child_process';
+import { promisify } from 'util';
 import type { ChildProcess } from 'child_process';
 import { crontabService } from '../services/crontab.service';
 import { scheduleService } from '../services/schedule.service';
@@ -7,6 +8,8 @@ import { configService } from '../services/config.service';
 import type { CronJob, CreateJobRequest, UpdateJobRequest } from '../../../shared/types';
 import path from 'path';
 import os from 'os';
+
+const execAsync = promisify(exec);
 
 const activeTailProcesses = new Map<number, ChildProcess>();
 
@@ -377,8 +380,13 @@ export function setupIpcHandlers(config?: { htmlPath?: string }) {
         }
       }
 
-      // Create file if it doesn't exist (Unix only — WSL handles its own filesystem)
-      if (!isWslPath) {
+      // Create file if it doesn't exist
+      if (isWslPath) {
+        // tailPath is already ~ expanded (e.g. /home/user/logs/test.log)
+        const logDir = tailPath.substring(0, tailPath.lastIndexOf('/'));
+        await execAsync(`wsl sh -c "mkdir -p '${logDir}' && touch '${tailPath}'"`)
+          .catch(() => {});
+      } else {
         const fs = await import('fs-extra');
         const fileExists = await fs.pathExists(tailPath);
         if (!fileExists) {
@@ -437,16 +445,30 @@ export function setupIpcHandlers(config?: { htmlPath?: string }) {
         return { success: false, error: 'Log path is required' };
       }
 
-      // Validate log path
       const validation = validateLogPath(logPath, workingDir);
       if (!validation.valid) {
         return { success: false, error: validation.error };
       }
 
-      const expandedPath = validation.expandedPath!;
+      const { expandedPath, isWslPath } = validation;
+
+      if (isWslPath) {
+        let wslPath = expandedPath!;
+        if (wslPath.startsWith('~')) {
+          const home = await crontabService.getWslHome();
+          wslPath = wslPath.replace(/^~/, home);
+        }
+        const logDir = wslPath.substring(0, wslPath.lastIndexOf('/'));
+        try {
+          const { stdout } = await execAsync(`wsl sh -c "test -d '${logDir}' && echo yes || echo no"`);
+          return { success: true, data: { exists: stdout.trim() === 'yes', dir: logDir } };
+        } catch {
+          return { success: true, data: { exists: false, dir: logDir } };
+        }
+      }
 
       const fs = await import('fs-extra');
-      const logDir = path.dirname(expandedPath);
+      const logDir = path.dirname(expandedPath!);
       const dirExists = await fs.pathExists(logDir);
 
       return { success: true, data: { exists: dirExists, dir: logDir } };
@@ -462,18 +484,26 @@ export function setupIpcHandlers(config?: { htmlPath?: string }) {
         return { success: false, error: 'Log path is required' };
       }
 
-      // Validate log path
       const validation = validateLogPath(logPath, workingDir);
       if (!validation.valid) {
         return { success: false, error: validation.error };
       }
 
-      const expandedPath = validation.expandedPath!;
+      const { expandedPath, isWslPath } = validation;
+
+      if (isWslPath) {
+        let wslPath = expandedPath!;
+        if (wslPath.startsWith('~')) {
+          const home = await crontabService.getWslHome();
+          wslPath = wslPath.replace(/^~/, home);
+        }
+        const logDir = wslPath.substring(0, wslPath.lastIndexOf('/'));
+        await execAsync(`wsl mkdir -p '${logDir}'`);
+        return { success: true, data: { dir: logDir } };
+      }
 
       const fs = await import('fs-extra');
-      const logDir = path.dirname(expandedPath);
-
-      // Create directory
+      const logDir = path.dirname(expandedPath!);
       await fs.ensureDir(logDir);
 
       return { success: true, data: { dir: logDir } };
