@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { FileText, FolderPlus, Copy, Check } from 'lucide-react';
+import { FileText, FolderPlus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 const api = window.electronAPI;
@@ -15,7 +15,6 @@ interface LogButtonProps {
 export function LogButton({ logFile, workingDir, showAlert, onOpenLog, isWsl }: LogButtonProps) {
   const { t } = useTranslation();
   const [dirExists, setDirExists] = useState<boolean | null>(null);
-  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (isWsl) return;
@@ -32,23 +31,24 @@ export function LogButton({ logFile, workingDir, showAlert, onOpenLog, isWsl }: 
     checkDir();
   }, [logFile, workingDir, isWsl]);
 
-  // WSL 환경: mkdir -p && touch && tail -f 명령어 복사 버튼
+  // WSL 환경: 터미널을 열어서 tail -f 실행
   if (isWsl) {
-    const lastSlash = logFile.lastIndexOf('/');
-    const logDir = lastSlash > 0 ? logFile.substring(0, lastSlash) : '~';
-    const wslCmd = `mkdir -p ${logDir} && touch ${logFile} && tail -f ${logFile}`;
-
-    const handleCopy = () => {
-      navigator.clipboard.writeText(wslCmd).then(() => {
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-      });
+    const handleOpenTerminal = async () => {
+      try {
+        await api.logs.openWslTerminal(logFile);
+      } catch (error) {
+        showAlert(t('errors.openFolderFailed'), 'error');
+      }
     };
 
     return (
-      <button onClick={handleCopy} className="command-link" title={wslCmd}>
-        {copied ? <Check /> : <Copy />}
-        {copied ? t('logs.copied') : t('logs.copyWslCmd')}
+      <button
+        onClick={handleOpenTerminal}
+        className="command-link"
+        title={`${t('logs.openLog')}: ${logFile}`}
+      >
+        <FileText />
+        {t('logs.log')}
       </button>
     );
   }
