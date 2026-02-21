@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
-import { Play, Trash2, Plus, RefreshCw, FolderOpen, Edit, ChevronUp, ChevronDown, Save, ListChecks, Settings, Database, Search, X, FolderPlus, Github, Languages, Check, GripVertical } from 'lucide-react';
+import { Play, Trash2, Plus, RefreshCw, FolderOpen, Edit, ChevronUp, ChevronDown, Save, ListChecks, Settings, Database, Search, X, Github, Languages, Check, GripVertical } from 'lucide-react';
 import { JobForm } from './components/JobForm';
 import { LogButton } from './components/LogButton';
 import { GlobalEnvSettings } from './components/GlobalEnvSettings';
