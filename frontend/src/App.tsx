@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo, useCallback } from 'react';
 import { Play, Trash2, Plus, RefreshCw, FolderOpen, Edit, ChevronUp, ChevronDown, Save, ListChecks, Settings, Database, Search, X, Github, Languages, Check, GripVertical } from 'lucide-react';
 import { JobForm } from './components/JobForm';
 import { LogButton } from './components/LogButton';
+import { LogViewer } from './components/LogViewer';
 import { GlobalEnvSettings } from './components/GlobalEnvSettings';
 import { BackupManager } from './components/BackupManager';
 import { useAlertDialog } from './components/AlertDialog';
@@ -43,6 +44,7 @@ function App() {
   const [startingWslCron, setStartingWslCron] = useState(false);
   const [updateInfo, setUpdateInfo] = useState<{ latestVersion: string; releaseUrl: string } | null>(null);
   const [updateDismissed, setUpdateDismissed] = useState(false);
+  const [logViewer, setLogViewer] = useState<{ logPath: string; workingDir?: string } | null>(null);
   const { showAlert } = useAlertDialog();
 
   // Resizable columns for jobs table
@@ -1180,7 +1182,7 @@ function App() {
                                       logFile={logFile}
                                       workingDir={job.workingDir}
                                       showAlert={showAlert}
-                                      onOpenLog={(logPath, wd) => { api.logs.openWindow(logPath, wd); }}
+                                      onOpenLog={(logPath, wd) => { setLogViewer({ logPath, workingDir: wd }); }}
                                       isWsl={isWsl}
                                     />
                                   ))
@@ -1231,6 +1233,15 @@ function App() {
           job={editingJob}
           onClose={handleCloseForm}
           onSubmit={editingJob ? handleUpdate : handleCreate}
+        />
+      )}
+
+      {/* Log Viewer Modal */}
+      {logViewer && (
+        <LogViewer
+          logPath={logViewer.logPath}
+          workingDir={logViewer.workingDir}
+          onClose={() => setLogViewer(null)}
         />
       )}
     </div>
