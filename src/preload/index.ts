@@ -69,8 +69,28 @@ const api = {
 
   // Logs API
   logs: {
-    open: (logPath?: string, workingDir?: string): Promise<IpcResponse<void>> =>
-      ipcRenderer.invoke('logs:open', logPath, workingDir),
+    startStream: (logPath: string, workingDir?: string): Promise<IpcResponse<void>> =>
+      ipcRenderer.invoke('logs:startStream', logPath, workingDir),
+
+    stopStream: (): Promise<IpcResponse<void>> =>
+      ipcRenderer.invoke('logs:stopStream'),
+
+    onData: (callback: (data: string) => void) => {
+      const handler = (_: unknown, data: string) => callback(data);
+      ipcRenderer.on('logs:data', handler);
+      return () => ipcRenderer.removeListener('logs:data', handler);
+    },
+
+    onError: (callback: (err: string) => void) => {
+      const handler = (_: unknown, err: string) => callback(err);
+      ipcRenderer.on('logs:error', handler);
+      return () => ipcRenderer.removeListener('logs:error', handler);
+    },
+
+    onClose: (callback: () => void) => {
+      ipcRenderer.on('logs:closed', callback);
+      return () => ipcRenderer.removeListener('logs:closed', callback);
+    },
 
     create: (logPath: string): Promise<IpcResponse<void>> =>
       ipcRenderer.invoke('logs:create', logPath),

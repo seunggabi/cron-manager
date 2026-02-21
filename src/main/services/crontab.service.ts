@@ -621,7 +621,7 @@ export class CrontabService {
     const globalEnv = await this.getGlobalEnv();
     const mergedEnv = {
       // Minimal essential vars from process
-      PATH: process.env.PATH || '/usr/bin:/bin',
+      PATH: process.env.PATH || (this.isWindows ? 'C:\\Windows\\System32' : '/usr/bin:/bin'),
       // Global env from crontab
       ...globalEnv,
       // Job-specific env (highest priority)
@@ -656,7 +656,7 @@ export class CrontabService {
       if (job.logFile) {
         try {
           const fs = await import('fs/promises');
-          const logPath = job.logFile.replace(/^~/, process.env.HOME || '');
+          const logPath = job.logFile.replace(/^~/, process.env.HOME || process.env.USERPROFILE || '');
           await fs.access(logPath);
           logFileExists = true;
         } catch {
