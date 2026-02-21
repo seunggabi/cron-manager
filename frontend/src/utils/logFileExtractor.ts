@@ -11,7 +11,8 @@ export function extractLogFiles(command: string): string[] {
 
   let match;
   while ((match = redirectionRegex.exec(command)) !== null) {
-    const filePath = match[1].trim();
+    // Strip surrounding single/double quotes (from shellEscape)
+    const filePath = match[1].trim().replace(/^['"]|['"]$/g, '');
 
     // Skip special redirections like /dev/null, /dev/stdout, /dev/stderr
     if (!filePath.startsWith('/dev/')) {
