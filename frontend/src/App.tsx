@@ -3,7 +3,6 @@ import { Play, Trash2, Plus, RefreshCw, FolderOpen, FileText, Edit, ChevronUp, C
 import { JobForm } from './components/JobForm';
 import { GlobalEnvSettings } from './components/GlobalEnvSettings';
 import { BackupManager } from './components/BackupManager';
-import { LogViewer } from './components/LogViewer';
 import { useAlertDialog } from './components/AlertDialog';
 import { NextRunCell } from './components/NextRunCell';
 import type { CronJob, CreateJobRequest, UpdateJobRequest } from '@cron-manager/shared';
@@ -114,7 +113,6 @@ function App() {
   const [jobDragOverIndex, setJobDragOverIndex] = useState<number | null>(null);
   const [wslCronRunning, setWslCronRunning] = useState<boolean | null>(null);
   const [startingWslCron, setStartingWslCron] = useState(false);
-  const [logViewer, setLogViewer] = useState<{ logPath: string; workingDir?: string } | null>(null);
   const { showAlert } = useAlertDialog();
 
   // Resizable columns for jobs table
@@ -639,15 +637,6 @@ function App() {
 
   return (
     <div className="app">
-      {/* In-app log viewer */}
-      {logViewer && (
-        <LogViewer
-          logPath={logViewer.logPath}
-          workingDir={logViewer.workingDir}
-          onClose={() => setLogViewer(null)}
-        />
-      )}
-
       {/* WSL cron warning banner */}
       {wslCronRunning === false && (
         <div style={{
@@ -1184,7 +1173,7 @@ function App() {
                                       logFile={logFile}
                                       workingDir={job.workingDir}
                                       showAlert={showAlert}
-                                      onOpenLog={(logPath, wd) => setLogViewer({ logPath, workingDir: wd })}
+                                      onOpenLog={(logPath, wd) => { api.logs.openWindow(logPath, wd); }}
                                     />
                                   ))
                                 ) : (

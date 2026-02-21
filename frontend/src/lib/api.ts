@@ -118,11 +118,11 @@ export const scheduleApi = {
 
 // Logs API
 export const logsApi = {
-  open: async (logPath?: string): Promise<void> => {
+  openWindow: async (logPath: string, workingDir?: string): Promise<void> => {
     if (!isElectron) {
       throw new Error('Electron API not available');
     }
-    await handleIpcResponse(window.electronAPI.logs.open(logPath));
+    await handleIpcResponse(window.electronAPI.logs.openWindow(logPath, workingDir));
   },
 
   create: async (logPath: string): Promise<void> => {

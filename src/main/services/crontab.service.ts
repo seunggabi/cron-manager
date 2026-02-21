@@ -642,6 +642,30 @@ export class CrontabService {
 
       const duration = Date.now() - startTime;
 
+      // Append stdout/stderr to logFile so manual runs are visible in the log viewer
+      if (job.logFile && (stdout || stderr)) {
+        try {
+          const fsP = await import('fs/promises');
+          const timestamp = new Date().toISOString();
+          const logEntry = `\n[${timestamp}] Manual run\n${stdout}${stderr ? `\n[stderr]\n${stderr}` : ''}\n`;
+          const isWslPath = job.logFile.startsWith('~') || job.logFile.startsWith('/');
+          if (this.isWindows && isWslPath) {
+            const os_m = await import('os');
+            const path_m = await import('path');
+            const tmpFile = path_m.join(os_m.tmpdir(), `log-append-${Date.now()}.tmp`);
+            await fsP.writeFile(tmpFile, logEntry, 'utf8');
+            const wslTmpPath = this.toWslPath(tmpFile);
+            await execAsync(`wsl bash -c "cat ${this.shellEscape(wslTmpPath)} >> ${this.shellEscape(job.logFile)}"`);
+            await fsP.unlink(tmpFile).catch(() => {});
+          } else {
+            const expandedPath = job.logFile.replace(/^~/, process.env.HOME || process.env.USERPROFILE || '');
+            await fsP.appendFile(expandedPath, logEntry, 'utf8');
+          }
+        } catch {
+          // Silently ignore log append errors
+        }
+      }
+
       return {
         exitCode: 0,
         stdout,

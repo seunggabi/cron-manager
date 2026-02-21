@@ -19,6 +19,8 @@ global.window.electronAPI = {
     sync: vi.fn(),
     reorder: vi.fn(),
     checkPermission: vi.fn().mockResolvedValue({ success: true, data: { hasPermission: true } }),
+    checkWslCronStatus: vi.fn().mockResolvedValue({ success: true, data: { running: false } }),
+    startWslCron: vi.fn().mockResolvedValue({ success: true, data: { success: true } }),
     testIn1Minute: vi.fn(),
   },
   schedule: {
@@ -41,7 +43,12 @@ global.window.electronAPI = {
     updateBackupConfig: vi.fn(),
   },
   logs: {
-    open: vi.fn(),
+    openWindow: vi.fn(),
+    startStream: vi.fn(),
+    stopStream: vi.fn(),
+    onData: vi.fn().mockReturnValue(() => {}),
+    onError: vi.fn().mockReturnValue(() => {}),
+    onClose: vi.fn().mockReturnValue(() => {}),
     checkDir: vi.fn(),
     createDir: vi.fn(),
     create: vi.fn(),
