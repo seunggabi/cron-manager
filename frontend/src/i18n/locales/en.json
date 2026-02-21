@@ -149,7 +149,8 @@
     "log": "Log",
     "addLog": "Add Log",
     "copyWslCmd": "Copy WSL Command",
-    "copied": "Copied!"
+    "copied": "Copied!",
+    "openTerminal": "Open Terminal"
   },
   "updates": {
     "available": "New version {{version}} is available!",

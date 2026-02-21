@@ -34,13 +34,21 @@ describe('LogButton (WSL mode)', () => {
 
   it('title에 logFile 경로가 포함된다', () => {
     render(<LogButton {...defaultProps} logFile="~/logs/test.log" isWsl />);
-    const btn = screen.getByTitle(/~/);
-    expect(btn).toBeInTheDocument();
+    const btns = screen.getAllByTitle(/~/);
+    expect(btns.length).toBeGreaterThan(0);
   });
 
-  it('클릭 시 openWslTerminal API를 호출한다', async () => {
+  it('logs.log 버튼 클릭 시 onOpenLog를 호출한다', async () => {
     render(<LogButton {...defaultProps} logFile="~/logs/test.log" isWsl />);
     fireEvent.click(screen.getByText('logs.log'));
+    await flushPromises();
+
+    expect(mockOnOpenLog).toHaveBeenCalledWith('~/logs/test.log', undefined);
+  });
+
+  it('터미널 버튼 클릭 시 openWslTerminal API를 호출한다', async () => {
+    render(<LogButton {...defaultProps} logFile="~/logs/test.log" isWsl />);
+    fireEvent.click(screen.getByText('logs.openTerminal'));
     await flushPromises();
 
     expect(window.electronAPI.logs.openWslTerminal).toHaveBeenCalledWith('~/logs/test.log');
@@ -51,7 +59,7 @@ describe('LogButton (WSL mode)', () => {
       new Error('Terminal error')
     );
     render(<LogButton {...defaultProps} isWsl />);
-    fireEvent.click(screen.getByText('logs.log'));
+    fireEvent.click(screen.getByText('logs.openTerminal'));
     await flushPromises();
 
     expect(mockShowAlert).toHaveBeenCalledWith('errors.openFolderFailed', 'error');
