@@ -52,7 +52,6 @@ global.window.electronAPI = {
     checkDir: vi.fn(),
     createDir: vi.fn(),
     create: vi.fn(),
-    openWslTerminal: vi.fn().mockResolvedValue({ success: true }),
   },
   files: {
     open: vi.fn(),

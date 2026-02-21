@@ -467,33 +467,6 @@ export function setupIpcHandlers(config?: { htmlPath?: string }) {
     }
   });
 
-  // Open WSL terminal with tail -f
-  ipcMain.handle('logs:openWslTerminal', async (_, logPath: string) => {
-    try {
-      let resolvedPath = logPath;
-      if (resolvedPath.startsWith('~')) {
-        try {
-          const wslHome = await crontabService.getWslHome();
-          resolvedPath = resolvedPath.replace(/^~/, wslHome);
-        } catch {
-          // keep original ~ if home detection fails
-        }
-      }
-      const logDir = resolvedPath.substring(0, resolvedPath.lastIndexOf('/'));
-      const cmd = `mkdir -p '${logDir}' && touch '${resolvedPath}' && tail -f -n 100 '${resolvedPath}'`;
-
-      // Try Windows Terminal first, fallback to cmd.exe
-      exec(`wt.exe wsl.exe -e bash -c "${cmd}; exec bash"`, (err) => {
-        if (err) {
-          exec(`cmd.exe /c start wsl.exe bash -c "${cmd}; exec bash"`);
-        }
-      });
-      return { success: true };
-    } catch (error: any) {
-      return { success: false, error: error.message };
-    }
-  });
-
   // Stop log stream
   ipcMain.handle('logs:stopStream', async (event) => {
     const proc = activeTailProcesses.get(event.sender.id);

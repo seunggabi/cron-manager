@@ -147,10 +147,7 @@
     "createDir": "로그 디렉토리 생성",
     "openLog": "로그 파일 열기",
     "log": "로그",
-    "addLog": "로그 추가",
-    "copyWslCmd": "WSL 명령어 복사",
-    "copied": "복사됨!",
-    "openTerminal": "터미널 열기"
+    "addLog": "로그 추가"
   },
   "updates": {
     "available": "새 버전 {{version}}이 출시되었습니다!",

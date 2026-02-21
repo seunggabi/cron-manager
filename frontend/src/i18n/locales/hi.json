@@ -146,10 +146,7 @@
   "logs": {
     "createDir": "लॉग निर्देशिका बनाएं",
     "openLog": "लॉग फ़ाइल खोलें",
-    "log": "लॉग",
-    "copyWslCmd": "WSL कमांड कॉपी करें",
-    "copied": "कॉपी किया!",
-    "openTerminal": "टर्मिनल खोलें"
+    "log": "लॉग"
   },
   "updates": {
     "available": "नया संस्करण {{version}} उपलब्ध है!",

@@ -106,9 +106,6 @@ const api = {
 
     createDir: (logPath?: string, workingDir?: string): Promise<IpcResponse<{ dir: string }>> =>
       ipcRenderer.invoke('logs:createDir', logPath, workingDir),
-
-    openWslTerminal: (logPath: string): Promise<IpcResponse<void>> =>
-      ipcRenderer.invoke('logs:openWslTerminal', logPath),
   },
 
   // Files API
