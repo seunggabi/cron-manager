@@ -112,6 +112,7 @@ function App() {
   const [jobDragIndex, setJobDragIndex] = useState<number | null>(null);
   const [jobDragOverIndex, setJobDragOverIndex] = useState<number | null>(null);
   const [wslCronRunning, setWslCronRunning] = useState<boolean | null>(null);
+  const [wslUser, setWslUser] = useState<string | null>(null);
   const [startingWslCron, setStartingWslCron] = useState(false);
   const { showAlert } = useAlertDialog();
 
@@ -136,6 +137,11 @@ function App() {
         }
         if (response.data.cronRunning !== undefined) {
           setWslCronRunning(response.data.cronRunning);
+          // Fetch WSL user for display in the banner
+          const userRes = await api.jobs.getWslUser();
+          if (userRes.success && userRes.data) {
+            setWslUser(userRes.data);
+          }
         }
       }
     } catch (error) {
@@ -638,36 +644,42 @@ function App() {
   return (
     <div className="app">
       {/* WSL cron warning banner */}
-      {wslCronRunning === false && (
+      {wslCronRunning !== null && (
         <div style={{
-          background: '#7c3aed',
+          background: wslCronRunning ? '#1e3a5f' : '#7c3aed',
           color: '#fff',
-          padding: '8px 16px',
+          padding: '6px 16px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           fontSize: '13px',
           gap: '8px',
         }}>
-          <span>⚠️ WSL cron daemon is not running. Scheduled jobs will not execute.</span>
-          <button
-            onClick={handleStartWslCron}
-            disabled={startingWslCron}
-            style={{
-              background: '#fff',
-              color: '#7c3aed',
-              border: 'none',
-              borderRadius: '4px',
-              padding: '4px 12px',
-              cursor: startingWslCron ? 'not-allowed' : 'pointer',
-              fontWeight: 600,
-              fontSize: '12px',
-              whiteSpace: 'nowrap',
-              opacity: startingWslCron ? 0.7 : 1,
-            }}
-          >
-            {startingWslCron ? 'Starting…' : 'Start cron'}
-          </button>
+          <span>
+            {wslUser && <span style={{ opacity: 0.8, marginRight: '8px' }}>WSL user: <strong>{wslUser}</strong></span>}
+            {!wslCronRunning && '⚠️ WSL cron daemon is not running. Scheduled jobs will not execute.'}
+            {wslCronRunning && '✓ WSL cron daemon is running.'}
+          </span>
+          {!wslCronRunning && (
+            <button
+              onClick={handleStartWslCron}
+              disabled={startingWslCron}
+              style={{
+                background: '#fff',
+                color: '#7c3aed',
+                border: 'none',
+                borderRadius: '4px',
+                padding: '4px 12px',
+                cursor: startingWslCron ? 'not-allowed' : 'pointer',
+                fontWeight: 600,
+                fontSize: '12px',
+                whiteSpace: 'nowrap',
+                opacity: startingWslCron ? 0.7 : 1,
+              }}
+            >
+              {startingWslCron ? 'Starting…' : 'Start cron'}
+            </button>
+          )}
         </div>
       )}
 

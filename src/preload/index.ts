@@ -21,6 +21,9 @@ const api = {
     checkPermission: (): Promise<IpcResponse<{ hasPermission: boolean; cronRunning?: boolean; error?: string }>> =>
       ipcRenderer.invoke('jobs:checkPermission'),
 
+    getWslUser: (): Promise<IpcResponse<string>> =>
+      ipcRenderer.invoke('jobs:getWslUser'),
+
     checkWslCronStatus: (): Promise<IpcResponse<{ running: boolean; error?: string }>> =>
       ipcRenderer.invoke('jobs:checkWslCronStatus'),
 
