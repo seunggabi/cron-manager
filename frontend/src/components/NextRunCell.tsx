@@ -3,9 +3,10 @@ import { format } from 'date-fns';
 
 interface NextRunCellProps {
   nextRun: string | null;
+  onExpired?: () => void;
 }
 
-export function NextRunCell({ nextRun }: NextRunCellProps) {
+export function NextRunCell({ nextRun, onExpired }: NextRunCellProps) {
   const [timeLeft, setTimeLeft] = useState<string>('');
   const [urgencyClass, setUrgencyClass] = useState<string>('');
   const [urgencyColor, setUrgencyColor] = useState<string>('');
@@ -23,8 +24,17 @@ export function NextRunCell({ nextRun }: NextRunCellProps) {
       const target = new Date(nextRun).getTime();
       const diff = target - now;
 
-      // If time has passed or more than 5 minutes away, show normal date format
-      if (diff < 0 || diff > 5 * 60 * 1000) {
+      // If time has passed, notify parent to recalculate nextRun
+      if (diff < 0) {
+        setTimeLeft(format(new Date(nextRun), 'yyyy-MM-dd HH:mm:ss'));
+        setUrgencyClass('');
+        setUrgencyColor('');
+        onExpired?.();
+        return false; // Stop interval
+      }
+
+      // More than 5 minutes away, show normal date format
+      if (diff > 5 * 60 * 1000) {
         setTimeLeft(format(new Date(nextRun), 'yyyy-MM-dd HH:mm:ss'));
         setUrgencyClass('');
         setUrgencyColor('');
