@@ -14,6 +14,8 @@ export class CrontabService {
   private lastWriteTime: number = 0;
   private pendingWrite: NodeJS.Timeout | null = null;
   private pendingContent: string | null = null;
+  private _wslHome: string | null = null;
+  private _wslUser: string | null = null;
 
   constructor(configService: ConfigService) {
     this.configService = configService;
@@ -38,6 +40,30 @@ export class CrontabService {
   }
 
   // ── WSL-specific ──────────────────────────────────────────────────────────
+
+  /** Get the WSL default user's home directory (cached) */
+  async getWslHome(): Promise<string> {
+    if (this._wslHome !== null) return this._wslHome;
+    try {
+      const { stdout } = await execAsync('wsl echo "$HOME"');
+      this._wslHome = stdout.trim();
+    } catch {
+      this._wslHome = '/root';
+    }
+    return this._wslHome;
+  }
+
+  /** Get the WSL default username (cached) */
+  async getWslUser(): Promise<string> {
+    if (this._wslUser !== null) return this._wslUser;
+    try {
+      const { stdout } = await execAsync('wsl whoami');
+      this._wslUser = stdout.trim();
+    } catch {
+      this._wslUser = 'root';
+    }
+    return this._wslUser;
+  }
 
   /** Check whether WSL is installed */
   async checkWslAvailable(): Promise<boolean> {
@@ -437,6 +463,19 @@ export class CrontabService {
   }
 
   /**
+   * Shell-escape a file path while preserving ~ prefix for shell expansion.
+   * shellEscape wraps in single quotes which prevents ~ expansion, so we
+   * keep ~ unquoted and escape only the rest of the path.
+   * e.g. ~/logs/test.log → ~/'logs/test.log' (bash expands ~ correctly)
+   */
+  private shellEscapeForPath(str: string): string {
+    if (str.startsWith('~/')) {
+      return `~/${this.shellEscape(str.slice(2))}`;
+    }
+    return this.shellEscape(str);
+  }
+
+  /**
    * Convert CronJob objects to crontab content
    */
   serializeCrontab(jobs: CronJob[]): string {
@@ -503,9 +542,9 @@ export class CrontabService {
       // Add log redirection only if command doesn't already have it
       if (job.logFile && !hasRedirect) {
         if (job.logStderr) {
-          fullCommand = `${fullCommand} >> ${this.shellEscape(job.logFile)} 2>> ${this.shellEscape(job.logStderr)}`;
+          fullCommand = `${fullCommand} >> ${this.shellEscapeForPath(job.logFile)} 2>> ${this.shellEscapeForPath(job.logStderr)}`;
         } else {
-          fullCommand = `${fullCommand} >> ${this.shellEscape(job.logFile)} 2>&1`;
+          fullCommand = `${fullCommand} >> ${this.shellEscapeForPath(job.logFile)} 2>&1`;
         }
       }
 
@@ -655,7 +694,7 @@ export class CrontabService {
             const tmpFile = path_m.join(os_m.tmpdir(), `log-append-${Date.now()}.tmp`);
             await fsP.writeFile(tmpFile, logEntry, 'utf8');
             const wslTmpPath = this.toWslPath(tmpFile);
-            await execAsync(`wsl bash -c "cat ${this.shellEscape(wslTmpPath)} >> ${this.shellEscape(job.logFile)}"`);
+            await execAsync(`wsl bash -c "cat ${this.shellEscape(wslTmpPath)} >> ${this.shellEscapeForPath(job.logFile)}"`);
             await fsP.unlink(tmpFile).catch(() => {});
           } else {
             const expandedPath = job.logFile.replace(/^~/, process.env.HOME || process.env.USERPROFILE || '');

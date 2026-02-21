@@ -21,6 +21,15 @@ export function setupIpcHandlers(config?: { htmlPath?: string }) {
     }
   });
 
+  ipcMain.handle('jobs:getWslUser', async () => {
+    try {
+      const user = await crontabService.getWslUser();
+      return { success: true, data: user };
+    } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  });
+
   ipcMain.handle('jobs:checkWslCronStatus', async () => {
     try {
       const result = await crontabService.checkWslCronStatus();
@@ -357,18 +366,29 @@ export function setupIpcHandlers(config?: { htmlPath?: string }) {
         activeTailProcesses.delete(webContentsId);
       }
 
+      // Expand ~ for WSL paths — spawn doesn't use a shell so ~ is not expanded by default
+      let tailPath = expandedPath!;
+      if (isWslPath && tailPath.startsWith('~')) {
+        try {
+          const wslHome = await crontabService.getWslHome();
+          tailPath = tailPath.replace(/^~/, wslHome);
+        } catch {
+          // Use original path if WSL home detection fails
+        }
+      }
+
       // Create file if it doesn't exist (Unix only — WSL handles its own filesystem)
       if (!isWslPath) {
         const fs = await import('fs-extra');
-        const fileExists = await fs.pathExists(expandedPath!);
+        const fileExists = await fs.pathExists(tailPath);
         if (!fileExists) {
-          await fs.ensureDir(path.dirname(expandedPath!));
-          await fs.writeFile(expandedPath!, '');
+          await fs.ensureDir(path.dirname(tailPath));
+          await fs.writeFile(tailPath, '');
         }
       }
 
       // Start tail -f process
-      const tailArgs = ['-f', '-n', '200', expandedPath!];
+      const tailArgs = ['-f', '-n', '200', tailPath];
       const tailProcess = isWslPath || process.platform === 'win32'
         ? spawn('wsl', ['tail', ...tailArgs])
         : spawn('tail', tailArgs);
