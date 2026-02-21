@@ -1,4 +1,4 @@
-import { ipcMain, shell } from 'electron';
+import { ipcMain, shell, BrowserWindow } from 'electron';
 import { spawn } from 'child_process';
 import type { ChildProcess } from 'child_process';
 import { crontabService } from '../services/crontab.service';
@@ -10,7 +10,7 @@ import os from 'os';
 
 const activeTailProcesses = new Map<number, ChildProcess>();
 
-export function setupIpcHandlers() {
+export function setupIpcHandlers(config?: { htmlPath?: string }) {
   // Jobs handlers
   ipcMain.handle('jobs:checkPermission', async () => {
     try {
@@ -300,6 +300,40 @@ export function setupIpcHandlers() {
       return { valid: false, error: error.message };
     }
   }
+
+  // Open log viewer in a separate detachable window
+  ipcMain.handle('logs:openWindow', async (_, logPath: string, workingDir?: string) => {
+    try {
+      const logWindow = new BrowserWindow({
+        width: 900,
+        height: 650,
+        title: `Log: ${path.basename(logPath)}`,
+        webPreferences: {
+          preload: path.join(__dirname, '../../preload/index.js'),
+          nodeIntegration: false,
+          contextIsolation: true,
+          sandbox: true,
+        },
+        show: false,
+      });
+
+      const params: Record<string, string> = { mode: 'logviewer', logPath };
+      if (workingDir) params.workingDir = workingDir;
+
+      if (process.env.NODE_ENV === 'development') {
+        const qs = new URLSearchParams(params).toString();
+        await logWindow.loadURL(`http://localhost:5173/?${qs}`);
+      } else {
+        const htmlPath = config?.htmlPath || path.join(__dirname, '../../../dist/index.html');
+        await logWindow.loadFile(htmlPath, { query: params });
+      }
+
+      logWindow.show();
+      return { success: true };
+    } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  });
 
   // Start real-time log stream (replaces external terminal approach)
   ipcMain.handle('logs:startStream', async (event, logPath?: string, workingDir?: string) => {

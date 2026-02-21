@@ -63,7 +63,7 @@ app.whenReady().then(async () => {
   await initializeServices();
 
   // Setup IPC handlers once when app is ready
-  setupIpcHandlers();
+  setupIpcHandlers({ htmlPath: isDev ? undefined : join(__dirname, '../../dist/index.html') });
 
   createWindow();
 

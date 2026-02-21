@@ -69,6 +69,9 @@ const api = {
 
   // Logs API
   logs: {
+    openWindow: (logPath: string, workingDir?: string): Promise<IpcResponse<void>> =>
+      ipcRenderer.invoke('logs:openWindow', logPath, workingDir),
+
     startStream: (logPath: string, workingDir?: string): Promise<IpcResponse<void>> =>
       ipcRenderer.invoke('logs:startStream', logPath, workingDir),
 
