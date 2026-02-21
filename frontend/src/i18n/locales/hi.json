@@ -148,7 +148,8 @@
     "openLog": "लॉग फ़ाइल खोलें",
     "log": "लॉग",
     "copyWslCmd": "WSL कमांड कॉपी करें",
-    "copied": "कॉपी किया!"
+    "copied": "कॉपी किया!",
+    "openTerminal": "टर्मिनल खोलें"
   },
   "updates": {
     "available": "नया संस्करण {{version}} उपलब्ध है!",

@@ -31,7 +31,7 @@ export function LogButton({ logFile, workingDir, showAlert, onOpenLog, isWsl }: 
     checkDir();
   }, [logFile, workingDir, isWsl]);
 
-  // WSL 환경: 터미널을 열어서 tail -f 실행
+  // WSL 환경: LogViewer 모달 열기 + 터미널 열기 버튼 둘 다 제공
   if (isWsl) {
     const handleOpenTerminal = async () => {
       try {
@@ -42,14 +42,24 @@ export function LogButton({ logFile, workingDir, showAlert, onOpenLog, isWsl }: 
     };
 
     return (
-      <button
-        onClick={handleOpenTerminal}
-        className="command-link"
-        title={`${t('logs.openLog')}: ${logFile}`}
-      >
-        <FileText />
-        {t('logs.log')}
-      </button>
+      <>
+        <button
+          onClick={() => onOpenLog(logFile, workingDir)}
+          className="command-link"
+          title={`${t('logs.openLog')}: ${logFile}`}
+        >
+          <FileText />
+          {t('logs.log')}
+        </button>
+        <button
+          onClick={handleOpenTerminal}
+          className="command-link"
+          title={`${t('logs.copyWslCmd')}: ${logFile}`}
+        >
+          <FolderPlus />
+          {t('logs.openTerminal')}
+        </button>
+      </>
     );
   }
 

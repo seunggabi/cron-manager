@@ -148,7 +148,8 @@
     "openLog": "ログファイルを開く",
     "log": "ログ",
     "copyWslCmd": "WSLコマンドをコピー",
-    "copied": "コピー済み!"
+    "copied": "コピー済み!",
+    "openTerminal": "ターミナルを開く"
   },
   "updates": {
     "available": "新しいバージョン {{version}} が利用可能です！",

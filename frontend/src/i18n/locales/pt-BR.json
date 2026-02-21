@@ -148,7 +148,8 @@
     "openLog": "Abrir Arquivo de Log",
     "log": "Log",
     "copyWslCmd": "Copiar comando WSL",
-    "copied": "Copiado!"
+    "copied": "Copiado!",
+    "openTerminal": "Abrir Terminal"
   },
   "updates": {
     "available": "Nova versão {{version}} disponível!",
