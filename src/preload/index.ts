@@ -18,8 +18,14 @@ export interface IpcResponse<T = any> {
 const api = {
   // Jobs API
   jobs: {
-    checkPermission: (): Promise<IpcResponse<{ hasPermission: boolean; error?: string }>> =>
+    checkPermission: (): Promise<IpcResponse<{ hasPermission: boolean; cronRunning?: boolean; error?: string }>> =>
       ipcRenderer.invoke('jobs:checkPermission'),
+
+    checkWslCronStatus: (): Promise<IpcResponse<{ running: boolean; error?: string }>> =>
+      ipcRenderer.invoke('jobs:checkWslCronStatus'),
+
+    startWslCron: (): Promise<IpcResponse<{ success: boolean; error?: string }>> =>
+      ipcRenderer.invoke('jobs:startWslCron'),
 
     getAll: (): Promise<IpcResponse<CronJob[]>> =>
       ipcRenderer.invoke('jobs:getAll'),

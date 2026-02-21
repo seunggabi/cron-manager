@@ -19,23 +19,89 @@ export class CrontabService {
     this.configService = configService;
   }
 
-  /**
-   * Check if user has permission to access crontab
-   * Verifies read access; on macOS, both read and write require Full Disk Access
-   */
-  async checkPermission(): Promise<{ hasPermission: boolean; error?: string }> {
+  // ── Platform helpers ──────────────────────────────────────────────────────
+
+  private get isWindows(): boolean {
+    return process.platform === 'win32';
+  }
+
+  /** Convert Windows path to WSL path (e.g. C:\Users\foo → /mnt/c/Users/foo) */
+  private toWslPath(windowsPath: string): string {
+    return windowsPath
+      .replace(/^([A-Za-z]):/, (_, drive) => `/mnt/${drive.toLowerCase()}`)
+      .replace(/\\/g, '/');
+  }
+
+  /** Build crontab command with optional args, using WSL on Windows */
+  private cronCmd(args: string): string {
+    return this.isWindows ? `wsl crontab ${args}` : `crontab ${args}`;
+  }
+
+  // ── WSL-specific ──────────────────────────────────────────────────────────
+
+  /** Check whether WSL is installed */
+  async checkWslAvailable(): Promise<boolean> {
     try {
-      // Read current crontab to verify permission
-      // On macOS, both read and write require Full Disk Access,
-      // so successful read confirms write permission as well
+      await execAsync('wsl echo ok');
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /** Check whether the cron daemon is running inside WSL */
+  async checkWslCronStatus(): Promise<{ running: boolean; error?: string }> {
+    try {
+      const { stdout } = await execAsync('wsl service cron status');
+      return { running: stdout.includes('running') };
+    } catch (error: any) {
+      // exit code 3 = stopped, that's not an error per se
+      const stopped = error.stderr?.includes('not running') || error.stdout?.includes('not running');
+      if (stopped) return { running: false };
+      return { running: false, error: error.message };
+    }
+  }
+
+  /** Start the cron daemon inside WSL */
+  async startWslCron(): Promise<{ success: boolean; error?: string }> {
+    try {
+      await execAsync('wsl sudo service cron start');
+      return { success: true };
+    } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  }
+
+  // ── Permission ────────────────────────────────────────────────────────────
+
+  /**
+   * Check crontab access permission.
+   * On Windows: verifies WSL is installed, reads crontab, and checks cron daemon status.
+   */
+  async checkPermission(): Promise<{ hasPermission: boolean; cronRunning?: boolean; error?: string }> {
+    try {
+      if (this.isWindows) {
+        const wslAvailable = await this.checkWslAvailable();
+        if (!wslAvailable) {
+          return {
+            hasPermission: false,
+            error: 'WSL (Windows Subsystem for Linux) is not installed. Please install WSL to use cron jobs on Windows.',
+          };
+        }
+      }
+
       await this.readCrontab();
+
+      if (this.isWindows) {
+        const { running } = await this.checkWslCronStatus();
+        return { hasPermission: true, cronRunning: running };
+      }
 
       return { hasPermission: true };
     } catch (error: any) {
-      // Permission denied or other errors
       return {
         hasPermission: false,
-        error: error.message || 'Permission denied to access crontab'
+        error: error.message || 'Permission denied to access crontab',
       };
     }
   }
@@ -45,10 +111,9 @@ export class CrontabService {
    */
   async readCrontab(): Promise<string> {
     try {
-      const { stdout } = await execAsync('crontab -l');
+      const { stdout } = await execAsync(this.cronCmd('-l'));
       return stdout;
     } catch (error: any) {
-      // crontab -l returns error if no crontab exists
       if (error.message.includes('no crontab')) {
         return '';
       }
@@ -187,7 +252,8 @@ export class CrontabService {
     try {
       // Write with restrictive permissions (0600)
       await fs.writeFile(tempFile, content, { mode: 0o600 });
-      await execAsync(`crontab ${tempFile}`);
+      const crontabArg = this.isWindows ? this.toWslPath(tempFile) : tempFile;
+      await execAsync(this.cronCmd(crontabArg));
     } finally {
       // Clean up temporary directory and file
       await fs.remove(tmpDir);
@@ -564,8 +630,11 @@ export class CrontabService {
 
     // Execute command with cwd option (safer than cd && command)
     const startTime = Date.now();
+    const cmd = this.isWindows
+      ? `wsl bash -c ${JSON.stringify(job.command)}`
+      : job.command;
     try {
-      const { stdout, stderr } = await execAsync(job.command, {
+      const { stdout, stderr } = await execAsync(cmd, {
         timeout: 300000, // 5 minutes timeout
         env: mergedEnv,
         cwd: job.workingDir || undefined,
@@ -747,12 +816,17 @@ export class CrontabService {
       await this.backupCrontab();
 
       // Write the backup content as current crontab
-      const tempFile = `/tmp/crontab-restore-${Date.now()}.tmp`;
+      const os = await import('os');
+      const path = await import('path');
+      const tmpPath = this.isWindows
+        ? path.join(os.tmpdir(), `crontab-restore-${Date.now()}.tmp`)
+        : `/tmp/crontab-restore-${Date.now()}.tmp`;
       try {
-        await fs.writeFile(tempFile, backupContent);
-        await execAsync(`crontab ${tempFile}`);
+        await fs.writeFile(tmpPath, backupContent);
+        const crontabArg = this.isWindows ? this.toWslPath(tmpPath) : tmpPath;
+        await execAsync(this.cronCmd(crontabArg));
       } finally {
-        await fs.remove(tempFile);
+        await fs.remove(tmpPath);
       }
     } catch (error: any) {
       throw new Error(`Failed to restore backup: ${error.message}`);
