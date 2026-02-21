@@ -109,6 +109,8 @@ function App() {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [jobDragIndex, setJobDragIndex] = useState<number | null>(null);
   const [jobDragOverIndex, setJobDragOverIndex] = useState<number | null>(null);
+  const [wslCronRunning, setWslCronRunning] = useState<boolean | null>(null);
+  const [startingWslCron, setStartingWslCron] = useState(false);
   const { showAlert } = useAlertDialog();
 
   // Resizable columns for jobs table
@@ -130,11 +132,31 @@ function App() {
             'error'
           );
         }
+        if (response.data.cronRunning !== undefined) {
+          setWslCronRunning(response.data.cronRunning);
+        }
       }
     } catch (error) {
       console.error('Failed to check crontab permission:', error);
     }
   }, [showAlert, t]);
+
+  const handleStartWslCron = useCallback(async () => {
+    setStartingWslCron(true);
+    try {
+      const response = await api.jobs.startWslCron();
+      if (response.success && response.data?.success) {
+        setWslCronRunning(true);
+        showAlert('WSL cron daemon started successfully.', 'success');
+      } else {
+        showAlert(response.data?.error || 'Failed to start WSL cron. Try running: wsl sudo service cron start', 'error');
+      }
+    } catch (error) {
+      showAlert('Failed to start WSL cron.', 'error');
+    } finally {
+      setStartingWslCron(false);
+    }
+  }, [showAlert]);
 
 
   useEffect(() => {
@@ -595,6 +617,40 @@ function App() {
 
   return (
     <div className="app">
+      {/* WSL cron warning banner */}
+      {wslCronRunning === false && (
+        <div style={{
+          background: '#7c3aed',
+          color: '#fff',
+          padding: '8px 16px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          fontSize: '13px',
+          gap: '8px',
+        }}>
+          <span>⚠️ WSL cron daemon is not running. Scheduled jobs will not execute.</span>
+          <button
+            onClick={handleStartWslCron}
+            disabled={startingWslCron}
+            style={{
+              background: '#fff',
+              color: '#7c3aed',
+              border: 'none',
+              borderRadius: '4px',
+              padding: '4px 12px',
+              cursor: startingWslCron ? 'not-allowed' : 'pointer',
+              fontWeight: 600,
+              fontSize: '12px',
+              whiteSpace: 'nowrap',
+              opacity: startingWslCron ? 0.7 : 1,
+            }}
+          >
+            {startingWslCron ? 'Starting…' : 'Start cron'}
+          </button>
+        </div>
+      )}
+
       {/* Header */}
       <div className="header">
         <div className="header-top">

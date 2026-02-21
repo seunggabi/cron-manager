@@ -17,6 +17,24 @@ export function setupIpcHandlers() {
     }
   });
 
+  ipcMain.handle('jobs:checkWslCronStatus', async () => {
+    try {
+      const result = await crontabService.checkWslCronStatus();
+      return { success: true, data: result };
+    } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  });
+
+  ipcMain.handle('jobs:startWslCron', async () => {
+    try {
+      const result = await crontabService.startWslCron();
+      return { success: true, data: result };
+    } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  });
+
   ipcMain.handle('jobs:getAll', async () => {
     try {
       const jobs = await crontabService.getAllJobs();
