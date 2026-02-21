@@ -321,6 +321,7 @@ export function setupIpcHandlers(config?: { htmlPath?: string }) {
         width: 900,
         height: 650,
         title: `Log: ${path.basename(logPath)}`,
+        backgroundColor: '#0d1117',
         webPreferences: {
           preload: path.join(__dirname, '../../preload/index.js'),
           nodeIntegration: false,
@@ -479,7 +480,7 @@ export function setupIpcHandlers(config?: { htmlPath?: string }) {
         }
       }
       const logDir = resolvedPath.substring(0, resolvedPath.lastIndexOf('/'));
-      const cmd = `mkdir -p '${logDir}' && touch '${resolvedPath}' && tail -f '${resolvedPath}'`;
+      const cmd = `mkdir -p '${logDir}' && touch '${resolvedPath}' && tail -f -n 100 '${resolvedPath}'`;
 
       // Try Windows Terminal first, fallback to cmd.exe
       exec(`wt.exe wsl.exe -e bash -c "${cmd}; exec bash"`, (err) => {
