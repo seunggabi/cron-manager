@@ -554,6 +554,17 @@ export function setupIpcHandlers(config?: { htmlPath?: string }) {
         return { success: false, error: 'File path must be absolute' };
       }
 
+      // On Windows, WSL paths (~/... or /...) must be converted via wslpath
+      if (process.platform === 'win32' && (filePath.startsWith('~') || filePath.startsWith('/'))) {
+        try {
+          const { stdout } = await execAsync(`wsl bash -c "wslpath -w $(dirname ${filePath})"`);
+          await shell.openPath(stdout.trim());
+        } catch {
+          return { success: false, error: 'Cannot open WSL path in Windows Explorer' };
+        }
+        return { success: true };
+      }
+
       // Get directory from file path
       let expandedFilePath = filePath;
       if (filePath.startsWith('~')) {
