@@ -147,7 +147,9 @@
     "createDir": "로그 디렉토리 생성",
     "openLog": "로그 파일 열기",
     "log": "로그",
-    "addLog": "로그 추가"
+    "addLog": "로그 추가",
+    "copyWslCmd": "WSL 명령어 복사",
+    "copied": "복사됨!"
   },
   "errors": {
     "crontabPermissionDenied": "crontab 접근 권한이 거부되었습니다. 시스템 설정 → 개인 정보 보호 및 보안 → 전체 디스크 접근 권한에서 권한을 부여해주세요.",

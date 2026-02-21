@@ -146,7 +146,9 @@
   "logs": {
     "createDir": "创建日志目录",
     "openLog": "打开日志文件",
-    "log": "日志"
+    "log": "日志",
+    "copyWslCmd": "复制WSL命令",
+    "copied": "已复制!"
   },
   "errors": {
     "createDirFailed": "创建目录失败",

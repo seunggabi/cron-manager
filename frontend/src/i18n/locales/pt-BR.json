@@ -146,7 +146,9 @@
   "logs": {
     "createDir": "Criar Diretório de Log",
     "openLog": "Abrir Arquivo de Log",
-    "log": "Log"
+    "log": "Log",
+    "copyWslCmd": "Copiar comando WSL",
+    "copied": "Copiado!"
   },
   "errors": {
     "createDirFailed": "Falha ao criar diretório",
