@@ -115,7 +115,7 @@ export function JobForm({ job, onClose, onSubmit }: JobFormProps) {
   ];
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay">
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h2>{job ? t('jobs.editJob') : t('jobs.newCronJob')}</h2>
@@ -179,13 +179,13 @@ export function JobForm({ job, onClose, onSubmit }: JobFormProps) {
               <label className="field-label">
                 {t('jobs.form.command')} <span className="required">{t('jobs.form.required')}</span>
               </label>
-              <input
-                type="text"
+              <textarea
                 value={command}
                 onChange={(e) => setCommand(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder={t('jobs.form.commandPlaceholder')}
                 className="mono"
+                rows={3}
                 required
               />
             </div>
