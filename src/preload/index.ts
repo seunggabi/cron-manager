@@ -164,6 +164,15 @@ const api = {
     check: (): Promise<IpcResponse<{ latestVersion: string; releaseUrl: string }>> =>
       ipcRenderer.invoke('updates:check'),
   },
+
+  // GitHub API
+  github: {
+    checkStarred: (owner: string, repo: string): Promise<IpcResponse<{ starred: boolean; ghAvailable: boolean }>> =>
+      ipcRenderer.invoke('github:checkStarred', owner, repo),
+
+    toggleStar: (owner: string, repo: string, star: boolean): Promise<IpcResponse<{ starred: boolean }>> =>
+      ipcRenderer.invoke('github:toggleStar', owner, repo, star),
+  },
 };
 
 // Expose the API to the renderer process
