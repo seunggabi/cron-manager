@@ -240,8 +240,15 @@ code, .mono {
 .icon-btn.edit:hover { background: var(--accent-light); color: var(--accent); }
 .icon-btn.pause:hover { background: var(--amber-bg); color: var(--amber); }
 .icon-btn.play:hover { background: var(--green-bg); color: var(--green); }
+.icon-btn.play.running { background: var(--green-bg); color: var(--green); cursor: not-allowed; opacity: 0.7; }
 .icon-btn.delete:hover { background: var(--red-bg); color: var(--red); }
 .icon-btn svg { width: 16px; height: 16px; }
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.spin { animation: spin 1s linear infinite; }
 
 /* Table Card */
 .table-card {
