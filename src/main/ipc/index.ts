@@ -729,6 +729,31 @@ export function setupIpcHandlers(config?: { htmlPath?: string }) {
     }
   });
 
+  // GitHub Star handlers
+  ipcMain.handle('github:checkStarred', async (_, owner: string, repo: string) => {
+    try {
+      await execAsync(`gh api user/starred/${owner}/${repo}`);
+      return { success: true, data: { starred: true, ghAvailable: true } };
+    } catch (error: any) {
+      const notStarred = error.message?.includes('404') || error.stderr?.includes('404');
+      if (notStarred) {
+        return { success: true, data: { starred: false, ghAvailable: true } };
+      }
+      // gh not installed or not authenticated
+      return { success: true, data: { starred: false, ghAvailable: false } };
+    }
+  });
+
+  ipcMain.handle('github:toggleStar', async (_, owner: string, repo: string, star: boolean) => {
+    try {
+      const method = star ? 'PUT' : 'DELETE';
+      await execAsync(`gh api user/starred/${owner}/${repo} -X ${method}`);
+      return { success: true, data: { starred: star } };
+    } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  });
+
   // Backup config handlers
   ipcMain.handle('config:getBackupConfig', async () => {
     try {

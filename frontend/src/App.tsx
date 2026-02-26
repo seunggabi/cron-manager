@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
-import { Play, Trash2, Plus, RefreshCw, FolderOpen, Edit, ChevronUp, ChevronDown, Save, ListChecks, Settings, Database, Search, X, Github, Languages, Check, GripVertical, Loader2 } from 'lucide-react';
+import { Play, Trash2, Plus, RefreshCw, FolderOpen, Edit, ChevronUp, ChevronDown, Save, ListChecks, Settings, Database, Search, X, Github, Languages, Check, GripVertical, Loader2, Star } from 'lucide-react';
 import { JobForm } from './components/JobForm';
 import { LogButton } from './components/LogButton';
 import { LogViewer } from './components/LogViewer';
@@ -46,6 +46,8 @@ function App() {
   const [updateDismissed, setUpdateDismissed] = useState(false);
   const [logViewer, setLogViewer] = useState<{ logPath: string; workingDir?: string } | null>(null);
   const [runningJobs, setRunningJobs] = useState<Set<string>>(new Set());
+  const [starred, setStarred] = useState<boolean | null>(null);
+  const [ghAvailable, setGhAvailable] = useState<boolean>(false);
   const { showAlert } = useAlertDialog();
 
   // Resizable columns for jobs table
@@ -102,6 +104,25 @@ function App() {
   useEffect(() => {
     checkCrontabPermission();
   }, [checkCrontabPermission]);
+
+  // Check GitHub star status on app start
+  useEffect(() => {
+    api.github.checkStarred('seunggabi', 'cron-manager').then((res) => {
+      if (res.success && res.data !== undefined) {
+        setStarred(res.data.starred);
+        setGhAvailable(res.data.ghAvailable);
+      }
+    }).catch(() => {});
+  }, []);
+
+  const handleToggleStar = async () => {
+    const newStarred = !starred;
+    setStarred(newStarred);
+    const res = await api.github.toggleStar('seunggabi', 'cron-manager', newStarred);
+    if (!res.success) {
+      setStarred(!newStarred); // rollback
+    }
+  };
 
   // Check for updates on app start
   useEffect(() => {
@@ -784,6 +805,35 @@ function App() {
                 <Github size={16} />
                 GitHub
               </a>
+
+              {/* GitHub Star Button */}
+              {ghAvailable ? (
+                <button
+                  onClick={handleToggleStar}
+                  className="btn"
+                  style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+                  title={starred ? 'Unstar on GitHub' : 'Star on GitHub'}
+                >
+                  <Star
+                    size={16}
+                    fill={starred ? 'currentColor' : 'none'}
+                    style={{ color: starred ? '#e3b341' : undefined }}
+                  />
+                  {starred ? 'Starred' : 'Star'}
+                </button>
+              ) : (
+                <a
+                  href="https://github.com/seunggabi/cron-manager"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn"
+                  style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+                  title="Star on GitHub"
+                >
+                  <Star size={16} />
+                  Star
+                </a>
+              )}
             </div>
             <div style={{ fontSize: '11px', opacity: 0.6, marginRight: '8px' }}>
               v{packageJson.version}
