@@ -107,12 +107,16 @@ function App() {
 
   // Check GitHub star status on app start
   useEffect(() => {
-    api.github.checkStarred('seunggabi', 'cron-manager').then((res) => {
-      if (res.success && res.data !== undefined) {
-        setStarred(res.data.starred);
-        setGhAvailable(res.data.ghAvailable);
-      }
-    }).catch(() => {});
+    const checkStar = async () => {
+      try {
+        const res = await api.github.checkStarred('seunggabi', 'cron-manager');
+        if (res.success && res.data !== undefined) {
+          setStarred(res.data.starred);
+          setGhAvailable(res.data.ghAvailable);
+        }
+      } catch {}
+    };
+    checkStar();
   }, []);
 
   const handleToggleStar = async () => {
