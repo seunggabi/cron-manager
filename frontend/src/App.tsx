@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
-import { Play, Trash2, Plus, RefreshCw, FolderOpen, Edit, ChevronUp, ChevronDown, Save, ListChecks, Settings, Database, Search, X, Github, Languages, Check, GripVertical } from 'lucide-react';
+import { Play, Trash2, Plus, RefreshCw, FolderOpen, Edit, ChevronUp, ChevronDown, Save, ListChecks, Settings, Database, Search, X, Github, Languages, Check, GripVertical, Loader2 } from 'lucide-react';
 import { JobForm } from './components/JobForm';
 import { LogButton } from './components/LogButton';
 import { LogViewer } from './components/LogViewer';
@@ -45,6 +45,7 @@ function App() {
   const [updateInfo, setUpdateInfo] = useState<{ latestVersion: string; releaseUrl: string } | null>(null);
   const [updateDismissed, setUpdateDismissed] = useState(false);
   const [logViewer, setLogViewer] = useState<{ logPath: string; workingDir?: string } | null>(null);
+  const [runningJobs, setRunningJobs] = useState<Set<string>>(new Set());
   const { showAlert } = useAlertDialog();
 
   // Resizable columns for jobs table
@@ -292,6 +293,7 @@ function App() {
   };
 
   const handleRun = async (id: string) => {
+    setRunningJobs(prev => new Set(prev).add(id));
     try {
       const response = await api.jobs.run(id);
       if (response.success && response.data) {
@@ -305,6 +307,12 @@ function App() {
       }
     } catch (error) {
       showAlert(t('errors.runJobFailed'), 'error');
+    } finally {
+      setRunningJobs(prev => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
     }
   };
 
@@ -1045,11 +1053,12 @@ function App() {
                           <div className="actions">
                             <button
                               onClick={() => handleRun(job.id)}
-                              className="icon-btn play"
+                              className={`icon-btn play${runningJobs.has(job.id) ? ' running' : ''}`}
                               title={t('jobs.runNow')}
                               data-tooltip={t('jobs.runNow')}
+                              disabled={runningJobs.has(job.id)}
                             >
-                              <Play />
+                              {runningJobs.has(job.id) ? <Loader2 className="spin" /> : <Play />}
                             </button>
                             <button
                               onClick={() => handleEdit(job)}
