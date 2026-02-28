@@ -319,11 +319,12 @@ function App() {
 
   const handleRun = async (id: string) => {
     setRunningJobs(prev => new Set(prev).add(id));
+    const executedAt = new Date().toLocaleString();
     try {
       const response = await api.jobs.run(id);
       if (response.success && response.data) {
         const result = response.data;
-        const message = `${t('success.runCompleted')}\n\n${t('dialogs.exitCode')}: ${result.exitCode}\n\n` +
+        const message = `${t('success.runCompleted')}\n${executedAt}\n\n${t('dialogs.exitCode')}: ${result.exitCode}\n\n` +
           `${t('dialogs.stdout')}:\n${result.stdout || '(empty)'}\n\n` +
           `${t('dialogs.stderr')}:\n${result.stderr || '(empty)'}`;
         showAlert(message, 'info');
