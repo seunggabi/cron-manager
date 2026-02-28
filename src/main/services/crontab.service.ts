@@ -16,6 +16,7 @@ export class CrontabService {
   private pendingContent: string | null = null;
   private _wslHome: string | null = null;
   private _wslUser: string | null = null;
+  private activeJobs = new Set<string>();
 
   constructor(configService: ConfigService) {
     this.configService = configService;
@@ -645,6 +646,43 @@ export class CrontabService {
     return this.updateJob(id, { enabled: !job.enabled });
   }
 
+  private getLockPath(jobId: string): string {
+    const path = require('path');
+    const os = require('os');
+    return path.join(os.homedir(), '.cron-manager', 'locks', `${jobId}.lock`);
+  }
+
+  private async acquireLock(jobId: string): Promise<void> {
+    const fs = await import('fs/promises');
+    const path = require('path');
+    const os = require('os');
+    const lockPath = this.getLockPath(jobId);
+    const lockDir = path.join(os.homedir(), '.cron-manager', 'locks');
+    const LOCK_TTL_MS = 5 * 60 * 1000; // 5분
+
+    await fs.mkdir(lockDir, { recursive: true });
+
+    try {
+      const content = await fs.readFile(lockPath, 'utf8');
+      const { startTime } = JSON.parse(content);
+      if (Date.now() - startTime < LOCK_TTL_MS) {
+        throw new Error('Job is already running');
+      }
+      // 5분 이상 된 stale lock → 제거 후 진행
+      await fs.unlink(lockPath).catch(() => {});
+    } catch (err: any) {
+      if (err.message === 'Job is already running') throw err;
+      // lock 파일 없음 → 정상 진행
+    }
+
+    await fs.writeFile(lockPath, JSON.stringify({ startTime: Date.now() }), 'utf8');
+  }
+
+  private async releaseLock(jobId: string): Promise<void> {
+    const fs = await import('fs/promises');
+    await fs.unlink(this.getLockPath(jobId)).catch(() => {});
+  }
+
   /**
    * Run job immediately
    */
@@ -654,6 +692,15 @@ export class CrontabService {
     if (!job) {
       throw new Error('Job not found');
     }
+
+    // 인메모리 체크: 현재 세션에서 실제로 실행 중인지 확인
+    if (this.activeJobs.has(id)) {
+      throw new Error('Job is already running');
+    }
+
+    // 앱 재시작 시 fallback: lock 파일 기반 체크 (5분 TTL)
+    await this.acquireLock(id);
+    this.activeJobs.add(id);
 
     // Merge environment variables (cron-like environment)
     // Priority: job env > global env > minimal process env
@@ -673,73 +720,78 @@ export class CrontabService {
       ? `wsl bash -c ${JSON.stringify(job.command)}`
       : job.command;
     try {
-      const { stdout, stderr } = await execAsync(cmd, {
-        timeout: 300000, // 5 minutes timeout
-        env: mergedEnv,
-        cwd: job.workingDir || undefined,
-      });
+      try {
+        const { stdout, stderr } = await execAsync(cmd, {
+          timeout: 300000, // 5 minutes timeout
+          env: mergedEnv,
+          cwd: job.workingDir || undefined,
+        });
 
-      const duration = Date.now() - startTime;
+        const duration = Date.now() - startTime;
 
-      // Append stdout/stderr to logFile so manual runs are visible in the log viewer
-      if (job.logFile && (stdout || stderr)) {
-        try {
-          const fsP = await import('fs/promises');
-          const timestamp = new Date().toISOString();
-          const logEntry = `\n[${timestamp}] Manual run\n${stdout}${stderr ? `\n[stderr]\n${stderr}` : ''}\n`;
-          const isWslPath = job.logFile.startsWith('~') || job.logFile.startsWith('/');
-          if (this.isWindows && isWslPath) {
-            const os_m = await import('os');
-            const path_m = await import('path');
-            const tmpFile = path_m.join(os_m.tmpdir(), `log-append-${Date.now()}.tmp`);
-            await fsP.writeFile(tmpFile, logEntry, 'utf8');
-            const wslTmpPath = this.toWslPath(tmpFile);
-            await execAsync(`wsl bash -c "cat ${this.shellEscape(wslTmpPath)} >> ${this.shellEscapeForPath(job.logFile)}"`);
-            await fsP.unlink(tmpFile).catch(() => {});
-          } else {
-            const expandedPath = job.logFile.replace(/^~/, process.env.HOME || process.env.USERPROFILE || '');
-            await fsP.appendFile(expandedPath, logEntry, 'utf8');
+        // Append stdout/stderr to logFile so manual runs are visible in the log viewer
+        if (job.logFile && (stdout || stderr)) {
+          try {
+            const fsP = await import('fs/promises');
+            const timestamp = new Date().toISOString();
+            const logEntry = `\n[${timestamp}] Manual run\n${stdout}${stderr ? `\n[stderr]\n${stderr}` : ''}\n`;
+            const isWslPath = job.logFile.startsWith('~') || job.logFile.startsWith('/');
+            if (this.isWindows && isWslPath) {
+              const os_m = await import('os');
+              const path_m = await import('path');
+              const tmpFile = path_m.join(os_m.tmpdir(), `log-append-${Date.now()}.tmp`);
+              await fsP.writeFile(tmpFile, logEntry, 'utf8');
+              const wslTmpPath = this.toWslPath(tmpFile);
+              await execAsync(`wsl bash -c "cat ${this.shellEscape(wslTmpPath)} >> ${this.shellEscapeForPath(job.logFile)}"`);
+              await fsP.unlink(tmpFile).catch(() => {});
+            } else {
+              const expandedPath = job.logFile.replace(/^~/, process.env.HOME || process.env.USERPROFILE || '');
+              await fsP.appendFile(expandedPath, logEntry, 'utf8');
+            }
+          } catch {
+            // Silently ignore log append errors
           }
-        } catch {
-          // Silently ignore log append errors
         }
-      }
 
-      return {
-        exitCode: 0,
-        stdout,
-        stderr,
-        duration,
-      };
-    } catch (execError: any) {
-      const duration = Date.now() - startTime;
+        return {
+          exitCode: 0,
+          stdout,
+          stderr,
+          duration,
+        };
+      } catch (execError: any) {
+        const duration = Date.now() - startTime;
 
-      // Check if logfile exists (command might have succeeded despite timeout)
-      let logFileExists = false;
-      if (job.logFile) {
-        try {
-          const fs = await import('fs/promises');
-          const logPath = job.logFile.replace(/^~/, process.env.HOME || process.env.USERPROFILE || '');
-          await fs.access(logPath);
-          logFileExists = true;
-        } catch {
-          // Logfile doesn't exist
+        // Check if logfile exists (command might have succeeded despite timeout)
+        let logFileExists = false;
+        if (job.logFile) {
+          try {
+            const fs = await import('fs/promises');
+            const logPath = job.logFile.replace(/^~/, process.env.HOME || process.env.USERPROFILE || '');
+            await fs.access(logPath);
+            logFileExists = true;
+          } catch {
+            // Logfile doesn't exist
+          }
         }
+
+        // If timeout but logfile exists, consider it successful
+        const isTimeout = execError.killed || execError.signal === 'SIGTERM';
+        const isSuccess = isTimeout && logFileExists;
+
+        return {
+          exitCode: isSuccess ? 0 : (execError.code || 1),
+          stdout: execError.stdout || '',
+          stderr: isSuccess ?
+            `Command is running in the background. Check the log file: ${job.logFile}` :
+            (execError.stderr || execError.message),
+          duration,
+          error: !isSuccess,
+        };
       }
-
-      // If timeout but logfile exists, consider it successful
-      const isTimeout = execError.killed || execError.signal === 'SIGTERM';
-      const isSuccess = isTimeout && logFileExists;
-
-      return {
-        exitCode: isSuccess ? 0 : (execError.code || 1),
-        stdout: execError.stdout || '',
-        stderr: isSuccess ?
-          `Command is running in the background. Check the log file: ${job.logFile}` :
-          (execError.stderr || execError.message),
-        duration,
-        error: !isSuccess,
-      };
+    } finally {
+      this.activeJobs.delete(id);
+      await this.releaseLock(id);
     }
   }
 
