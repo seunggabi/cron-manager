@@ -708,6 +708,7 @@ export class CrontabService {
     const mergedEnv = {
       // Minimal essential vars from process
       PATH: process.env.PATH || (this.isWindows ? 'C:\\Windows\\System32' : '/usr/bin:/bin'),
+      HOME: process.env.HOME || process.env.USERPROFILE || '',
       // Global env from crontab
       ...globalEnv,
       // Job-specific env (highest priority)
