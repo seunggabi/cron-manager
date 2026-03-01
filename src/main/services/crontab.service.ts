@@ -699,14 +699,19 @@ export class CrontabService {
     await fs.unlink(this.getLockPath(jobId)).catch(() => {});
   }
 
-  private async clearAllLocks(): Promise<void> {
+  private clearAllLocks(): void {
     try {
-      const fs = await import('fs/promises');
+      const fs = require('fs');
       const path = require('path');
       const os = require('os');
       const lockDir = path.join(os.homedir(), '.cron-manager', 'locks');
-      const files = await fs.readdir(lockDir).catch(() => [] as string[]);
-      await Promise.all(files.filter(f => f.endsWith('.lock')).map(f => fs.unlink(path.join(lockDir, f)).catch(() => {})));
+      if (!fs.existsSync(lockDir)) return;
+      const files: string[] = fs.readdirSync(lockDir);
+      for (const f of files) {
+        if (f.endsWith('.lock')) {
+          try { fs.unlinkSync(path.join(lockDir, f)); } catch {}
+        }
+      }
     } catch {
       // Ignore errors (lock dir might not exist yet)
     }
