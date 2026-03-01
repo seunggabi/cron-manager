@@ -20,6 +20,8 @@ export class CrontabService {
 
   constructor(configService: ConfigService) {
     this.configService = configService;
+    // Clear all lock files on startup — if the app just started, no jobs can be running
+    this.clearAllLocks();
   }
 
   // ── Platform helpers ──────────────────────────────────────────────────────
@@ -681,6 +683,19 @@ export class CrontabService {
   private async releaseLock(jobId: string): Promise<void> {
     const fs = await import('fs/promises');
     await fs.unlink(this.getLockPath(jobId)).catch(() => {});
+  }
+
+  private async clearAllLocks(): Promise<void> {
+    try {
+      const fs = await import('fs/promises');
+      const path = require('path');
+      const os = require('os');
+      const lockDir = path.join(os.homedir(), '.cron-manager', 'locks');
+      const files = await fs.readdir(lockDir).catch(() => [] as string[]);
+      await Promise.all(files.filter(f => f.endsWith('.lock')).map(f => fs.unlink(path.join(lockDir, f)).catch(() => {})));
+    } catch {
+      // Ignore errors (lock dir might not exist yet)
+    }
   }
 
   /**
