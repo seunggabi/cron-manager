@@ -25,4 +25,4 @@ test-*.js
 
 .idea/
 .claude/
-.omc/
+.omc/\!build/installer.nsh

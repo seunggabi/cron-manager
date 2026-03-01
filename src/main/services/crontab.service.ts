@@ -258,6 +258,20 @@ export class CrontabService {
   }
 
   /**
+   * Flush any pending (throttled) crontab write immediately
+   */
+  async flush(): Promise<void> {
+    if (this.pendingWrite && this.pendingContent) {
+      clearTimeout(this.pendingWrite);
+      this.pendingWrite = null;
+      const content = this.pendingContent;
+      this.pendingContent = null;
+      await this.doWriteCrontab(content);
+      this.lastWriteTime = Date.now();
+    }
+  }
+
+  /**
    * Internal method to actually write crontab
    */
   private async doWriteCrontab(content: string): Promise<void> {

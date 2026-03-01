@@ -173,6 +173,24 @@ const api = {
     toggleStar: (owner: string, repo: string, star: boolean): Promise<IpcResponse<{ starred: boolean }>> =>
       ipcRenderer.invoke('github:toggleStar', owner, repo, star),
   },
+
+  // Uninstall API (Windows only)
+  uninstall: {
+    cleanupData: (options: { removeCrontabJobs: boolean }): Promise<IpcResponse<string[]>> =>
+      ipcRenderer.invoke('uninstall:cleanupData', options),
+
+    runScript: (): Promise<IpcResponse<void>> =>
+      ipcRenderer.invoke('uninstall:runScript'),
+  },
+
+  // Menu events
+  menu: {
+    onUninstall: (callback: () => void) => {
+      const handler = () => callback();
+      ipcRenderer.on('menu:uninstall', handler);
+      return () => ipcRenderer.removeListener('menu:uninstall', handler);
+    },
+  },
 };
 
 // Expose the API to the renderer process

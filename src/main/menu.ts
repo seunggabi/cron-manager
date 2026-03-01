@@ -140,6 +140,17 @@ export function createApplicationMenu(mainWindow: BrowserWindow) {
             await shell.openExternal('https://github.com/seunggabi/cron-manager/issues');
           },
         },
+        ...(process.platform === 'win32'
+          ? [
+              { type: 'separator' as const },
+              {
+                label: 'Uninstall Cron Manager...',
+                click: () => {
+                  mainWindow.webContents.send('menu:uninstall');
+                },
+              },
+            ]
+          : []),
       ],
     },
   ];

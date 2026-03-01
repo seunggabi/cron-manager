@@ -96,6 +96,12 @@
       "shared/dist",
       "shared/package.json"
     ],
+    "extraResources": [
+      {
+        "from": "resources/uninstall.bat",
+        "to": "uninstall.bat"
+      }
+    ],
     "asarUnpack": [
       "shared/**/*"
     ],
@@ -118,6 +124,10 @@
         "zip"
       ],
       "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "include": "build/installer.nsh",
+      "deleteAppDataOnUninstall": false
     },
     "linux": {
       "target": [

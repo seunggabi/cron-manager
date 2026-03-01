@@ -1,8 +1,8 @@
 import { app, BrowserWindow, shell } from 'electron';
 import { join } from 'path';
-import { setupIpcHandlers } from './ipc';
+import { setupIpcHandlers, cleanupAllStreams } from './ipc';
 import { configService } from './services/config.service';
-import { initCrontabService } from './services/crontab.service';
+import { initCrontabService, crontabService } from './services/crontab.service';
 import { createApplicationMenu } from './menu';
 
 const isDev = process.env.NODE_ENV === 'development';
@@ -71,6 +71,14 @@ app.whenReady().then(async () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       createWindow();
     }
+  });
+});
+
+app.on('will-quit', (event) => {
+  event.preventDefault();
+  cleanupAllStreams();
+  (crontabService?.flush() ?? Promise.resolve()).finally(() => {
+    app.exit(0);
   });
 });
 
