@@ -13,7 +13,7 @@ function startVite() {
   viteProcess = spawn('npx', ['vite'], {
     cwd: rootDir,
     stdio: 'inherit',
-    shell: true,
+    detached: true,
   });
 
   viteProcess.on('exit', (code) => {
@@ -48,7 +48,9 @@ function startElectron() {
 
 function cleanup() {
   if (viteProcess) {
-    viteProcess.kill();
+    if (viteProcess.pid) {
+      try { process.kill(-viteProcess.pid, 'SIGTERM'); } catch {}
+    }
     viteProcess = null;
   }
   if (electronProcess) {

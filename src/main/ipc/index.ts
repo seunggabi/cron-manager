@@ -1,4 +1,4 @@
-import { ipcMain, shell, BrowserWindow } from 'electron';
+import { ipcMain, shell, BrowserWindow, app } from 'electron';
 import { spawn, exec } from 'child_process';
 import { promisify } from 'util';
 import type { ChildProcess } from 'child_process';
@@ -774,4 +774,84 @@ export function setupIpcHandlers(config?: { htmlPath?: string }) {
       return { success: false, error: error.message };
     }
   });
+
+  // Uninstall: clean up app data (Windows only)
+  ipcMain.handle('uninstall:cleanupData', async (_, options: { removeCrontabJobs: boolean }) => {
+    try {
+      const fs = await import('fs-extra');
+      const pathMod = await import('path');
+      const results: string[] = [];
+
+      // 1. Optionally remove CRON-MANAGER jobs from crontab
+      if (options.removeCrontabJobs) {
+        try {
+          const content = await crontabService.readCrontab();
+          const lines = content.split('\n');
+          const cleaned: string[] = [];
+          let skipNext = false;
+          for (const line of lines) {
+            if (line.startsWith('# CRON-MANAGER:')) {
+              skipNext = true;
+              continue;
+            }
+            if (skipNext && line.trim() !== '') {
+              skipNext = false;
+              continue;
+            }
+            skipNext = false;
+            cleaned.push(line);
+          }
+          // Remove trailing empty lines
+          while (cleaned.length > 0 && cleaned[cleaned.length - 1].trim() === '') {
+            cleaned.pop();
+          }
+          await crontabService.writeCrontab(cleaned.join('\n'));
+          await crontabService.flush();
+          results.push('Crontab jobs removed');
+        } catch (e: any) {
+          results.push(`Crontab cleanup failed: ${e.message}`);
+        }
+      }
+
+      // 2. Remove Windows-side app data
+      const winDataDir = pathMod.join(os.homedir(), '.cron-manager');
+      if (await fs.pathExists(winDataDir)) {
+        await fs.remove(winDataDir);
+        results.push('Windows app data removed');
+      }
+
+      // 3. Remove WSL-side app data
+      try {
+        await execAsync('wsl rm -rf ~/.cron-manager');
+        results.push('WSL app data removed');
+      } catch {
+        // WSL not available or already removed — ignore
+      }
+
+      return { success: true, data: results };
+    } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  });
+
+  // Uninstall: run embedded uninstall.bat
+  ipcMain.handle('uninstall:runScript', async () => {
+    try {
+      const batPath = app.isPackaged
+        ? path.join(process.resourcesPath, 'uninstall.bat')
+        : path.join(__dirname, '../../../resources/uninstall.bat');
+
+      spawn('cmd.exe', ['/c', 'start', '', batPath], { detached: true, stdio: 'ignore' }).unref();
+      return { success: true };
+    } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  });
+}
+
+export function cleanupAllStreams() {
+  for (const proc of activeTailProcesses.values()) {
+    proc.kill();
+  }
+  activeTailProcesses.clear();
 }

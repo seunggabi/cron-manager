@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { Play, Trash2, Plus, RefreshCw, FolderOpen, Edit, ChevronUp, ChevronDown, Save, ListChecks, Settings, Database, Search, X, Github, Languages, Check, GripVertical, Loader2, Star } from 'lucide-react';
 import { JobForm } from './components/JobForm';
+import { UninstallDialog } from './components/UninstallDialog';
 import { LogButton } from './components/LogButton';
 import { LogViewer } from './components/LogViewer';
 import { GlobalEnvSettings } from './components/GlobalEnvSettings';
@@ -49,6 +50,7 @@ function App() {
   const [starred, setStarred] = useState<boolean | null>(null);
   const [ghAvailable, setGhAvailable] = useState<boolean>(false);
   const { showAlert } = useAlertDialog();
+  const [showUninstallDialog, setShowUninstallDialog] = useState(false);
 
   // Resizable columns for jobs table
   const { getColumnStyle, ResizeHandle } = useResizableColumns('jobs', {
@@ -104,6 +106,13 @@ function App() {
   useEffect(() => {
     checkCrontabPermission();
   }, [checkCrontabPermission]);
+
+  useEffect(() => {
+    const cleanup = window.electronAPI?.menu?.onUninstall(() => {
+      setShowUninstallDialog(true);
+    });
+    return () => cleanup?.();
+  }, []);
 
   // Check GitHub star status on app start
   useEffect(() => {
@@ -1307,6 +1316,11 @@ function App() {
           workingDir={logViewer.workingDir}
           onClose={() => setLogViewer(null)}
         />
+      )}
+
+      {/* Uninstall Dialog (Windows only) */}
+      {showUninstallDialog && (
+        <UninstallDialog onClose={() => setShowUninstallDialog(false)} />
       )}
     </div>
   );
