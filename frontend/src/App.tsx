@@ -1,7 +1,6 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { Play, Trash2, Plus, RefreshCw, FolderOpen, Edit, ChevronUp, ChevronDown, Save, ListChecks, Settings, Database, Search, X, Github, Languages, Check, GripVertical, Loader2, Star } from 'lucide-react';
 import { JobForm } from './components/JobForm';
-import { UninstallDialog } from './components/UninstallDialog';
 import { LogButton } from './components/LogButton';
 import { LogViewer } from './components/LogViewer';
 import { GlobalEnvSettings } from './components/GlobalEnvSettings';
@@ -50,7 +49,6 @@ function App() {
   const [starred, setStarred] = useState<boolean | null>(null);
   const [ghAvailable, setGhAvailable] = useState<boolean>(false);
   const { showAlert } = useAlertDialog();
-  const [showUninstallDialog, setShowUninstallDialog] = useState(false);
 
   // Resizable columns for jobs table
   const { getColumnStyle, ResizeHandle } = useResizableColumns('jobs', {
@@ -107,12 +105,6 @@ function App() {
     checkCrontabPermission();
   }, [checkCrontabPermission]);
 
-  useEffect(() => {
-    const cleanup = window.electronAPI?.menu?.onUninstall(() => {
-      setShowUninstallDialog(true);
-    });
-    return () => cleanup?.();
-  }, []);
 
   // Check GitHub star status on app start
   useEffect(() => {
@@ -330,16 +322,11 @@ function App() {
     setRunningJobs(prev => new Set(prev).add(id));
     const executedAt = new Date().toLocaleString();
     try {
-      const response = await api.jobs.run(id);
-      if (response.success && response.data) {
-        const result = response.data;
-        const message = `${t('success.runCompleted')}\n${executedAt}\n\n${t('dialogs.exitCode')}: ${result.exitCode}\n\n` +
-          `${t('dialogs.stdout')}:\n${result.stdout || '(empty)'}\n\n` +
-          `${t('dialogs.stderr')}:\n${result.stderr || '(empty)'}`;
-        showAlert(message, 'info');
-      } else {
-        showAlert(response.error || t('errors.runJobFailed'), 'error');
-      }
+      const result = await api.jobs.run(id);
+      const message = `${t('success.runCompleted')}\n${executedAt}\n\n${t('dialogs.exitCode')}: ${result.exitCode}\n\n` +
+        `${t('dialogs.stdout')}:\n${result.stdout || '(empty)'}\n\n` +
+        `${t('dialogs.stderr')}:\n${result.stderr || '(empty)'}`;
+      showAlert(message, 'info');
     } catch (error) {
       showAlert(t('errors.runJobFailed'), 'error');
     } finally {
@@ -1318,10 +1305,6 @@ function App() {
         />
       )}
 
-      {/* Uninstall Dialog (Windows only) */}
-      {showUninstallDialog && (
-        <UninstallDialog onClose={() => setShowUninstallDialog(false)} />
-      )}
     </div>
   );
 }

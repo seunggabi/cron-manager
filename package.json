@@ -1,6 +1,6 @@
 {
   "name": "cron-manager",
-  "version": "0.10.1",
+  "version": "0.22.1",
   "description": "Crontab Manager - Electron Desktop App",
   "main": "dist-electron/main/index.js",
   "author": {
@@ -12,8 +12,8 @@
   "scripts": {
     "dev": "tsx scripts/dev-runner.ts",
     "restart": "bash scripts/restart.sh",
-    "build": "npm run build:shared && tsc && vite build && electron-builder",
-    "build:dev": "npm run build:shared && tsc && vite build",
+    "build": "tsx scripts/sync-version.ts && npm run build:shared && tsc && vite build && electron-builder",
+    "build:dev": "tsx scripts/sync-version.ts && npm run build:shared && tsc && vite build",
     "build:shared": "cd shared && npm run build",
     "preview": "vite preview",
     "electron:build": "npm run build:dev && electron-builder",
