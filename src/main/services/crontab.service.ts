@@ -30,6 +30,12 @@ export class CrontabService {
     return process.platform === 'win32';
   }
 
+  /** Absolute path to wsl.exe — avoids PATH resolution issues in packaged apps */
+  private get wslExe(): string {
+    const sysRoot = process.env.SystemRoot || process.env.SYSTEMROOT || 'C:\\Windows';
+    return `"${sysRoot}\\System32\\wsl.exe"`;
+  }
+
   /** Convert Windows path to WSL path (e.g. C:\Users\foo → /mnt/c/Users/foo) */
   private toWslPath(windowsPath: string): string {
     return windowsPath
@@ -740,8 +746,8 @@ export class CrontabService {
     // Priority: job env > global env > minimal process env
     const globalEnv = await this.getGlobalEnv();
     const mergedEnv = {
-      // Minimal essential vars from process
-      PATH: process.env.PATH || (this.isWindows ? 'C:\\Windows\\System32' : '/usr/bin:/bin'),
+      // Inherit full process environment so system PATH and wsl.exe are available
+      ...process.env,
       HOME: process.env.HOME || process.env.USERPROFILE || '',
       // Global env from crontab
       ...globalEnv,
@@ -751,15 +757,30 @@ export class CrontabService {
 
     // Execute command with cwd option (safer than cd && command)
     const startTime = Date.now();
-    const cmd = this.isWindows
-      ? `wsl bash -c ${JSON.stringify(job.command)}`
-      : job.command;
+    const isWslPath = (p: string) => p.startsWith('~') || p.startsWith('/');
+    let cmd: string;
+    let execCwd: string | undefined;
+    if (this.isWindows) {
+      // On Windows, workingDir may be a WSL path — fold it into the bash command
+      // since Node's cwd option cannot resolve Linux paths on Windows
+      const bashCmd = job.workingDir
+        ? `cd ${this.shellEscape(job.workingDir)} && ${job.command}`
+        : job.command;
+      cmd = `${this.wslExe} bash -c ${JSON.stringify(bashCmd)}`;
+      // Only pass cwd if it's a native Windows path
+      execCwd = (job.workingDir && !isWslPath(job.workingDir))
+        ? job.workingDir
+        : undefined;
+    } else {
+      cmd = job.command;
+      execCwd = job.workingDir || undefined;
+    }
     try {
       try {
         const { stdout, stderr } = await execAsync(cmd, {
           timeout: 300000, // 5 minutes timeout
           env: mergedEnv,
-          cwd: job.workingDir || undefined,
+          cwd: execCwd,
         });
 
         const duration = Date.now() - startTime;
