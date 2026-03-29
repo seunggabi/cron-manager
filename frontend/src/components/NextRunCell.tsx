@@ -1,19 +1,27 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 
 interface NextRunCellProps {
   nextRun: string | null;
+  schedule?: string;
   onExpired?: () => void;
 }
 
-export function NextRunCell({ nextRun, onExpired }: NextRunCellProps) {
+export function NextRunCell({ nextRun, schedule, onExpired }: NextRunCellProps) {
+  const { t } = useTranslation();
   const [timeLeft, setTimeLeft] = useState<string>('');
   const [urgencyClass, setUrgencyClass] = useState<string>('');
   const [urgencyColor, setUrgencyColor] = useState<string>('');
 
   useEffect(() => {
     if (!nextRun) {
-      setTimeLeft('-');
+      // Show @reboot label if schedule is @reboot, otherwise show dash
+      if (schedule?.toUpperCase() === '@REBOOT') {
+        setTimeLeft(t('schedule.humanReadable.reboot'));
+      } else {
+        setTimeLeft('-');
+      }
       setUrgencyClass('');
       setUrgencyColor('');
       return;

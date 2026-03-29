@@ -90,7 +90,8 @@
         "hourly": "Stündlich",
         "daily": "Täglich um Mitternacht",
         "daily9am": "Täglich um 9 Uhr",
-        "weekdays9am": "Wochentags um 9 Uhr"
+        "weekdays9am": "Wochentags um 9 Uhr",
+        "reboot": "Beim Booten"
       },
       "commandPlaceholder": "/usr/local/bin/backup.sh",
       "schedulePlaceholderExample": "* * * * *",
@@ -262,6 +263,10 @@
       "workday9am": {
         "name": "Wochentags um 9 Uhr",
         "description": "Mo-Fr um 9 Uhr"
+      },
+      "reboot": {
+        "name": "Beim Booten",
+        "description": "Beim Systemstart ausführen"
       }
     },
     "humanReadable": {
@@ -301,6 +306,7 @@
         "5": "Freitag",
         "6": "Samstag"
       },
+      "reboot": "Beim Systemstart ausführen",
       "backgroundRunning": "Befehl wird im Hintergrund ausgeführt. Überprüfen Sie die Protokolldatei: {{logFile}}"
     }
   }

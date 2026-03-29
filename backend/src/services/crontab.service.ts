@@ -144,6 +144,27 @@ export class CrontabService {
    * Parse single cron line
    */
   private parseCronLine(line: string, metadata: Partial<CronJob>): CronJob | null {
+    // Handle @reboot special syntax
+    const rebootMatch = line.match(/^@reboot\s+(.+)$/i);
+    if (rebootMatch) {
+      const command = rebootMatch[1];
+      return {
+        id: metadata.id || nanoid(),
+        name: metadata.name || command.substring(0, 50),
+        description: metadata.description,
+        schedule: '@reboot',
+        command,
+        enabled: true,
+        env: metadata.env,
+        workingDir: metadata.workingDir,
+        logFile: metadata.logFile,
+        logStderr: metadata.logStderr,
+        tags: metadata.tags,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+    }
+
     // Cron format: minute hour day month weekday command
     const parts = line.match(/^(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(.+)$/);
 

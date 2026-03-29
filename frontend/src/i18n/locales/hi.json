@@ -90,7 +90,8 @@
         "hourly": "प्रति घंटा",
         "daily": "रोज़ आधी रात",
         "daily9am": "रोज़ सुबह 9 बजे",
-        "weekdays9am": "सप्ताहांत सुबह 9 बजे"
+        "weekdays9am": "सप्ताहांत सुबह 9 बजे",
+        "reboot": "बूट पर"
       },
       "commandPlaceholder": "/usr/local/bin/backup.sh",
       "schedulePlaceholderExample": "* * * * *",
@@ -262,6 +263,10 @@
       "workday9am": {
         "name": "सप्ताहांत सुबह 9 बजे",
         "description": "सोम-शुक्र 9:00 बजे"
+      },
+      "reboot": {
+        "name": "बूट पर",
+        "description": "सिस्टम शुरू होने पर चलाएं"
       }
     },
     "humanReadable": {
@@ -301,6 +306,7 @@
         "5": "शुक्रवार",
         "6": "शनिवार"
       },
+      "reboot": "सिस्टम शुरू होने पर चलाएं",
       "backgroundRunning": "कमांड बैकग्राउंड में चल रहा है। लॉग फ़ाइल की जाँच करें: {{logFile}}"
     }
   }

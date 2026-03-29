@@ -90,7 +90,8 @@
         "hourly": "每小时",
         "daily": "每天午夜",
         "daily9am": "每天上午9点",
-        "weekdays9am": "工作日上午9点"
+        "weekdays9am": "工作日上午9点",
+        "reboot": "系统启动时"
       },
       "commandPlaceholder": "/usr/local/bin/backup.sh",
       "schedulePlaceholderExample": "* * * * *",
@@ -262,6 +263,10 @@
       "workday9am": {
         "name": "工作日早上9点",
         "description": "周一至周五早上9点"
+      },
+      "reboot": {
+        "name": "系统启动时",
+        "description": "系统启动时运行"
       }
     },
     "humanReadable": {
@@ -301,6 +306,7 @@
         "5": "周五",
         "6": "周六"
       },
+      "reboot": "系统启动时运行",
       "backgroundRunning": "命令正在后台运行。请查看日志文件：{{logFile}}"
     }
   }

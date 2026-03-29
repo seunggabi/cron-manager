@@ -90,7 +90,8 @@
         "hourly": "毎時",
         "daily": "毎日深夜",
         "daily9am": "毎日午前9時",
-        "weekdays9am": "平日午前9時"
+        "weekdays9am": "平日午前9時",
+        "reboot": "起動時"
       },
       "commandPlaceholder": "/usr/local/bin/backup.sh",
       "schedulePlaceholderExample": "* * * * *",
@@ -262,6 +263,10 @@
       "workday9am": {
         "name": "平日午前9時",
         "description": "月～金曜日の9時"
+      },
+      "reboot": {
+        "name": "起動時",
+        "description": "システム起動時に実行"
       }
     },
     "humanReadable": {
@@ -301,6 +306,7 @@
         "5": "金曜日",
         "6": "土曜日"
       },
+      "reboot": "システム起動時に実行",
       "backgroundRunning": "コマンドがバックグラウンドで実行中です。ログファイルを確認してください：{{logFile}}"
     }
   }

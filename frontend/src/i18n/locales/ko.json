@@ -90,7 +90,8 @@
         "hourly": "매시간",
         "daily": "매일 0시",
         "daily9am": "매일 9시",
-        "weekdays9am": "평일 9시"
+        "weekdays9am": "평일 9시",
+        "reboot": "재부팅 시"
       },
       "commandPlaceholder": "/usr/local/bin/backup.sh",
       "schedulePlaceholderExample": "* * * * *",
@@ -265,6 +266,10 @@
       "workday9am": {
         "name": "평일 오전 9시",
         "description": "월~금 9시"
+      },
+      "reboot": {
+        "name": "재부팅 시",
+        "description": "시스템 재부팅 시 실행"
       }
     },
     "humanReadable": {
@@ -304,6 +309,7 @@
         "5": "금요일",
         "6": "토요일"
       },
+      "reboot": "재부팅 시 실행",
       "backgroundRunning": "명령이 백그라운드에서 실행 중입니다. 로그 파일을 확인하세요: {{logFile}}"
     }
   }

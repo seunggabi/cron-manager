@@ -5,6 +5,11 @@ export class ScheduleService {
    * Validate cron expression
    */
   validateSchedule(schedule: string): { valid: boolean; error?: string } {
+    // Handle @reboot special syntax
+    if (schedule.toUpperCase() === '@REBOOT') {
+      return { valid: true };
+    }
+
     try {
       // Normalize whitespace before validation
       const normalized = schedule.trim().replace(/\s+/g, ' ');
@@ -20,6 +25,11 @@ export class ScheduleService {
    * Get next run times for a cron expression
    */
   getNextRuns(schedule: string, count: number = 5): Date[] {
+    // @reboot has no scheduled next run times
+    if (schedule.toUpperCase() === '@REBOOT') {
+      return [];
+    }
+
     try {
       const cron = new Cron(schedule);
       const runs: Date[] = [];
@@ -44,6 +54,11 @@ export class ScheduleService {
    * Convert cron expression to human-readable format
    */
   toHumanReadable(schedule: string): string {
+    // Handle @reboot special syntax
+    if (schedule.toUpperCase() === '@REBOOT') {
+      return 'schedule.humanReadable.reboot';
+    }
+
     const parts = schedule.trim().split(/\s+/);
 
     if (parts.length < 5) {
@@ -298,6 +313,14 @@ export class ScheduleService {
         nameKey: 'schedule.presets.workday9am.name',
         descriptionKey: 'schedule.presets.workday9am.description',
         schedule: '0 9 * * 1-5'
+      },
+      {
+        id: 'reboot',
+        name: '재부팅 시',
+        description: '시스템 재부팅 시 실행',
+        nameKey: 'schedule.presets.reboot.name',
+        descriptionKey: 'schedule.presets.reboot.description',
+        schedule: '@reboot'
       },
     ];
   }

@@ -112,6 +112,7 @@ export function JobForm({ job, onClose, onSubmit }: JobFormProps) {
     { label: t('jobs.form.presets.daily'), value: '0 0 * * *' },
     { label: t('jobs.form.presets.daily9am'), value: '0 9 * * *' },
     { label: t('jobs.form.presets.weekdays9am'), value: '0 9 * * 1-5' },
+    { label: t('jobs.form.presets.reboot'), value: '@reboot' },
   ];
 
   return (

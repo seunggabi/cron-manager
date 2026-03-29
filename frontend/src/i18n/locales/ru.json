@@ -90,7 +90,8 @@
         "hourly": "Каждый час",
         "daily": "Ежедневно в полночь",
         "daily9am": "Ежедневно в 9 утра",
-        "weekdays9am": "В будни в 9 утра"
+        "weekdays9am": "В будни в 9 утра",
+        "reboot": "При перезагрузке"
       },
       "commandPlaceholder": "/usr/local/bin/backup.sh",
       "schedulePlaceholderExample": "* * * * *",
@@ -262,6 +263,10 @@
       "workday9am": {
         "name": "В будни в 9:00",
         "description": "Пн-Пт в 9:00"
+      },
+      "reboot": {
+        "name": "При перезагрузке",
+        "description": "При перезагрузке системы"
       }
     },
     "humanReadable": {
@@ -301,6 +306,7 @@
         "5": "пятница",
         "6": "суббота"
       },
+      "reboot": "При перезагрузке системы",
       "backgroundRunning": "Команда выполняется в фоновом режиме. Проверьте файл журнала: {{logFile}}"
     }
   }

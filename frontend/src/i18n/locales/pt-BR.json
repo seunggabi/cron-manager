@@ -90,7 +90,8 @@
         "hourly": "A Cada Hora",
         "daily": "Diariamente à Meia-Noite",
         "daily9am": "Diariamente às 9h",
-        "weekdays9am": "Dias Úteis às 9h"
+        "weekdays9am": "Dias Úteis às 9h",
+        "reboot": "Ao Inicializar"
       },
       "commandPlaceholder": "/usr/local/bin/backup.sh",
       "schedulePlaceholderExample": "* * * * *",
@@ -262,6 +263,10 @@
       "workday9am": {
         "name": "Dias úteis às 9h",
         "description": "Seg-Sex às 9:00"
+      },
+      "reboot": {
+        "name": "Ao Inicializar",
+        "description": "Executar ao iniciar o sistema"
       }
     },
     "humanReadable": {
@@ -301,6 +306,7 @@
         "5": "sexta-feira",
         "6": "sábado"
       },
+      "reboot": "Executar ao iniciar o sistema",
       "backgroundRunning": "Comando está sendo executado em segundo plano. Verifique o arquivo de log: {{logFile}}"
     }
   }
