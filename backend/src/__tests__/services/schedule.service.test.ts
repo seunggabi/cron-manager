@@ -361,8 +361,14 @@ describe('ScheduleService', () => {
         const validation = service.validateSchedule(preset.schedule);
         expect(validation.valid).toBe(true);
 
-        const runs = service.getNextRuns(preset.schedule, 3);
-        expect(runs.length).toBeGreaterThan(0);
+        // @reboot doesn't have next run times, skip validation for it
+        if (preset.schedule === '@reboot') {
+          const runs = service.getNextRuns(preset.schedule, 3);
+          expect(runs.length).toBe(0);
+        } else {
+          const runs = service.getNextRuns(preset.schedule, 3);
+          expect(runs.length).toBeGreaterThan(0);
+        }
       });
     });
 
