@@ -1265,7 +1265,7 @@ function App() {
                           )}
                         </td>
                         <td>
-                          <NextRunCell nextRun={job.nextRun ? job.nextRun.toISOString() : null} onExpired={silentRefreshNextRuns} />
+                          <NextRunCell nextRun={job.nextRun ? job.nextRun.toISOString() : null} schedule={job.schedule} onExpired={silentRefreshNextRuns} />
                         </td>
                         <td>
                           <code className="mono" style={{ fontSize: '12px', opacity: 0.7 }}>
